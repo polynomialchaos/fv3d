@@ -1,0 +1,35 @@
+# Compiled source #
+###################
+*.o
+*.out
+*.a
+*.so
+*.mod
+*.pyc
+*.pdf
+
+# Logs #
+######################
+*.log
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Folders #
+###########
+.vscode/
+bin/
+lib/
+build/
+share/
+
+# Packages #
+############
+*.tar
+*.tar.gz
+*.zip
