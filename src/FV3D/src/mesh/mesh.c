@@ -100,32 +100,33 @@ void mesh_initialize()
 
 void mesh_finalize()
 {
-        deallocate( mesh_file );
+    deallocate( mesh_file );
 
-        //     _DEALLOCATE( partition_cells )
-        // _DEALLOCATE( partition_boundaries )
-        // _DEALLOCATE( partition_faces )
-        // _DEALLOCATE( partition_sends )
-        // _DEALLOCATE( partition_sends_pid )
-        // _DEALLOCATE( partition_receives )
-        // _DEALLOCATE( partition_receives_pid )
+    deallocate( partition_cells );
+    deallocate( partition_boundaries );
+    deallocate( partition_faces );
+    deallocate( partition_sends );
+    deallocate( partition_sends_pid );
+    deallocate( partition_receives );
+    deallocate( partition_receives_pid );
 
-        // _DEALLOCATE( n_partition_sends_to )
-        // _DEALLOCATE( partition_sends_to )
-        // _DEALLOCATE( n_partition_receives_from )
-        // _DEALLOCATE( partition_receives_from )
+    deallocate( n_partition_sends_to );
+    deallocate( partition_sends_to );
+    deallocate( n_partition_receives_from );
+    deallocate( partition_receives_from );
 
-        // _DEALLOCATE( vertices )
-        // _DEALLOCATE( cells )
-        // _DEALLOCATE( faces )
-        // _DEALLOCATE( boundaries )
-        // _DEALLOCATE( regions )
+    deallocate( vertices );
 
-        // _DEALLOCATE( dist_cell_1 )
-        // _DEALLOCATE( dist_cell_2 )
+    deallocate( cells );
+    deallocate( boundaries );
+    deallocate( faces );
+    deallocate( regions );
 
-        // _DEALLOCATE( internal_faces )
-        // _DEALLOCATE( boundary_faces )
+    deallocate( dist_cell_1 );
+    deallocate( dist_cell_2 );
+
+    deallocate( internal_faces );
+    deallocate( boundary_faces );
 }
 
 void read_mesh_file()
