@@ -17,6 +17,59 @@
 //----------------------------------------------------------------------------------------------------------------------------------
 string_t mesh_file = NULL;
 
+int dimension = 0;
+int is_partitioned = 0;
+
+int n_partitions = 0;
+int n_partition_cells = 0;
+int n_partition_boundaries = 0;
+int n_partition_faces = 0;
+int n_partition_sends = 0;
+int n_partition_receives = 0;
+
+int *partition_cells = NULL;
+int *partition_boundaries = NULL;
+int *partition_faces = NULL;
+int *partition_sends = NULL;
+int *partition_sends_pid = NULL;
+int *partition_receives = NULL;
+int *partition_receives_pid = NULL;
+
+int *n_partition_sends_to = NULL;
+int *partition_sends_to = NULL;
+int *n_partition_receives_from = NULL;
+int *partition_receives_from = NULL;
+
+int n_vertices = 0;
+double *vertices = NULL;
+
+int n_global_cells = 0;
+int n_cells = 0;
+Cell_t *cells = NULL;
+
+int n_global_boundaries = 0;
+int n_boundaries = 0;
+Boundary_t *boundaries = NULL;
+
+int n_global_faces = 0;
+int n_faces = 0;
+Face_t *faces = NULL;
+
+int n_regions = 0;
+Region_t *regions = NULL;
+
+double *dist_cell_1 = NULL;
+double *dist_cell_2 = NULL;
+
+double total_volume = 0.0;
+
+int flow_region = 0;
+
+int n_internal_faces = 0;
+int *internal_faces = NULL;
+int n_boundary_faces = 0;
+int *boundary_faces = NULL;
+
 //##################################################################################################################################
 // LOCAL FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
@@ -77,6 +130,11 @@ void mesh_finalize()
 
 void read_mesh_file()
 {
+        // integer                             :: max_cell_vertices = 0            !< maximum number of cell vertices
+    // integer                             :: max_cell_faces = 0               !< maximum number of cell faces
+    // integer                             :: max_boundary_vertices = 0        !< maximum number of boundary vertices
+    // integer                             :: max_face_vertices = 0            !< maximum number of face vertices
+
         // is_parallel = get_is_parallel()
         // i_rank = get_i_rank()
 
