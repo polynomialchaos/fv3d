@@ -49,7 +49,7 @@ def write_mesh( file_name, mesh ):
         n_partition_receives    = [len( x ) for x in mesh.partition_receives]
 
     with h5py.File( file_name, 'w' ) as fp:
-        fp.attrs['dim'] = [mesh.dimension]
+        fp.attrs['dimension'] = [mesh.dimension]
         fp.attrs['is_partitioned'] = [1 if mesh.is_partitioned else 0]
 
         if mesh.is_partitioned:
