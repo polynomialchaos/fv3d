@@ -2,13 +2,14 @@
 # pyPreprocessor - Python package for FV3D preprocessing
 # (c) Florian Eigentler | 2020
 #-----------------------------------------------------------------------------------------------------------------------------------
-import argparse, json
+import os, argparse, json, shutil
 from pypreprocessor.reader import read_handler_lin1d, read_handler_gmsh
 from pypreprocessor import process_mesh, write_mesh
 
 ####################################################################################################################################
 # Defintions
 #-----------------------------------------------------------------------------------------------------------------------------------
+main_path = os.path.abspath( __file__ )
 
 ####################################################################################################################################
 # Functions
@@ -24,11 +25,16 @@ def main():
 
     # define the argument parser
     parser = argparse.ArgumentParser( description='pyPreprocessor - Python package for FV3D preprocessing' )
+    parser.add_argument( '-g', '--generate', dest='generate', action='store_true', help='The preprocessing input file' )
     parser.add_argument( 'inifile', nargs='+', help='The preprocessing input file' )
     args = parser.parse_args()
 
     # modify arguments
     args.inifile = args.inifile[0]
+    if args.generate:
+        tpl_file = os.path.join( os.path.dirname( main_path ), 'template.json' )
+        shutil.copyfile( tpl_file, args.inifile )
+        raise SystemExit
 
     # read the input file
     with open( args.inifile, 'r' ) as fp:

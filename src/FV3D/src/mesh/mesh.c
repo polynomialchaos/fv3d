@@ -86,7 +86,7 @@ void mesh_define()
     register_initialize_routine( mesh_initialize );
     register_finalize_routine( mesh_finalize );
 
-    string_t tmp = "untitled_mesh.h5";
+    string_t tmp = "untitled.mesh.h5";
     set_parameter( "Mesh/mesh_file", ParameterString, &tmp, "The mesh file", NULL, 0 );
 }
 
@@ -205,34 +205,23 @@ void read_mesh_file()
             close_hdf5_group( group_id );
         }
 
+        // the vertices
+        hid_t group_id = open_hdf5_group( file_id, "VERTICES" );
+            get_hdf5_attribute( group_id, "n_vertices", HDF5Int, &n_vertices );
+
+            vertices = allocate( sizeof( double ) * n_vertices );
+            dims[0] = 3 * n_vertices;
+            dims[1] = 0;
+            get_hdf5_dataset_chunk_n_m( group_id, "x", HDF5Int,
+                vertices, 1, dims, NULL, NULL, NULL, NULL, NULL );
+        close_hdf5_group( group_id );
+
     close_hdf5_file( file_id );
         // integer                             :: max_cell_vertices = 0            !< maximum number of cell vertices
     // integer                             :: max_cell_faces = 0               !< maximum number of cell faces
     // integer                             :: max_boundary_vertices = 0        !< maximum number of boundary vertices
     // integer                             :: max_face_vertices = 0            !< maximum number of face vertices
 
-        // is_parallel = get_is_parallel()
-        // i_rank = get_i_rank()
-
-        // file_id = open_hdf5_file( mesh_file )
-        //     ! the array sizes for visualization
-        //     call get_hdf5_attribute( file_id, "dim", dimension )
-        //     call get_hdf5_attribute( file_id, "is_partitioned", is_partitioned )
-
-        //     if( (is_parallel) .and. (.not. is_partitioned) ) &
-        //         call add_error(__LINE__, __FILE__, &
-        //             "Parallel run requires a partitioned mesh!" )
-
-
-
-        //     ! the vertices
-        //     group_id = open_hdf5_group( file_id, "VERTICES" )
-        //         call get_hdf5_attribute( group_id, "n_vertices", n_vertices )
-
-        //         allocate( vertices(3,n_vertices) )
-
-        //         call get_hdf5_dataset( group_id, "x", vertices )
-        //     call close_hdf5_group( group_id, "VERTICES" )
 
         //     ! the cells
         //     group_id = open_hdf5_group( file_id, "CELLS" )

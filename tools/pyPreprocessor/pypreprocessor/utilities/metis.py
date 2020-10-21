@@ -9,9 +9,10 @@ from ctypes import cdll, POINTER, byref, c_int, c_float, c_double
 ####################################################################################################################################
 # Defintions
 #-----------------------------------------------------------------------------------------------------------------------------------
-lib_path    = os.path.join( '/usr/lib/x86_64-linux-gnu/libmetis' )
-lib_ending  = {'darwin': 'dylib', 'win32': 'dll'}.get( sys.platform, 'so' )
-lib         = cdll.LoadLibrary( '{:}.{:}'.format( lib_path, lib_ending ) )
+lib_path = os.path.join( '/usr/lib/x86_64-linux-gnu/libmetis' )
+if not os.path.exists( lib_path ): lib_path = '/usr/local/Cellar/metis/5.1.0/lib/libmetis'
+lib_ending = {'darwin': 'dylib', 'win32': 'dll'}.get( sys.platform, 'so' )
+lib = cdll.LoadLibrary( '{:}.{:}'.format( lib_path, lib_ending ) )
 
 c_int_p = POINTER( c_int )
 c_float_p = POINTER( c_float )

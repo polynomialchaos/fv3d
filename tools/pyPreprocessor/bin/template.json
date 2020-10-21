@@ -1,0 +1,49 @@
+{
+    "General": {
+        "title": {
+            "value": "untitled",
+            "The project title": null
+        }
+    },
+    "Reader": {
+        "mesh_reader": {
+            "value": "Gmsh",
+            "The mesh reader": [
+                "Gmsh",
+                "Lin1D"
+            ]
+        },
+        "mesh_file": {
+            "value": "(NDEF)",
+            "The mesh file": null
+        },
+        "Lin1D": {
+            "x_left": {
+                "value": 0.00000E+00,
+                "The left mesh position": null
+            },
+            "x_right": {
+                "value": 1.00000E+00,
+                "The right mesh position": null
+            },
+            "n_elements": {
+                "value": 10,
+                "The number of elements": null
+            }
+        }
+    },
+    "Process": {
+        "mesh_scale": {
+            "value": [
+                1.00000E+00,
+                1.00000E+00,
+                1.00000E+00
+            ],
+            "The mesh scale factor for each dimension": null
+        },
+        "n_partitions": {
+            "value": 0,
+            "The number of partitions": null
+        }
+    }
+}
