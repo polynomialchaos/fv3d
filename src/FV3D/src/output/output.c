@@ -46,7 +46,7 @@ void output_initialize()
     do_output_data = (i_output_data != 0);
 
     const_string_t suffix = ".h5";
-    output_file = allocate( sizeof( string_t ) * (strlen( title ) + strlen( suffix ) + 1) );
+    output_file = allocate( sizeof( char ) * (strlen( title ) + strlen( suffix ) + 1) );
     strcpy( title, output_file );
     strcat( output_file, suffix );
 }

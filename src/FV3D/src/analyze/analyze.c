@@ -3,6 +3,7 @@
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
 #include "analyze_private.h"
+#include "equation/equation_private.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -31,7 +32,7 @@ void analyze_define()
     register_initialize_routine( analyze_initialize );
     register_finalize_routine( analyze_finalize );
 
-    // allocate( residual(n_variables) ); residual = 0.0
+    residual = allocate( sizeof( residual ) * n_variables );
 }
 
 void analyze_initialize()
