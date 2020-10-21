@@ -2,8 +2,8 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#ifndef FV3D_PRIVATE_H
-#define FV3D_PRIVATE_H
+#ifndef OUTPUT_PRIVATE_H
+#define OUTPUT_PRIVATE_H
 
 #include "fv3d_module.h"
 
@@ -18,10 +18,16 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-extern string_t title;
+    // integer                 :: i_output_data = -1       !< The output file frequency  (-1 ... first/last, 0 ... disable)
+
+    // character(len=_STRLEN_) :: output_file = ''         !< Output file
+    // logical                 :: do_output_data = .false. !< Flag to write output file
 
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
+void output_define();
+void create_file_header();
+void write_output( int iter, double time );
 
-#endif /* FV3D_PRIVATE_H */
+#endif /* OUTPUT_PRIVATE_H */

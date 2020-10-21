@@ -3,6 +3,13 @@
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
 #include "main_private.h"
+#include "mesh/mesh_private.h"
+#include "equation/equation_private.h"
+#include "fv/fv_private.h"
+#include "analyze/analyze_private.h"
+#include "output/output_private.h"
+#include "restart/restart_private.h"
+#include "timedisc/timedisc_private.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -18,15 +25,38 @@
 string_t title = NULL;
 
 //##################################################################################################################################
+// LOCAL FUNCTIONS
+//----------------------------------------------------------------------------------------------------------------------------------
+void main_define();
+void main_initialize();
+void main_finalize();
+
+//##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
 int main( int argc, string_t *argv )
 {
+    // define the program structure
     main_define();
+    mesh_define();
+    equation_define();
+    fv_define();
+    analyze_define();
+    output_define();
+    restart_define();
+    timedisc_define();
 
-    global_initialize( argc, argv, 1, 0 );
+    // call the global initialize routine
+    global_initialize( argc, argv, 1, 1 );
 
-    global_finalize();
+    // calculation
+    printf_r( "\n" );
+    printf_r_block( '=', "Calculation" );
+    timedisc();
+    printf_r_emtpy_block( '=' );
+
+    // end the program
+    check_abort( 1 );
     return 1;
 }
 
@@ -41,7 +71,7 @@ void main_define()
 
 void main_initialize()
 {
-    get_parameter_value( "General/title", ParameterString, &title );
+    get_parameter( "General/title", ParameterString, &title );
 }
 
 void main_finalize()

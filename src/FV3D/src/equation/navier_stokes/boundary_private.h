@@ -2,8 +2,8 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#ifndef FV3D_PRIVATE_H
-#define FV3D_PRIVATE_H
+#ifndef NAVIER_STOKES_BOUNDARY_PRIVATE_H
+#define NAVIER_STOKES_BOUNDARY_PRIVATE_H
 
 #include "fv3d_module.h"
 
@@ -18,10 +18,17 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-extern string_t title;
+    // enum, bind( C )
+    //     enumerator :: BND_NULL, BND_FLOW, BND_INFLOW, BND_OUTFLOW, BND_AD_WALL, BND_IT_WALL, &
+    //         BND_SLIP_WALL, BND_SYMM, BND_STATE, BND_FUNC
+    // end enum
+
+    // character(len=_STRLEN_),    parameter   :: bnd_type_names(BND_FUNC) = [character(len=_STRLEN_)  :: &
+    //     'flow', 'inflow', 'outflow', 'wall-adiabatic', 'wall-isothermal', 'wall-slip', 'symmetry', 'state', 'function']
 
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
+void boundary_define();
 
-#endif /* FV3D_PRIVATE_H */
+#endif /* NAVIER_STOKES_BOUNDARY_PRIVATE_H */

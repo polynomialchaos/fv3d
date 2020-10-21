@@ -2,8 +2,8 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#ifndef FV3D_PRIVATE_H
-#define FV3D_PRIVATE_H
+#ifndef EXPLICIT_PRIVATE_H
+#define EXPLICIT_PRIVATE_H
 
 #include "fv3d_module.h"
 
@@ -18,10 +18,16 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-extern string_t title;
+extern int explicit_active;
+    // character(len=_STRLEN_) :: scheme = 'RK3-3'             !< The explicit scheme
+
+    // integer                 :: n_rk_stages = 0              !< Number of Runge Kutta stages
+    // real,   allocatable     :: rk_a(:), rk_b(:), rk_g(:)    !< Runge Kutta coefficients
 
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
+void explicit_define();
+void time_step_lserkw2( double t, double dt, int iter );
 
-#endif /* FV3D_PRIVATE_H */
+#endif /* EXPLICIT_PRIVATE_H */

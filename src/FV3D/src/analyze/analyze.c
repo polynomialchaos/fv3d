@@ -2,10 +2,7 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#ifndef FV3D_PRIVATE_H
-#define FV3D_PRIVATE_H
-
-#include "fv3d_module.h"
+#include "analyze_private.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -18,10 +15,41 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-extern string_t title;
+double *residual = NULL;
+
+//##################################################################################################################################
+// LOCAL FUNCTIONS
+//----------------------------------------------------------------------------------------------------------------------------------
+void analyze_initialize();
+void analyze_finalize();
 
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
+void analyze_define()
+{
+    register_initialize_routine( analyze_initialize );
+    register_finalize_routine( analyze_finalize );
 
-#endif /* FV3D_PRIVATE_H */
+    // allocate( residual(n_variables) ); residual = 0.0
+}
+
+void analyze_initialize()
+{
+}
+
+void analyze_finalize()
+{
+    deallocate( residual );
+}
+
+void calc_global_residual( double dt )
+{
+// !     residual_loc = 0.00
+// !     do i = 1, n_cells
+// !         residual_loc = residual_loc + cells(i)%volume * phi_dt(:,i)
+// !     end do
+
+// !     residual_loc = abs( residual_loc ) / total_volume * dt
+// !     call allreduce_mpi( residual_loc, residual, MPI_SUM )
+}
