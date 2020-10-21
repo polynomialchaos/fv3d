@@ -19,6 +19,7 @@
 ._*
 .Spotlight-V100
 .Trashes
+__pycache__
 
 # Folders #
 ###########
@@ -27,6 +28,8 @@ bin/
 lib/
 build/
 share/
+*.egg-info/
+!/tools/pyPreprocessor/bin
 
 # Packages #
 ############
