@@ -62,9 +62,9 @@ void read_restart_data()
         //     call get_hdf5_attribute( last_id, 'iter', iter_restart )
         //     call get_hdf5_attribute( last_id, 'time', time_restart )
 
-        //     allocate( phi_restart(n_variables,n_cells+n_partition_receives+n_boundaries) )
-        //     allocate( phi_total_restart(n_tot_variables,n_cells+n_partition_receives+n_boundaries) )
-        //     allocate( phi_dt_restart(n_variables,n_cells+n_partition_receives+n_boundaries) )
+        //     allocate( phi_restart(n_variables,n_cells+n_receives+n_boundaries) )
+        //     allocate( phi_total_restart(n_tot_variables,n_cells+n_receives+n_boundaries) )
+        //     allocate( phi_dt_restart(n_variables,n_cells+n_receives+n_boundaries) )
 
         //     if( get_is_parallel() ) then
         //         call get_hdf5_dataset( last_id, 'phi', phi_restart(:,:n_cells), stride=partition_cells )
