@@ -138,6 +138,9 @@ void read_mesh_file()
     hsize_t offset[2];
     hsize_t count[2];
 
+    int max_cell_vertices = 0;
+    int max_cell_faces = 0;
+
     hid_t file_id = open_hdf5_file( mesh_file );
         get_hdf5_attribute( file_id, "dimension", HDF5Int, &dimension );
         get_hdf5_attribute( file_id, "is_partitioned", HDF5Int, &is_partitioned );
@@ -151,20 +154,17 @@ void read_mesh_file()
                 get_hdf5_attribute( group_id, "n_partitions", HDF5Int, &n_partitions );
                 check_error( (n_partitions == get_n_procs()) );
 
-                dims[0]     = 1;
-                offset[0]   = rank;
-                count[0]    = 1;
-
-                get_hdf5_dataset_chunk_n( group_id, "n_partition_cells", HDF5Int,
-                    &n_partition_cells, 1, dims, NULL, offset, count, NULL, NULL );
-                get_hdf5_dataset_chunk_n( group_id, "n_partition_boundaries", HDF5Int,
-                    &n_partition_boundaries, 1, dims, NULL, offset, count, NULL, NULL );
-                get_hdf5_dataset_chunk_n( group_id, "n_partition_faces", HDF5Int,
-                    &n_partition_faces, 1, dims, NULL, offset, count, NULL, NULL );
-                get_hdf5_dataset_chunk_n( group_id, "n_partition_sends", HDF5Int,
-                    &n_partition_sends, 1, dims, NULL, offset, count, NULL, NULL );
-                get_hdf5_dataset_chunk_n( group_id, "n_partition_receives", HDF5Int,
-                    &n_partition_receives, 1, dims, NULL, offset, count, NULL, NULL );
+                dims[0] = 1; offset[0] = rank; count[0] = 1;
+                get_hdf5_dataset_chunk_n( group_id, "n_partition_cells", HDF5Int, &n_partition_cells,
+                    1, dims, NULL, offset, count, NULL, NULL );
+                get_hdf5_dataset_chunk_n( group_id, "n_partition_boundaries", HDF5Int, &n_partition_boundaries,
+                    1, dims, NULL, offset, count, NULL, NULL );
+                get_hdf5_dataset_chunk_n( group_id, "n_partition_faces", HDF5Int, &n_partition_faces,
+                    1, dims, NULL, offset, count, NULL, NULL );
+                get_hdf5_dataset_chunk_n( group_id, "n_partition_sends", HDF5Int, &n_partition_sends,
+                    1, dims, NULL, offset, count, NULL, NULL );
+                get_hdf5_dataset_chunk_n( group_id, "n_partition_receives", HDF5Int, &n_partition_receives,
+                    1, dims, NULL, offset, count, NULL, NULL );
 
                 partition_cells         = allocate( sizeof( int ) * n_partition_cells );
                 partition_boundaries    = allocate( sizeof( int ) * n_partition_boundaries );
@@ -176,32 +176,32 @@ void read_mesh_file()
 
                 dims[0] = n_partition_cells; offset[0] = rank;  count[0] = 1;
                 dims[1] = 0; offset[1] = 0; count[1] = n_partition_cells;
-                get_hdf5_dataset_chunk_n_m( group_id, "partition_cells", HDF5Int,
-                    partition_cells, 1, dims, NULL, offset, count, NULL, NULL );
+                get_hdf5_dataset_chunk_n_m( group_id, "partition_cells", HDF5Int, partition_cells,
+                    1, dims, NULL, offset, count, NULL, NULL );
 
                 dims[0] = n_partition_boundaries; offset[0] = rank;  count[0] = 1;
                 dims[1] = 0; offset[1] = 0; count[1] = n_partition_boundaries;
-                get_hdf5_dataset_chunk_n_m( group_id, "partition_boundaries", HDF5Int,
-                    partition_boundaries, 1, dims, NULL, offset, count, NULL, NULL );
+                get_hdf5_dataset_chunk_n_m( group_id, "partition_boundaries", HDF5Int, partition_boundaries,
+                    1, dims, NULL, offset, count, NULL, NULL );
 
                 dims[0] = n_partition_faces; offset[0] = rank;  count[0] = 1;
                 dims[1] = 0; offset[1] = 0; count[1] = n_partition_faces;
-                get_hdf5_dataset_chunk_n_m( group_id, "partition_faces", HDF5Int,
-                    partition_faces, 1, dims, NULL, offset, count, NULL, NULL );
+                get_hdf5_dataset_chunk_n_m( group_id, "partition_faces", HDF5Int, partition_faces,
+                    1, dims, NULL, offset, count, NULL, NULL );
 
                 dims[0] = n_partition_sends; offset[0] = rank;  count[0] = 1;
                 dims[1] = 0; offset[1] = 0; count[1] = n_partition_sends;
-                get_hdf5_dataset_chunk_n_m( group_id, "partition_sends", HDF5Int,
-                    partition_sends, 1, dims, NULL, offset, count, NULL, NULL );
-                get_hdf5_dataset_chunk_n_m( group_id, "partition_sends_pid", HDF5Int,
-                    partition_sends_pid, 1, dims, NULL, offset, count, NULL, NULL );
+                get_hdf5_dataset_chunk_n_m( group_id, "partition_sends", HDF5Int, partition_sends,
+                    1, dims, NULL, offset, count, NULL, NULL );
+                get_hdf5_dataset_chunk_n_m( group_id, "partition_sends_pid", HDF5Int, partition_sends_pid,
+                    1, dims, NULL, offset, count, NULL, NULL );
 
                 dims[0] = n_partition_receives; offset[0] = rank;  count[0] = 1;
                 dims[1] = 0; offset[1] = 0; count[1] = n_partition_receives;
-                get_hdf5_dataset_chunk_n_m( group_id, "partition_receives", HDF5Int,
-                    partition_receives, 1, dims, NULL, offset, count, NULL, NULL );
-                get_hdf5_dataset_chunk_n_m( group_id, "partition_receives_pid", HDF5Int,
-                    partition_receives_pid, 1, dims, NULL, offset, count, NULL, NULL );
+                get_hdf5_dataset_chunk_n_m( group_id, "partition_receives", HDF5Int, partition_receives,
+                    1, dims, NULL, offset, count, NULL, NULL );
+                get_hdf5_dataset_chunk_n_m( group_id, "partition_receives_pid", HDF5Int, partition_receives_pid,
+                    1, dims, NULL, offset, count, NULL, NULL );
             close_hdf5_group( group_id );
         }
 
@@ -209,64 +209,102 @@ void read_mesh_file()
         hid_t group_id = open_hdf5_group( file_id, "VERTICES" );
             get_hdf5_attribute( group_id, "n_vertices", HDF5Int, &n_vertices );
 
-            vertices = allocate( sizeof( double ) * n_vertices );
-            dims[0] = 3 * n_vertices;
-            dims[1] = 0;
-            get_hdf5_dataset_chunk_n_m( group_id, "x", HDF5Int,
-                vertices, 1, dims, NULL, NULL, NULL, NULL, NULL );
+            vertices = allocate( sizeof( double ) * 3 * n_vertices );
+            dims[0] = 3;
+            dims[1] = n_vertices;
+            get_hdf5_dataset_chunk_n_m( group_id, "x", HDF5Int, vertices,
+                2, dims, NULL, NULL, NULL, NULL, NULL );
         close_hdf5_group( group_id );
 
-    close_hdf5_file( file_id );
-        // integer                             :: max_cell_vertices = 0            !< maximum number of cell vertices
-    // integer                             :: max_cell_faces = 0               !< maximum number of cell faces
-    // integer                             :: max_boundary_vertices = 0        !< maximum number of boundary vertices
-    // integer                             :: max_face_vertices = 0            !< maximum number of face vertices
+        // the cells
+        group_id = open_hdf5_group( file_id, "CELLS" );
+            get_hdf5_attribute( group_id, "n_cells", HDF5Int, &n_cells );
+            get_hdf5_attribute( group_id, "max_cell_vertices", HDF5Int, &max_cell_vertices );
+            get_hdf5_attribute( group_id, "max_cell_faces", HDF5Int, &max_cell_faces );
 
+            n_global_cells = n_cells;
+            if (is_parallel) n_cells = n_partition_cells;
 
-        //     ! the cells
-        //     group_id = open_hdf5_group( file_id, "CELLS" )
-        //         call get_hdf5_attribute( group_id, "n_cells", n_cells ); n_global_cells = n_cells
-        //         call get_hdf5_attribute( group_id, "max_cell_vertices", max_cell_vertices )
-        //         call get_hdf5_attribute( group_id, "max_cell_faces", max_cell_faces )
-        //         if( is_parallel ) n_cells = n_partition_cells
+            cells = allocate( sizeof( Cell_t ) * (n_cells + n_partition_receives) );
 
-        //         allocate( cells(n_cells+n_partition_receives) )
+            if (is_parallel)
+            {
+                hsize_t *stride = allocate( sizeof( hsize_t ) * (n_cells + n_partition_receives) );
+                for ( int i = 0; i < n_partition_cells; i++)
+                    stride[i] = partition_cells[i];
+                for ( int i = n_partition_cells; i < n_partition_cells + n_partition_receives; i++)
+                    stride[i] = partition_receives[i-n_partition_cells];
 
-        //         if( is_parallel ) then
-        //             allocate( tmp_stride(n_cells+n_partition_receives) )
-        //             tmp_stride(:n_cells) = partition_cells
-        //             tmp_stride(n_cells+1:) = partition_receives
+                dims[0] = n_cells + n_partition_receives;
+                int *tmp_i = allocate( sizeof(int) * (n_cells + n_partition_receives) );
+                get_hdf5_dataset_select_n( group_id, "id", HDF5Int, tmp_i,
+                    1, dims, NULL, stride, (n_cells + n_partition_receives) );
+                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                    cells[i].id = tmp_i[i];
 
-        //             call get_hdf5_dataset( group_id, "id", cells(:)%id, stride=tmp_stride )
-        //             call get_hdf5_dataset( group_id, "type", cells(:)%type, stride=tmp_stride )
+                get_hdf5_dataset_select_n( group_id, "type", HDF5Int, tmp_i,
+                    1, dims, NULL, stride, (n_cells + n_partition_receives) );
+                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                    cells[i].type = tmp_i[i];
 
-        //             call get_hdf5_dataset( group_id, "n_vertices", cells(:)%n_vertices, stride=tmp_stride )
-        //             allocate( tmp_i(max_cell_vertices,n_cells+n_partition_receives) ); tmp_i = 0
-        //             call get_hdf5_dataset( group_id, "vertices", tmp_i, stride=tmp_stride )
-        //             do i = 1, n_cells+n_partition_receives
-        //                 cells(i)%vertices = tmp_i(1:cells(i)%n_vertices,i)
-        //             end do
-        //             _DEALLOCATE( tmp_i )
+                get_hdf5_dataset_select_n( group_id, "n_vertices", HDF5Int, tmp_i,
+                    1, dims, NULL, stride, (n_cells + n_partition_receives) );
+                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                    cells[i].n_vertices = tmp_i[i];
 
-        //             call get_hdf5_dataset( group_id, "n_faces", cells(:)%n_faces, stride=tmp_stride )
-        //             allocate( tmp_i(max_cell_faces,n_cells+n_partition_receives) ); tmp_i = 0
-        //             call get_hdf5_dataset( group_id, "faces", tmp_i, stride=tmp_stride )
-        //             do i = 1, n_cells+n_partition_receives
-        //                 cells(i)%faces = tmp_i(1:cells(i)%n_faces,i)
-        //             end do
-        //             _DEALLOCATE( tmp_i )
+                get_hdf5_dataset_select_n( group_id, "n_faces", HDF5Int, tmp_i,
+                    1, dims, NULL, stride, (n_cells + n_partition_receives) );
+                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                    cells[i].n_faces = tmp_i[i];
+                deallocate( tmp_i );
 
-        //             allocate( tmp_r(3,n_cells+n_partition_receives) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "x", tmp_r, stride=tmp_stride )
-        //             do i = 1, n_cells+n_partition_receives
-        //                 cells(i)%x = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
+                dims[0] = n_cells + n_partition_receives; offset[0] = 0; count[0] = n_cells + n_partition_receives;
+                dims[1] = max_cell_vertices; offset[1] = 0; count[1] = max_cell_vertices;
+                tmp_i = allocate( sizeof(int) * max_cell_vertices * (n_cells + n_partition_receives) );
+                get_hdf5_dataset_select_n_m( group_id, "vertices", HDF5Int, tmp_i,
+                    2, dims, NULL, offset, count, stride, (n_cells + n_partition_receives) );
+                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                {
+                    cells[i].vertices = allocate( sizeof( int ) * cells[i].n_vertices );
+                    for ( int j = 0; j < cells[i].n_vertices; j++)
+                        cells[i].vertices[j] = tmp_i[i*max_cell_vertices+j];
+                }
+                deallocate( tmp_i );
 
-        //             call get_hdf5_dataset( group_id, "volume", cells(:)%volume, stride=tmp_stride )
+                dims[0] = n_cells + n_partition_receives; offset[0] = 0; count[0] = n_cells + n_partition_receives;
+                dims[1] = max_cell_faces; offset[1] = 0; count[1] = max_cell_faces;
+                tmp_i = allocate( sizeof(int) * max_cell_faces * (n_cells + n_partition_receives) );
+                get_hdf5_dataset_select_n_m( group_id, "faces", HDF5Int, tmp_i,
+                    2, dims, NULL, offset, count, stride, (n_cells + n_partition_receives) );
+                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                {
+                    cells[i].faces = allocate( sizeof( int ) * cells[i].n_faces );
+                    for ( int j = 0; j < cells[i].n_faces; j++)
+                        cells[i].faces[j] = tmp_i[i*max_cell_faces+j];
+                }
+                deallocate( tmp_i );
 
-        //             _DEALLOCATE(tmp_stride)
-        //         else
+                dims[0] = n_cells + n_partition_receives;
+                double *tmp_d = allocate( sizeof( double ) * (n_cells + n_partition_receives) );
+                get_hdf5_dataset_select_n( group_id, "volume", HDF5Double, tmp_d,
+                    1, dims, NULL, stride, (n_cells + n_partition_receives) );
+                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                    cells[i].volume = tmp_d[i];
+                deallocate( tmp_d );
+
+                dims[0] = n_cells + n_partition_receives; offset[0] = 0; count[0] = n_cells + n_partition_receives;
+                dims[1] = 3; offset[1] = 0; count[1] = 3;
+                tmp_d = allocate( sizeof( double ) * 3 * (n_cells + n_partition_receives) );
+                get_hdf5_dataset_select_n_m( group_id, "x", HDF5Double, tmp_d,
+                    2, dims, NULL, offset, count, stride, (n_cells + n_partition_receives) );
+                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                    for ( int j = 0; j < 3; j++)
+                        cells[i].x[j] = tmp_d[i*3+j];
+                deallocate( tmp_d );
+                deallocate( stride );
+            }
+            else
+            {
         //             call get_hdf5_dataset( group_id, "id", cells(:)%id )
         //             call get_hdf5_dataset( group_id, "type", cells(:)%type )
 
@@ -294,8 +332,15 @@ void read_mesh_file()
         //             _DEALLOCATE( tmp_r )
 
         //             call get_hdf5_dataset( group_id, "volume", cells(:)%volume )
-        //         end if
-        //     call close_hdf5_group( group_id, "CELLS" )
+            }
+        close_hdf5_group( group_id );
+    close_hdf5_file( file_id );
+        // integer                             :: max_cell_vertices = 0            !< maximum number of cell vertices
+    // integer                             :: max_cell_faces = 0               !< maximum number of cell faces
+    // integer                             :: max_boundary_vertices = 0        !< maximum number of boundary vertices
+    // integer                             :: max_face_vertices = 0            !< maximum number of face vertices
+
+
 
         //     ! the boundaries
         //     group_id = open_hdf5_group( file_id, "BOUNDARIES" )
