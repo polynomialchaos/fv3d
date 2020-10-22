@@ -99,32 +99,32 @@ typedef struct Mesh
     int n_partition_faces;
     int n_partition_sends;
     int n_partition_receives;
-    Partition_t partition;
+    Partition_t *partition;
 
     int n_vertices;
-    Vertices_t vertices;
+    Vertices_t *vertices;
 
     int n_global_cells;
     int n_local_cells;
     int n_cells;
     int max_cell_vertices;
     int max_cell_faces;
-    Cells_t cells;
+    Cells_t *cells;
 
     int n_global_boundaries;
     int n_local_boundaries;
     int n_boundaries;
     int max_boundary_vertices;
-    Boundaries_t boundaries;
+    Boundaries_t *boundaries;
 
     int n_global_faces;
     int n_local_faces;
     int n_faces;
     int max_face_vertices;
-    Faces_t faces;
+    Faces_t *faces;
 
     int n_regions;
-    Regions_t regions;
+    Regions_t *regions;
 
     // double *dist_cell_1;
     // double *dist_cell_2;
@@ -143,7 +143,9 @@ typedef struct Mesh
 //----------------------------------------------------------------------------------------------------------------------------------
 void mesh_define();
 
-void free_mesh( Mesh_t *mesh );
+Mesh_t *allocate_mesh();
+void deallocate_mesh( Mesh_t **mesh );
+
 void allocate_partition( Partition_t *partition, int n_partitions,
     int n_cells, int n_boundaries, int n_faces, int n_sends, int n_receives );
 void allocate_vertices( Vertices_t *vertices, int n_vertices );

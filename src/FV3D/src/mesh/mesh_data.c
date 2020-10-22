@@ -20,24 +20,40 @@
 //##################################################################################################################################
 // LOCAL FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
-void deallocate_partition( Partition_t *partition );
-void deallocate_vertices( Vertices_t *vertices );
-void deallocate_cells( Cells_t *cells );
-void deallocate_boundaries( Boundaries_t *boundaries );
-void deallocate_faces( Faces_t *faces );
-void deallocate_regions( Regions_t *regions );
+void deallocate_partition( Partition_t **partition );
+void deallocate_vertices( Vertices_t **vertices );
+void deallocate_cells( Cells_t **cells );
+void deallocate_boundaries( Boundaries_t **boundaries );
+void deallocate_faces( Faces_t **faces );
+void deallocate_regions( Regions_t **regions );
 
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
-void free_mesh( Mesh_t *mesh )
+Mesh_t *allocate_mesh()
 {
-    deallocate_partition( &mesh->partition );
-    deallocate_vertices( &mesh->vertices );
-    deallocate_cells( &mesh->cells );
-    deallocate_boundaries( &mesh->boundaries );
-    deallocate_faces( &mesh->faces );
-    deallocate_regions( &mesh->regions );
+    Mesh_t *tmp     = allocate( sizeof( Mesh_t ) );
+
+    tmp->partition  = allocate( sizeof( Partition_t ) );
+    tmp->vertices   = allocate( sizeof( Vertices_t ) );
+    tmp->cells      = allocate( sizeof( Cells_t ) );
+    tmp->boundaries = allocate( sizeof( Boundaries_t ) );
+    tmp->faces      = allocate( sizeof( Faces_t ) );
+    tmp->regions    = allocate( sizeof( Regions_t ) );
+
+    return tmp;
+}
+
+void deallocate_mesh( Mesh_t **mesh )
+{
+    deallocate_partition( &(*mesh)->partition );
+    deallocate_vertices( &(*mesh)->vertices );
+    deallocate_cells( &(*mesh)->cells );
+    deallocate_boundaries( &(*mesh)->boundaries );
+    deallocate_faces( &(*mesh)->faces );
+    deallocate_regions( &(*mesh)->regions );
+
+    deallocate( *mesh );
 }
 
 void allocate_partition( Partition_t *partition, int n_partitions,
@@ -108,69 +124,81 @@ void allocate_regions( Regions_t *regions, int n_regions, int length )
     regions->name = allocate_hdf5_string_buffer( n_regions, length );
 }
 
-void deallocate_partition( Partition_t *partition )
+void deallocate_partition( Partition_t **partition )
 {
-    deallocate( partition->partition_cells );
-    deallocate( partition->partition_boundaries );
-    deallocate( partition->partition_faces );
-    deallocate( partition->partition_sends );
-    deallocate( partition->partition_sends_pid );
-    deallocate( partition->partition_receives );
-    deallocate( partition->partition_receives_pid );
+    deallocate( (*partition)->partition_cells );
+    deallocate( (*partition)->partition_boundaries );
+    deallocate( (*partition)->partition_faces );
+    deallocate( (*partition)->partition_sends );
+    deallocate( (*partition)->partition_sends_pid );
+    deallocate( (*partition)->partition_receives );
+    deallocate( (*partition)->partition_receives_pid );
 
-    deallocate( partition->n_partition_sends_to );
-    deallocate( partition->partition_sends_to );
-    deallocate( partition->n_partition_receives_from );
-    deallocate( partition->partition_receives_from );
+    deallocate( (*partition)->n_partition_sends_to );
+    deallocate( (*partition)->partition_sends_to );
+    deallocate( (*partition)->n_partition_receives_from );
+    deallocate( (*partition)->partition_receives_from );
+
+    deallocate( *partition );
 }
 
-void deallocate_vertices( Vertices_t *vertices )
+void deallocate_vertices( Vertices_t **vertices )
 {
-    deallocate( vertices->x );
+    deallocate( (*vertices)->x );
+
+    deallocate( *vertices );
 }
 
-void deallocate_cells( Cells_t *cells )
+void deallocate_cells( Cells_t **cells )
 {
-    deallocate( cells->id );
-    deallocate( cells->type );
-    deallocate( cells->n_vertices );
-    deallocate( cells->vertices );
-    deallocate( cells->n_faces );
-    deallocate( cells->faces );
-    deallocate( cells->x );
-    deallocate( cells->volume );
-    deallocate( cells->ds );
+    deallocate( (*cells)->id );
+    deallocate( (*cells)->type );
+    deallocate( (*cells)->n_vertices );
+    deallocate( (*cells)->vertices );
+    deallocate( (*cells)->n_faces );
+    deallocate( (*cells)->faces );
+    deallocate( (*cells)->x );
+    deallocate( (*cells)->volume );
+    deallocate( (*cells)->ds );
+
+    deallocate( *cells );
 }
 
-void deallocate_boundaries( Boundaries_t *boundaries )
+void deallocate_boundaries( Boundaries_t **boundaries )
 {
-    deallocate( boundaries->id );
-    deallocate( boundaries->type );
-    deallocate( boundaries->n_vertices );
-    deallocate( boundaries->vertices );
-    deallocate( boundaries->face );
-    deallocate( boundaries->distance );
-    deallocate( boundaries->n );
-    deallocate( boundaries->t1 );
-    deallocate( boundaries->t2 );
+    deallocate( (*boundaries)->id );
+    deallocate( (*boundaries)->type );
+    deallocate( (*boundaries)->n_vertices );
+    deallocate( (*boundaries)->vertices );
+    deallocate( (*boundaries)->face );
+    deallocate( (*boundaries)->distance );
+    deallocate( (*boundaries)->n );
+    deallocate( (*boundaries)->t1 );
+    deallocate( (*boundaries)->t2 );
+
+    deallocate( *boundaries );
 }
 
-void deallocate_faces( Faces_t *faces )
+void deallocate_faces( Faces_t **faces )
 {
-    deallocate( faces->type );
-    deallocate( faces->n_vertices );
-    deallocate( faces->vertices );
-    deallocate( faces->cells );
-    deallocate( faces->boundary );
-    deallocate( faces->area );
-    deallocate( faces->lambda );
-    deallocate( faces->x );
-    deallocate( faces->n );
-    deallocate( faces->t1 );
-    deallocate( faces->t2 );
+    deallocate( (*faces)->type );
+    deallocate( (*faces)->n_vertices );
+    deallocate( (*faces)->vertices );
+    deallocate( (*faces)->cells );
+    deallocate( (*faces)->boundary );
+    deallocate( (*faces)->area );
+    deallocate( (*faces)->lambda );
+    deallocate( (*faces)->x );
+    deallocate( (*faces)->n );
+    deallocate( (*faces)->t1 );
+    deallocate( (*faces)->t2 );
+
+    deallocate( *faces );
 }
 
-void deallocate_regions( Regions_t *regions )
+void deallocate_regions( Regions_t **regions )
 {
-    deallocate_hdf5_string_buffer( &regions->name );
+    deallocate_hdf5_string_buffer( &(*regions)->name );
+
+    deallocate( *regions );
 }
