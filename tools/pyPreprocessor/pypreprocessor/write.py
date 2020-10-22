@@ -67,13 +67,13 @@ def write_mesh( file_name, mesh ):
             fp_g.create_dataset( 'n_partition_sends', data=n_partition_sends )
             fp_g.create_dataset( 'n_partition_receives', data=n_partition_receives )
 
-            fp_g.create_dataset( 'partition_cells', data=fill_array( mesh.partition_cells, 0, np.int32 ) )
-            fp_g.create_dataset( 'partition_boundaries', data=fill_array( mesh.partition_boundaries, 0, np.int32 ) )
-            fp_g.create_dataset( 'partition_faces', data=fill_array( mesh.partition_faces, 0, np.int32 ) )
-            fp_g.create_dataset( 'partition_sends', data=fill_array( mesh.partition_sends, 0, np.int32 ) )
-            fp_g.create_dataset( 'partition_sends_pid', data=fill_array( mesh.partition_sends_pid, 0, np.int32 ) )
-            fp_g.create_dataset( 'partition_receives', data=fill_array( mesh.partition_receives, 0, np.int32 ) )
-            fp_g.create_dataset( 'partition_receives_pid', data=fill_array( mesh.partition_receives_pid, 0, np.int32 ) )
+            fp_g.create_dataset( 'partition_cells', data=fill_array( mesh.partition_cells, -1, np.int32 ) )
+            fp_g.create_dataset( 'partition_boundaries', data=fill_array( mesh.partition_boundaries, -1, np.int32 ) )
+            fp_g.create_dataset( 'partition_faces', data=fill_array( mesh.partition_faces, -1, np.int32 ) )
+            fp_g.create_dataset( 'partition_sends', data=fill_array( mesh.partition_sends, -1, np.int32 ) )
+            fp_g.create_dataset( 'partition_sends_pid', data=fill_array( mesh.partition_sends_pid, -1, np.int32 ) )
+            fp_g.create_dataset( 'partition_receives', data=fill_array( mesh.partition_receives, -1, np.int32 ) )
+            fp_g.create_dataset( 'partition_receives_pid', data=fill_array( mesh.partition_receives_pid, -1, np.int32 ) )
 
         # the vertices
         fp_g = fp.create_group( 'VERTICES' )
@@ -91,9 +91,9 @@ def write_mesh( file_name, mesh ):
         fp_g.create_dataset( 'type', data=[x.element_type.value for x in mesh.cells] )
 
         fp_g.create_dataset( 'n_vertices', data=[x.n_vertice_ids for x in mesh.cells] )
-        fp_g.create_dataset( 'vertices', data=fill_array( [x.vertice_ids for x in mesh.cells], 0, np.int32, sy=max_cell_vertices ) )
+        fp_g.create_dataset( 'vertices', data=fill_array( [x.vertice_ids for x in mesh.cells], -1, np.int32, sy=max_cell_vertices ) )
         fp_g.create_dataset( 'n_faces', data=[x.n_face_ids for x in mesh.cells] )
-        fp_g.create_dataset( 'faces', data=fill_array( [x.face_ids for x in mesh.cells], 0, np.int32, sy=max_cell_faces ) )
+        fp_g.create_dataset( 'faces', data=fill_array( [x.face_ids for x in mesh.cells], -1, np.int32, sy=max_cell_faces ) )
 
         fp_g.create_dataset( 'x', data=np.array( [x.x for x in mesh.cells] ) )
         fp_g.create_dataset( 'volume', data=np.array( [x.volume for x in mesh.cells] ) )
@@ -112,7 +112,7 @@ def write_mesh( file_name, mesh ):
         fp_g.create_dataset( 'type', data=[x.element_type.value for x in mesh.boundaries] )
 
         fp_g.create_dataset( 'n_vertices', data=[x.n_vertice_ids for x in mesh.boundaries] )
-        fp_g.create_dataset( 'vertices', data=fill_array( [x.vertice_ids for x in mesh.boundaries], 0, np.int32, sy=max_boundary_vertices ) )
+        fp_g.create_dataset( 'vertices', data=fill_array( [x.vertice_ids for x in mesh.boundaries], -1, np.int32, sy=max_boundary_vertices ) )
         fp_g.create_dataset( 'face', data=[x.face_id for x in mesh.boundaries] )
 
         fp_g.create_dataset( 'n', data=np.array( [x.n for x in mesh.boundaries] ) )
@@ -132,12 +132,11 @@ def write_mesh( file_name, mesh ):
 
         fp_g.create_dataset( 'type', data=[x.element_type.value for x in mesh.faces] )
 
-        fp_g.create_dataset( 'cell1', data=[x.cell_ids[0] for x in mesh.faces] )
-        fp_g.create_dataset( 'cell2', data=[x.cell_ids[1] for x in mesh.faces] )
+        fp_g.create_dataset( 'cells', data=[x.cell_ids for x in mesh.faces] )
         fp_g.create_dataset( 'boundary', data=[x.boundary_id for x in mesh.faces] )
 
         fp_g.create_dataset( 'n_vertices', data=[x.n_vertice_ids for x in mesh.faces] )
-        fp_g.create_dataset( 'vertices', data=fill_array( [x.vertice_ids for x in mesh.faces], 0, np.int32, sy=max_face_vertices ) )
+        fp_g.create_dataset( 'vertices', data=fill_array( [x.vertice_ids for x in mesh.faces], -1, np.int32, sy=max_face_vertices ) )
 
         fp_g.create_dataset( 'x', data=np.array( [x.x for x in mesh.faces] ) )
         fp_g.create_dataset( 'n', data=np.array( [x.n for x in mesh.faces] ) )

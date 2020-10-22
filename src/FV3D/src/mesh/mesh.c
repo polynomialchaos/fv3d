@@ -2,6 +2,7 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
+#include <string.h>
 #include "mesh_private.h"
 
 //##################################################################################################################################
@@ -44,14 +45,17 @@ int n_vertices = 0;
 double *vertices = NULL;
 
 int n_global_cells = 0;
+int n_local_cells = 0;
 int n_cells = 0;
 Cell_t *cells = NULL;
 
 int n_global_boundaries = 0;
+int n_local_boundaries = 0;
 int n_boundaries = 0;
 Boundary_t *boundaries = NULL;
 
 int n_global_faces = 0;
+int n_local_faces = 0;
 int n_faces = 0;
 Face_t *faces = NULL;
 
@@ -76,6 +80,7 @@ int *boundary_faces = NULL;
 void mesh_initialize();
 void mesh_finalize();
 void read_mesh_file();
+void remap_local_mesh();
 void calc_mesh_metrics();
 
 //##################################################################################################################################
@@ -95,6 +100,7 @@ void mesh_initialize()
     get_parameter( "Mesh/mesh_file", ParameterString, &mesh_file );
 
     read_mesh_file();
+    if (get_is_parallel()) remap_local_mesh();
     calc_mesh_metrics();
 }
 
@@ -134,13 +140,6 @@ void read_mesh_file()
     int is_parallel = get_is_parallel();
     int rank = get_rank();
 
-    hsize_t dims[2];
-    hsize_t offset[2];
-    hsize_t count[2];
-
-    int max_cell_vertices = 0;
-    int max_cell_faces = 0;
-
     hid_t file_id = open_hdf5_file( mesh_file );
         get_hdf5_attribute( file_id, "dimension", HDF5Int, &dimension );
         get_hdf5_attribute( file_id, "is_partitioned", HDF5Int, &is_partitioned );
@@ -149,6 +148,10 @@ void read_mesh_file()
         if (is_parallel)
         {
             check_error( (is_partitioned == 1) );
+
+            hsize_t dims[2];
+            hsize_t offset[2];
+            hsize_t count[2];
 
             hid_t group_id = open_hdf5_group( file_id, "PARTITIONS" );
                 get_hdf5_attribute( group_id, "n_partitions", HDF5Int, &n_partitions );
@@ -206,64 +209,84 @@ void read_mesh_file()
         }
 
         // the vertices
-        hid_t group_id = open_hdf5_group( file_id, "VERTICES" );
-            get_hdf5_attribute( group_id, "n_vertices", HDF5Int, &n_vertices );
+        {
+            hsize_t dims[2];
 
-            vertices = allocate( sizeof( double ) * 3 * n_vertices );
-            dims[0] = 3;
-            dims[1] = n_vertices;
-            get_hdf5_dataset_chunk_n_m( group_id, "x", HDF5Int, vertices,
-                2, dims, NULL, NULL, NULL, NULL, NULL );
-        close_hdf5_group( group_id );
+            hid_t group_id = open_hdf5_group( file_id, "VERTICES" );
+                get_hdf5_attribute( group_id, "n_vertices", HDF5Int, &n_vertices );
+
+                vertices = allocate( sizeof( double ) * 3 * n_vertices );
+                dims[0] = 3;
+                dims[1] = n_vertices;
+                get_hdf5_dataset_chunk_n_m( group_id, "x", HDF5Int, vertices,
+                    2, dims, NULL, NULL, NULL, NULL, NULL );
+            close_hdf5_group( group_id );
+        }
+
 
         // the cells
-        group_id = open_hdf5_group( file_id, "CELLS" );
-            get_hdf5_attribute( group_id, "n_cells", HDF5Int, &n_cells );
-            get_hdf5_attribute( group_id, "max_cell_vertices", HDF5Int, &max_cell_vertices );
-            get_hdf5_attribute( group_id, "max_cell_faces", HDF5Int, &max_cell_faces );
+        {
+            int max_cell_vertices = 0;
+            int max_cell_faces = 0;
 
-            n_global_cells = n_cells;
-            if (is_parallel) n_cells = n_partition_cells;
+            hsize_t dims[2];
+            hsize_t offset[2];
+            hsize_t count[2];
 
-            cells = allocate( sizeof( Cell_t ) * (n_cells + n_partition_receives) );
+            hid_t group_id = open_hdf5_group( file_id, "CELLS" );
+                get_hdf5_attribute( group_id, "n_cells", HDF5Int, &n_cells );
+                get_hdf5_attribute( group_id, "max_cell_vertices", HDF5Int, &max_cell_vertices );
+                get_hdf5_attribute( group_id, "max_cell_faces", HDF5Int, &max_cell_faces );
 
-            if (is_parallel)
-            {
-                hsize_t *stride = allocate( sizeof( hsize_t ) * (n_cells + n_partition_receives) );
-                for ( int i = 0; i < n_partition_cells; i++)
-                    stride[i] = partition_cells[i];
-                for ( int i = n_partition_cells; i < n_partition_cells + n_partition_receives; i++)
-                    stride[i] = partition_receives[i-n_partition_cells];
+                n_global_cells = n_cells;
+                if (is_parallel) n_cells = n_partition_cells;
+                n_local_cells = n_cells + n_partition_receives;
 
-                dims[0] = n_cells + n_partition_receives;
-                int *tmp_i = allocate( sizeof(int) * (n_cells + n_partition_receives) );
+                cells = allocate( sizeof( Cell_t ) * n_local_cells );
+
+                hsize_t *stride = allocate( sizeof( hsize_t ) * n_local_cells );
+                if (is_parallel)
+                {
+                    for ( int i = 0; i < n_partition_cells; i++)
+                        stride[i] = partition_cells[i];
+                    for ( int i = n_partition_cells; i < n_local_cells; i++)
+                        stride[i] = partition_receives[i-n_partition_cells];
+                }
+                else
+                {
+                    for ( int i = 0; i < n_local_cells; i++)
+                        stride[i] = i;
+                }
+
+                dims[0] = n_local_cells;
+                int *tmp_i = allocate( sizeof(int) * n_local_cells );
                 get_hdf5_dataset_select_n( group_id, "id", HDF5Int, tmp_i,
-                    1, dims, NULL, stride, (n_cells + n_partition_receives) );
-                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                    1, dims, NULL, stride, n_local_cells );
+                for ( int i = 0; i < n_local_cells; i++)
                     cells[i].id = tmp_i[i];
 
                 get_hdf5_dataset_select_n( group_id, "type", HDF5Int, tmp_i,
-                    1, dims, NULL, stride, (n_cells + n_partition_receives) );
-                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                    1, dims, NULL, stride, n_local_cells );
+                for ( int i = 0; i < n_local_cells; i++)
                     cells[i].type = tmp_i[i];
 
                 get_hdf5_dataset_select_n( group_id, "n_vertices", HDF5Int, tmp_i,
-                    1, dims, NULL, stride, (n_cells + n_partition_receives) );
-                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                    1, dims, NULL, stride, n_local_cells );
+                for ( int i = 0; i < n_local_cells; i++)
                     cells[i].n_vertices = tmp_i[i];
 
                 get_hdf5_dataset_select_n( group_id, "n_faces", HDF5Int, tmp_i,
-                    1, dims, NULL, stride, (n_cells + n_partition_receives) );
-                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                    1, dims, NULL, stride, n_local_cells );
+                for ( int i = 0; i < n_local_cells; i++)
                     cells[i].n_faces = tmp_i[i];
                 deallocate( tmp_i );
 
-                dims[0] = n_cells + n_partition_receives; offset[0] = 0; count[0] = n_cells + n_partition_receives;
+                dims[0] = n_local_cells; offset[0] = 0; count[0] = n_local_cells;
                 dims[1] = max_cell_vertices; offset[1] = 0; count[1] = max_cell_vertices;
-                tmp_i = allocate( sizeof(int) * max_cell_vertices * (n_cells + n_partition_receives) );
+                tmp_i = allocate( sizeof(int) * max_cell_vertices * n_local_cells );
                 get_hdf5_dataset_select_n_m( group_id, "vertices", HDF5Int, tmp_i,
-                    2, dims, NULL, offset, count, stride, (n_cells + n_partition_receives) );
-                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                    2, dims, NULL, offset, count, stride, n_local_cells );
+                for ( int i = 0; i < n_local_cells; i++)
                 {
                     cells[i].vertices = allocate( sizeof( int ) * cells[i].n_vertices );
                     for ( int j = 0; j < cells[i].n_vertices; j++)
@@ -271,12 +294,12 @@ void read_mesh_file()
                 }
                 deallocate( tmp_i );
 
-                dims[0] = n_cells + n_partition_receives; offset[0] = 0; count[0] = n_cells + n_partition_receives;
+                dims[0] = n_local_cells; offset[0] = 0; count[0] = n_local_cells;
                 dims[1] = max_cell_faces; offset[1] = 0; count[1] = max_cell_faces;
-                tmp_i = allocate( sizeof(int) * max_cell_faces * (n_cells + n_partition_receives) );
+                tmp_i = allocate( sizeof(int) * max_cell_faces * n_local_cells );
                 get_hdf5_dataset_select_n_m( group_id, "faces", HDF5Int, tmp_i,
-                    2, dims, NULL, offset, count, stride, (n_cells + n_partition_receives) );
-                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                    2, dims, NULL, offset, count, stride, n_local_cells );
+                for ( int i = 0; i < n_local_cells; i++)
                 {
                     cells[i].faces = allocate( sizeof( int ) * cells[i].n_faces );
                     for ( int j = 0; j < cells[i].n_faces; j++)
@@ -284,260 +307,268 @@ void read_mesh_file()
                 }
                 deallocate( tmp_i );
 
-                dims[0] = n_cells + n_partition_receives;
-                double *tmp_d = allocate( sizeof( double ) * (n_cells + n_partition_receives) );
+                dims[0] = n_local_cells;
+                double *tmp_d = allocate( sizeof( double ) * n_local_cells );
                 get_hdf5_dataset_select_n( group_id, "volume", HDF5Double, tmp_d,
-                    1, dims, NULL, stride, (n_cells + n_partition_receives) );
-                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                    1, dims, NULL, stride, n_local_cells );
+                for ( int i = 0; i < n_local_cells; i++)
                     cells[i].volume = tmp_d[i];
                 deallocate( tmp_d );
 
-                dims[0] = n_cells + n_partition_receives; offset[0] = 0; count[0] = n_cells + n_partition_receives;
+                dims[0] = n_local_cells; offset[0] = 0; count[0] = n_local_cells;
                 dims[1] = 3; offset[1] = 0; count[1] = 3;
-                tmp_d = allocate( sizeof( double ) * 3 * (n_cells + n_partition_receives) );
+                tmp_d = allocate( sizeof( double ) * 3 * n_local_cells );
                 get_hdf5_dataset_select_n_m( group_id, "x", HDF5Double, tmp_d,
-                    2, dims, NULL, offset, count, stride, (n_cells + n_partition_receives) );
-                for ( int i = 0; i < (n_cells + n_partition_receives); i++)
+                    2, dims, NULL, offset, count, stride, n_local_cells );
+                for ( int i = 0; i < n_local_cells; i++)
                     for ( int j = 0; j < 3; j++)
                         cells[i].x[j] = tmp_d[i*3+j];
                 deallocate( tmp_d );
                 deallocate( stride );
-            }
-            else
-            {
-        //             call get_hdf5_dataset( group_id, "id", cells(:)%id )
-        //             call get_hdf5_dataset( group_id, "type", cells(:)%type )
+            close_hdf5_group( group_id );
+        }
 
-        //             call get_hdf5_dataset( group_id, "n_vertices", cells(:)%n_vertices )
-        //             allocate( tmp_i(max_cell_vertices,n_cells) ); tmp_i = 0
-        //             call get_hdf5_dataset( group_id, "vertices", tmp_i )
-        //             do i = 1, n_cells
-        //                 cells(i)%vertices = tmp_i(1:cells(i)%n_vertices,i)
-        //             end do
-        //             _DEALLOCATE( tmp_i )
+        // the boundaries
+        {
+            int max_boundary_vertices = 0;
 
-        //             call get_hdf5_dataset( group_id, "n_faces", cells(:)%n_faces )
-        //             allocate( tmp_i(max_cell_faces,n_cells) ); tmp_i = 0
-        //             call get_hdf5_dataset( group_id, "faces", tmp_i )
-        //             do i = 1, n_cells
-        //                 cells(i)%faces = tmp_i(1:cells(i)%n_faces,i)
-        //             end do
-        //             _DEALLOCATE( tmp_i )
+            hsize_t dims[2];
+            hsize_t offset[2];
+            hsize_t count[2];
 
-        //             allocate( tmp_r(3,n_cells) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "x", tmp_r )
-        //             do i = 1, n_cells
-        //                 cells(i)%x = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
+            hid_t group_id = open_hdf5_group( file_id, "BOUNDARIES" );
+                get_hdf5_attribute( group_id, "n_boundaries", HDF5Int, &n_boundaries );
+                get_hdf5_attribute( group_id, "max_boundary_vertices", HDF5Int, &max_boundary_vertices );
 
-        //             call get_hdf5_dataset( group_id, "volume", cells(:)%volume )
-            }
-        close_hdf5_group( group_id );
+                n_global_boundaries = n_boundaries;
+                if (is_parallel) n_boundaries = n_partition_boundaries;
+                n_local_boundaries = n_boundaries;
+
+                boundaries = allocate( sizeof( Boundary_t ) * n_local_boundaries );
+
+                hsize_t *stride = allocate( sizeof( hsize_t ) * n_local_boundaries );
+                if (is_parallel)
+                {
+                    for ( int i = 0; i < n_partition_boundaries; i++)
+                        stride[i] = partition_boundaries[i];
+                }
+                else
+                {
+                    for ( int i = 0; i < n_local_boundaries; i++)
+                        stride[i] = i;
+                }
+
+                dims[0] = n_local_boundaries;
+                int *tmp_i = allocate( sizeof(int) * n_local_boundaries );
+                get_hdf5_dataset_select_n( group_id, "id", HDF5Int, tmp_i,
+                    1, dims, NULL, stride, n_local_boundaries );
+                for ( int i = 0; i < n_local_boundaries; i++)
+                    boundaries[i].id = tmp_i[i];
+
+                get_hdf5_dataset_select_n( group_id, "type", HDF5Int, tmp_i,
+                    1, dims, NULL, stride, n_local_boundaries );
+                for ( int i = 0; i < n_local_boundaries; i++)
+                    boundaries[i].type = tmp_i[i];
+
+                get_hdf5_dataset_select_n( group_id, "n_vertices", HDF5Int, tmp_i,
+                    1, dims, NULL, stride, n_local_boundaries );
+                for ( int i = 0; i < n_local_boundaries; i++)
+                    boundaries[i].n_vertices = tmp_i[i];
+
+                get_hdf5_dataset_select_n( group_id, "face", HDF5Int, tmp_i,
+                    1, dims, NULL, stride, n_local_boundaries );
+                for ( int i = 0; i < n_local_boundaries; i++)
+                    boundaries[i].face = tmp_i[i];
+                deallocate( tmp_i );
+
+                dims[0] = n_local_boundaries; offset[0] = 0; count[0] = n_local_boundaries;
+                dims[1] = max_boundary_vertices; offset[1] = 0; count[1] = max_boundary_vertices;
+                tmp_i = allocate( sizeof(int) * max_boundary_vertices * n_local_boundaries );
+                get_hdf5_dataset_select_n_m( group_id, "vertices", HDF5Int, tmp_i,
+                    2, dims, NULL, offset, count, stride, n_local_boundaries );
+                for ( int i = 0; i < n_local_boundaries; i++)
+                {
+                    boundaries[i].vertices = allocate( sizeof( int ) * boundaries[i].n_vertices );
+                    for ( int j = 0; j < boundaries[i].n_vertices; j++)
+                        boundaries[i].vertices[j] = tmp_i[i*max_boundary_vertices+j];
+                }
+                deallocate( tmp_i );
+
+                dims[0] = n_local_boundaries;
+                double *tmp_d = allocate( sizeof( double ) * n_local_boundaries );
+                get_hdf5_dataset_select_n( group_id, "distance", HDF5Double, tmp_d,
+                    1, dims, NULL, stride, n_local_boundaries );
+                for ( int i = 0; i < n_local_boundaries; i++)
+                    boundaries[i].distance = tmp_d[i];
+                deallocate( tmp_d );
+
+                dims[0] = n_local_boundaries; offset[0] = 0; count[0] = n_local_boundaries;
+                dims[1] = 3; offset[1] = 0; count[1] = 3;
+                tmp_d = allocate( sizeof( double ) * 3 * n_local_boundaries );
+                get_hdf5_dataset_select_n_m( group_id, "n", HDF5Double, tmp_d,
+                    2, dims, NULL, offset, count, stride, n_local_boundaries );
+                for ( int i = 0; i < n_local_boundaries; i++)
+                    for ( int j = 0; j < 3; j++)
+                        boundaries[i].n[j] = tmp_d[i*3+j];
+
+                get_hdf5_dataset_select_n_m( group_id, "t1", HDF5Double, tmp_d,
+                    2, dims, NULL, offset, count, stride, n_local_boundaries );
+                for ( int i = 0; i < n_local_boundaries; i++)
+                    for ( int j = 0; j < 3; j++)
+                        boundaries[i].t1[j] = tmp_d[i*3+j];
+
+                get_hdf5_dataset_select_n_m( group_id, "t2", HDF5Double, tmp_d,
+                    2, dims, NULL, offset, count, stride, n_local_boundaries );
+                for ( int i = 0; i < n_local_boundaries; i++)
+                    for ( int j = 0; j < 3; j++)
+                        boundaries[i].t2[j] = tmp_d[i*3+j];
+                deallocate( tmp_d );
+                deallocate( stride );
+            close_hdf5_group( group_id );
+        }
+
+        // the faces
+        {
+            int max_face_vertices = 0;
+
+            hsize_t dims[2];
+            hsize_t offset[2];
+            hsize_t count[2];
+
+            hid_t group_id = open_hdf5_group( file_id, "FACES" );
+                get_hdf5_attribute( group_id, "n_faces", HDF5Int, &n_faces );
+                get_hdf5_attribute( group_id, "max_face_vertices", HDF5Int, &max_face_vertices );
+
+                n_global_faces = n_faces;
+                if (is_parallel) n_faces = n_partition_faces;
+                n_local_faces = n_faces;
+
+                faces = allocate( sizeof( Face_t ) * n_local_faces );
+
+                hsize_t *stride = allocate( sizeof( hsize_t ) * n_local_faces );
+                if (is_parallel)
+                {
+                    for ( int i = 0; i < n_partition_faces; i++)
+                        stride[i] = partition_faces[i];
+                }
+                else
+                {
+                    for ( int i = 0; i < n_local_faces; i++)
+                        stride[i] = i;
+                }
+
+                dims[0] = n_local_faces;
+                int *tmp_i = allocate( sizeof(int) * n_local_faces );
+                get_hdf5_dataset_select_n( group_id, "type", HDF5Int, tmp_i,
+                    1, dims, NULL, stride, n_local_faces );
+                for ( int i = 0; i < n_local_faces; i++)
+                    faces[i].type = tmp_i[i];
+
+                get_hdf5_dataset_select_n( group_id, "n_vertices", HDF5Int, tmp_i,
+                    1, dims, NULL, stride, n_local_faces );
+                for ( int i = 0; i < n_local_faces; i++)
+                    faces[i].n_vertices = tmp_i[i];
+
+                get_hdf5_dataset_select_n( group_id, "boundary", HDF5Int, tmp_i,
+                    1, dims, NULL, stride, n_local_faces );
+                for ( int i = 0; i < n_local_faces; i++)
+                    faces[i].boundary = tmp_i[i];
+                deallocate( tmp_i );
+
+                dims[0] = n_local_faces; offset[0] = 0; count[0] = n_local_faces;
+                dims[1] = max_face_vertices; offset[1] = 0; count[1] = max_face_vertices;
+                tmp_i = allocate( sizeof(int) * max_face_vertices * n_local_faces );
+                get_hdf5_dataset_select_n_m( group_id, "vertices", HDF5Int, tmp_i,
+                    2, dims, NULL, offset, count, stride, n_local_faces );
+                for ( int i = 0; i < n_local_faces; i++)
+                {
+                    faces[i].vertices = allocate( sizeof( int ) * faces[i].n_vertices );
+                    for ( int j = 0; j < faces[i].n_vertices; j++)
+                        faces[i].vertices[j] = tmp_i[i*max_face_vertices+j];
+                }
+                deallocate( tmp_i );
+
+                dims[0] = n_local_faces; offset[0] = 0; count[0] = n_local_faces;
+                dims[1] = 2; offset[1] = 0; count[1] = 2;
+                tmp_i = allocate( sizeof(int) * 2 * n_local_faces );
+                get_hdf5_dataset_select_n_m( group_id, "cells", HDF5Int, tmp_i,
+                    2, dims, NULL, offset, count, stride, n_local_faces );
+                for ( int i = 0; i < n_local_faces; i++)
+                {
+                    for ( int j = 0; j < 2; j++)
+                        faces[i].cells[j] = tmp_i[i*2+j];
+                }
+                deallocate( tmp_i );
+
+                dims[0] = n_local_faces;
+                double *tmp_d = allocate( sizeof( double ) * n_local_faces );
+                get_hdf5_dataset_select_n( group_id, "area", HDF5Double, tmp_d,
+                    1, dims, NULL, stride, n_local_faces );
+                for ( int i = 0; i < n_local_faces; i++)
+                    faces[i].area = tmp_d[i];
+
+                get_hdf5_dataset_select_n( group_id, "lambda", HDF5Double, tmp_d,
+                    1, dims, NULL, stride, n_local_faces );
+                for ( int i = 0; i < n_local_faces; i++)
+                    faces[i].lambda = tmp_d[i];
+                deallocate( tmp_d );
+
+                dims[0] = n_local_faces; offset[0] = 0; count[0] = n_local_faces;
+                dims[1] = 3; offset[1] = 0; count[1] = 3;
+                tmp_d = allocate( sizeof( double ) * 3 * n_local_faces );
+                get_hdf5_dataset_select_n_m( group_id, "x", HDF5Double, tmp_d,
+                    2, dims, NULL, offset, count, stride, n_local_faces );
+                for ( int i = 0; i < n_local_faces; i++)
+                    for ( int j = 0; j < 3; j++)
+                        faces[i].x[j] = tmp_d[i*3+j];
+
+                get_hdf5_dataset_select_n_m( group_id, "n", HDF5Double, tmp_d,
+                    2, dims, NULL, offset, count, stride, n_local_faces );
+                for ( int i = 0; i < n_local_faces; i++)
+                    for ( int j = 0; j < 3; j++)
+                        faces[i].n[j] = tmp_d[i*3+j];
+
+                get_hdf5_dataset_select_n_m( group_id, "t1", HDF5Double, tmp_d,
+                    2, dims, NULL, offset, count, stride, n_local_faces );
+                for ( int i = 0; i < n_local_faces; i++)
+                    for ( int j = 0; j < 3; j++)
+                        faces[i].t1[j] = tmp_d[i*3+j];
+
+                get_hdf5_dataset_select_n_m( group_id, "t2", HDF5Double, tmp_d,
+                    2, dims, NULL, offset, count, stride, n_local_faces );
+                for ( int i = 0; i < n_local_faces; i++)
+                    for ( int j = 0; j < 3; j++)
+                        faces[i].t2[j] = tmp_d[i*3+j];
+                deallocate( tmp_d );
+                deallocate( stride );
+            close_hdf5_group( group_id );
+        }
+
+        // the regions
+        {
+            hsize_t dims[2];
+            hsize_t offset[2];
+            hsize_t count[2];
+
+            hid_t group_id = open_hdf5_group( file_id, "REGIONS" );
+                get_hdf5_attribute( group_id, "n_regions", HDF5Int, &n_regions );
+
+                regions = allocate( sizeof( Region_t ) * n_regions );
+
+                dims[0] = n_regions;
+                string_t *tmp_s = allocate_hdf5_string_buffer( n_regions, get_hdf5_dataset_size( group_id, "name" ) );
+                get_hdf5_dataset_chunk_n( group_id, "name", HDF5String, tmp_s[0],
+                    1, dims, NULL, NULL, NULL, NULL, NULL );
+                for ( int i = 0; i < n_regions; i++ )
+                {
+                    regions[i].name = allocate( sizeof( char ) * (len_trim( tmp_s[i] ) + 1) );
+                    strcpy( tmp_s[i], regions[i].name );
+                }
+
+                deallocate_hdf5_string_buffer( &tmp_s );
+            close_hdf5_group( group_id );
+        }
     close_hdf5_file( file_id );
-        // integer                             :: max_cell_vertices = 0            !< maximum number of cell vertices
-    // integer                             :: max_cell_faces = 0               !< maximum number of cell faces
-    // integer                             :: max_boundary_vertices = 0        !< maximum number of boundary vertices
-    // integer                             :: max_face_vertices = 0            !< maximum number of face vertices
-
-
-
-        //     ! the boundaries
-        //     group_id = open_hdf5_group( file_id, "BOUNDARIES" )
-        //         call get_hdf5_attribute( group_id, "n_boundaries", n_boundaries ); n_global_boundaries = n_boundaries
-        //         call get_hdf5_attribute( group_id, "max_boundary_vertices", max_boundary_vertices )
-        //         if( is_parallel ) n_boundaries = n_partition_boundaries
-
-        //         allocate( boundaries(n_boundaries) )
-
-        //         if( is_parallel ) then
-        //             call get_hdf5_dataset( group_id, "id", boundaries(:)%id, stride=partition_boundaries )
-        //             call get_hdf5_dataset( group_id, "type", boundaries(:)%type, stride=partition_boundaries )
-
-        //             call get_hdf5_dataset( group_id, "n_vertices", boundaries(:)%n_vertices, stride=partition_boundaries )
-        //             allocate( tmp_i(max_boundary_vertices,n_boundaries) ); tmp_i = 0
-        //             call get_hdf5_dataset( group_id, "vertices", tmp_i, stride=partition_boundaries )
-        //             do i = 1, n_boundaries
-        //                 boundaries(i)%vertices = tmp_i(1:boundaries(i)%n_vertices,i)
-        //             end do
-        //             _DEALLOCATE( tmp_i )
-
-        //             call get_hdf5_dataset( group_id, "face", boundaries(:)%face, stride=partition_boundaries )
-        //             call get_hdf5_dataset( group_id, "distance", boundaries(:)%distance, stride=partition_boundaries )
-
-        //             allocate( tmp_r(3,n_boundaries) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "n", tmp_r, stride=partition_boundaries )
-        //             do i = 1, n_boundaries
-        //                 boundaries(i)%n = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
-
-        //             allocate( tmp_r(3,n_boundaries) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "t1", tmp_r, stride=partition_boundaries )
-        //             do i = 1, n_boundaries
-        //                 boundaries(i)%t1 = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
-
-        //             allocate( tmp_r(3,n_boundaries) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "t2", tmp_r, stride=partition_boundaries )
-        //             do i = 1, n_boundaries
-        //                 boundaries(i)%t2 = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
-        //         else
-        //             call get_hdf5_dataset( group_id, "id", boundaries(:)%id )
-        //             call get_hdf5_dataset( group_id, "type", boundaries(:)%type )
-
-        //             call get_hdf5_dataset( group_id, "n_vertices", boundaries(:)%n_vertices )
-        //             allocate( tmp_i(max_boundary_vertices,n_boundaries) ); tmp_i = 0
-        //             call get_hdf5_dataset( group_id, "vertices", tmp_i )
-        //             do i = 1, n_boundaries
-        //                 boundaries(i)%vertices = tmp_i(1:boundaries(i)%n_vertices,i)
-        //             end do
-        //             _DEALLOCATE( tmp_i )
-
-        //             call get_hdf5_dataset( group_id, "face", boundaries(:)%face )
-        //             call get_hdf5_dataset( group_id, "distance", boundaries(:)%distance )
-
-        //             allocate( tmp_r(3,n_boundaries) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "n", tmp_r )
-        //             do i = 1, n_boundaries
-        //                 boundaries(i)%n = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
-
-        //             allocate( tmp_r(3,n_boundaries) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "t1", tmp_r )
-        //             do i = 1, n_boundaries
-        //                 boundaries(i)%t1 = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
-
-        //             allocate( tmp_r(3,n_boundaries) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "t2", tmp_r )
-        //             do i = 1, n_boundaries
-        //                 boundaries(i)%t2 = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
-        //         end if
-        //     call close_hdf5_group( group_id,"BOUNDARIES" )
-
-        //     ! the faces
-        //     group_id = open_hdf5_group( file_id, "FACES" )
-        //         call get_hdf5_attribute( group_id, "n_faces", n_faces ); n_global_faces = n_faces
-        //         call get_hdf5_attribute( group_id, "max_face_vertices", max_face_vertices )
-        //         if( is_parallel ) n_faces = n_partition_faces
-
-        //         allocate( faces(n_faces) )
-
-        //         if( is_parallel ) then
-        //             call get_hdf5_dataset( group_id, "type", faces(:)%type, stride=partition_faces )
-        //             call get_hdf5_dataset( group_id, "cell1", faces(:)%cells(1), stride=partition_faces )
-        //             call get_hdf5_dataset( group_id, "cell2", faces(:)%cells(2), stride=partition_faces )
-        //             call get_hdf5_dataset( group_id, "boundary", faces(:)%boundary, stride=partition_faces )
-
-        //             call get_hdf5_dataset( group_id, "n_vertices", faces(:)%n_vertices, stride=partition_faces )
-        //             allocate( tmp_i(max_face_vertices,n_faces) ); tmp_i = 0
-        //             call get_hdf5_dataset( group_id, "vertices", tmp_i, stride=partition_faces )
-        //             do i = 1, n_cells
-        //                 faces(i)%vertices = tmp_i(1:faces(i)%n_vertices,i)
-        //             end do
-        //             _DEALLOCATE( tmp_i )
-
-        //             call get_hdf5_dataset( group_id, "area", faces(:)%area, stride=partition_faces )
-        //             call get_hdf5_dataset( group_id, "lambda", faces(:)%lambda, stride=partition_faces )
-
-        //             allocate( tmp_r(3,n_faces) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "x", tmp_r, stride=partition_faces )
-        //             do i = 1, n_faces
-        //                 faces(i)%x = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
-
-        //             allocate( tmp_r(3,n_faces) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "n", tmp_r, stride=partition_faces )
-        //             do i = 1, n_faces
-        //                 faces(i)%n = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
-
-        //             allocate( tmp_r(3,n_faces) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "t1", tmp_r, stride=partition_faces )
-        //             do i = 1, n_faces
-        //                 faces(i)%t1 = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
-
-        //             allocate( tmp_r(3,n_faces) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "t2", tmp_r, stride=partition_faces )
-        //             do i = 1, n_faces
-        //                 faces(i)%t2 = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
-        //         else
-        //             call get_hdf5_dataset( group_id, "type", faces(:)%type )
-        //             call get_hdf5_dataset( group_id, "cell1", faces(:)%cells(1) )
-        //             call get_hdf5_dataset( group_id, "cell2", faces(:)%cells(2) )
-        //             call get_hdf5_dataset( group_id, "boundary", faces(:)%boundary )
-
-        //             call get_hdf5_dataset( group_id, "n_vertices", faces(:)%n_vertices )
-        //             allocate( tmp_i(max_face_vertices,n_faces) ); tmp_i = 0
-        //             call get_hdf5_dataset( group_id, "vertices", tmp_i )
-        //             do i = 1, n_cells
-        //                 faces(i)%vertices = tmp_i(1:faces(i)%n_vertices,i)
-        //             end do
-        //             _DEALLOCATE( tmp_i )
-
-        //             call get_hdf5_dataset( group_id, "area", faces(:)%area )
-        //             call get_hdf5_dataset( group_id, "lambda", faces(:)%lambda )
-
-        //             allocate( tmp_r(3,n_faces) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "x", tmp_r )
-        //             do i = 1, n_faces
-        //                 faces(i)%x = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
-
-        //             allocate( tmp_r(3,n_faces) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "n", tmp_r )
-        //             do i = 1, n_faces
-        //                 faces(i)%n = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
-
-        //             allocate( tmp_r(3,n_faces) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "t1", tmp_r )
-        //             do i = 1, n_faces
-        //                 faces(i)%t1 = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
-
-        //             allocate( tmp_r(3,n_faces) ); tmp_r = 0
-        //             call get_hdf5_dataset( group_id, "t2", tmp_r )
-        //             do i = 1, n_faces
-        //                 faces(i)%t2 = tmp_r(:,i)
-        //             end do
-        //             _DEALLOCATE( tmp_r )
-        //         end if
-        //     call close_hdf5_group( group_id, "FACES" )
-
-        //     ! the regions
-        //     group_id = open_hdf5_group( file_id, "REGIONS" )
-        //         call get_hdf5_attribute( group_id, "n_regions", n_regions )
-
-        //         allocate( regions(n_regions) )
-
-        //         allocate( tmp_c(n_regions) ); tmp_c = ""
-        //         call get_hdf5_dataset( group_id, "name", tmp_c )
-        //         do i = 1, n_regions
-        //             regions(i)%name = tmp_c(i)
-        //         end do
-        //         _DEALLOCATE( tmp_c )
-        //     call close_hdf5_group( group_id, "REGIONS" )
-        // call close_hdf5_file( file_id, mesh_file )
-
-        // if( is_parallel ) call remap_local_mesh()
 }
 
 void remap_local_mesh()
@@ -572,7 +603,7 @@ void remap_local_mesh()
         // end do
 
         // ! set the local cell indices
-        // do i = 1, n_cells + n_partition_receives
+        // do i = 1, n_local_cells
         //     do j = 1, cells(i)%n_faces
         //         cells(i)%faces(j) = global_faces(cells(i)%faces(j))
         //     end do
@@ -667,7 +698,7 @@ void calc_mesh_metrics()
         //         internal_faces(iif) = i
         //     else
         //         dist_cell_2(:,i)    = 0.0
-        //         faces(i)%cells(2)   = n_cells + n_partition_receives + faces(i)%boundary
+        //         faces(i)%cells(2)   = n_local_cells + faces(i)%boundary
         //         ibf                 = ibf + 1
         //         boundary_faces(ibf) = i
         //     end if
