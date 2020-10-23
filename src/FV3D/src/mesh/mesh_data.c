@@ -71,7 +71,44 @@ Mesh_t *allocate_mesh()
     tmp->regions    = allocate( sizeof( Regions_t ) );
 
     tmp->total_volume = 0.0;
+    tmp->flow_region = -1;
     return tmp;
+}
+
+void print_mesh_info( Mesh_t *mesh )
+{
+    printf_r( "%d\n", mesh->dimension      );
+    printf_r( "%d\n", mesh->is_partitioned );
+
+    printf_r( "%d\n", mesh->n_partitions           );
+    printf_r( "%d\n", mesh->n_partition_cells      );
+    printf_r( "%d\n", mesh->n_partition_boundaries );
+    printf_r( "%d\n", mesh->n_partition_faces      );
+    printf_r( "%d\n", mesh->n_partition_sends      );
+    printf_r( "%d\n", mesh->n_partition_receives   );
+
+    printf_r( "%d\n", mesh->n_vertices );
+
+    printf_r( "%d\n", mesh->n_global_cells    );
+    printf_r( "%d\n", mesh->n_local_cells     );
+    printf_r( "%d\n", mesh->n_cells           );
+    printf_r( "%d\n", mesh->max_cell_vertices );
+    printf_r( "%d\n", mesh->max_cell_faces    );
+
+    printf_r( "%d\n", mesh->n_global_boundaries   );
+    printf_r( "%d\n", mesh->n_local_boundaries    );
+    printf_r( "%d\n", mesh->n_boundaries          );
+    printf_r( "%d\n", mesh->max_boundary_vertices );
+
+    printf_r( "%d\n", mesh->n_global_faces    );
+    printf_r( "%d\n", mesh->n_local_faces     );
+    printf_r( "%d\n", mesh->n_faces           );
+    printf_r( "%d\n", mesh->max_face_vertices );
+
+    printf_r( "%d\n", mesh->n_regions );
+
+    printf_r( "%d\n", mesh->total_volume );
+    printf_r( "%d\n", mesh->flow_region  );
 }
 
 void deallocate_mesh( Mesh_t **mesh )
@@ -169,9 +206,7 @@ void allocate_faces( Faces_t *faces, int n_faces, int max_vertices )
 void allocate_regions( Regions_t *regions, int n_regions, int length )
 {
     regions->name           = allocate_hdf5_string_buffer( n_regions, length );
-    // regions->is_boundary    = allocate( sizeof( int ) * n_regions );
-
-    // set_value_int_n( 0, regions->is_boundary, n_regions );
+    regions->is_boundary    = allocate( sizeof( int ) * n_regions );
 }
 
 void deallocate_partition( Partition_t **partition )

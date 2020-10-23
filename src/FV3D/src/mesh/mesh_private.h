@@ -93,7 +93,7 @@ typedef struct Faces
 typedef struct Regions
 {
     string_t *name;
-    // int *is_boundary;
+    int *is_boundary;
 
     // double *phi;
     // int *type;
@@ -139,6 +139,7 @@ typedef struct Mesh
     Regions_t *regions;
 
     double total_volume;
+    int flow_region;
 } Mesh_t;
 
 //##################################################################################################################################
@@ -147,6 +148,7 @@ typedef struct Mesh
 void mesh_define();
 
 Mesh_t *allocate_mesh();
+void print_mesh_info( Mesh_t *mesh );
 void deallocate_mesh( Mesh_t **mesh );
 
 void allocate_partition( Partition_t *partition, int n_partitions,

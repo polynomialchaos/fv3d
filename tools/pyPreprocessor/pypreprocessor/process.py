@@ -3,7 +3,7 @@
 # (c) Florian Eigentler | 2020
 #-----------------------------------------------------------------------------------------------------------------------------------
 import numpy as np
-from pypreprocessor.utilities import Mesh, ElementType, Cell, Boundary, Cell, metis_part_mesh_nodal
+from pypreprocessor.utilities import Mesh, ElementType, Cell, Boundary, Cell, Region, metis_part_mesh_nodal
 from pypreprocessor.utilities import calc_area, calc_distance, calc_normal, calc_t1, calc_t2, calc_volume, calc_weight
 
 ####################################################################################################################################
@@ -21,6 +21,7 @@ class ProcessMesh( Mesh ):
         self.cells          = []
         self.boundaries     = []
         self.faces          = []
+        self.regions        = [Region( x ) for x in self.regions]
 
         self._element_to_cell_boundaries()
         self._generate_cell_faces()
@@ -50,6 +51,9 @@ class ProcessMesh( Mesh ):
             boundary.t1         = calc_t1( boundary )
             boundary.t2         = calc_t2( boundary )
             boundary.distance   = calc_distance( self.cells, self.faces, boundary )
+
+            region = self.regions[boundary.region_id]
+            region.is_boundary = True
 
         for cell in self.cells:
             cell.dx = np.array( cell.dx )

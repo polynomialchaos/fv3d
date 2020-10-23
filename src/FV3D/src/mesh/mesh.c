@@ -49,6 +49,8 @@ void mesh_initialize()
     read_mesh_file( global_mesh );
     if (get_is_parallel()) remap_local_mesh( global_mesh );
     calc_mesh_metrics( global_mesh );
+
+    print_mesh_info( global_mesh );
 }
 
 void mesh_finalize()
@@ -382,6 +384,10 @@ void read_mesh_file( Mesh_t *mesh )
                 dims[0] = mesh->n_regions;
                 get_hdf5_dataset_chunk_n( group_id, "name", HDF5String, mesh->regions->name[0],
                     1, dims, NULL, NULL, NULL, NULL, NULL );
+
+                dims[0] = mesh->n_regions;
+                get_hdf5_dataset_chunk_n( group_id, "is_boundary", HDF5Int, mesh->regions->is_boundary,
+                    1, dims, NULL, NULL, NULL, NULL, NULL );
             close_hdf5_group( group_id );
         }
     close_hdf5_file( file_id );
@@ -552,6 +558,15 @@ void calc_mesh_metrics( Mesh_t *mesh )
 
             mesh->faces->boundary_faces[l] = i;
             l += 1;
+        }
+    }
+
+    for ( int i = 0; i < mesh->n_regions; i++)
+    {
+        if (mesh->regions->is_boundary[i] == 0)
+        {
+            mesh->flow_region = i;
+            break;
         }
     }
 }

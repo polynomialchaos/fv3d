@@ -2,7 +2,7 @@
 # pyPreprocessor - Python package for FV3D preprocessing
 # (c) Florian Eigentler | 2020
 #-----------------------------------------------------------------------------------------------------------------------------------
-from .element import ElementType, Element, Cell, Boundary, Face
+from .element import ElementType, Element, Cell, Boundary, Face, Region
 from .mesh import Mesh
 from .metis import metis_part_mesh_nodal
 from .geometry import calc_area, calc_distance, calc_normal, calc_t1, calc_t2, calc_volume, calc_weight

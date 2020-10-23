@@ -50,7 +50,7 @@ def write_mesh( file_name, mesh ):
 
     with h5py.File( file_name, 'w' ) as fp:
         fp.attrs['dimension'] = [mesh.dimension]
-        fp.attrs['is_partitioned'] = [1 if mesh.is_partitioned else 0]
+        fp.attrs['is_partitioned'] = [int( mesh.is_partitioned )]
 
         if mesh.is_partitioned:
             fp_g = fp.create_group( 'PARTITIONS' )
@@ -152,7 +152,8 @@ def write_mesh( file_name, mesh ):
         fp_g = fp.create_group( 'REGIONS' )
         fp_g.attrs['n_regions'] = [len( mesh.regions )]
 
-        fp_g.create_dataset( 'name', data=[np.string_( x ) for x in mesh.regions] )
+        fp_g.create_dataset( 'name', data=[np.string_( x.name ) for x in mesh.regions] )
+        fp_g.create_dataset( 'is_boundary', data=[int( x.is_boundary ) for x in mesh.regions] )
 
 def change_to_numpy_array( mesh ):
     for x in mesh.cells:

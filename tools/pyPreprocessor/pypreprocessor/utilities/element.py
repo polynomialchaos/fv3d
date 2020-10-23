@@ -117,6 +117,15 @@ class Face( Element ):
         self.area           = area
         self.weight         = weight
 
+class Region( Element ):
+    def __init__( self, name, is_boundary=False ):
+        self.name           = name
+        self.is_boundary    = is_boundary
+
+    @property
+    def n_vertice_ids( self ):
+        raise NotImplementedError
+
 ####################################################################################################################################
 # Functions
 #-----------------------------------------------------------------------------------------------------------------------------------
