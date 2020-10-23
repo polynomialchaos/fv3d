@@ -22,6 +22,13 @@
 //----------------------------------------------------------------------------------------------------------------------------------
 typedef struct Partition_t
 {
+    int n_partitions;
+    int n_partition_cells;
+    int n_partition_boundaries;
+    int n_partition_faces;
+    int n_partition_sends;
+    int n_partition_receives;
+
     int *partition_cells;
     int *partition_boundaries;
     int *partition_faces;
@@ -38,11 +45,19 @@ typedef struct Partition_t
 
 typedef struct Vertices
 {
+    int n_vertices;
+
     double *x;
 } Vertices_t;
 
 typedef struct Cells
 {
+    int n_global_cells;
+    int n_local_cells;
+    int n_cells;
+    int max_cell_vertices;
+    int max_cell_faces;
+
     int *id;
     int *type;
     int *n_vertices;
@@ -56,6 +71,11 @@ typedef struct Cells
 
 typedef struct Boundaries
 {
+    int n_global_boundaries;
+    int n_local_boundaries;
+    int n_boundaries;
+    int max_boundary_vertices;
+
     int *id;
     int *type;
     int *n_vertices;
@@ -69,6 +89,11 @@ typedef struct Boundaries
 
 typedef struct Faces
 {
+    int n_global_faces;
+    int n_local_faces;
+    int n_faces;
+    int max_face_vertices;
+
     int *type;
     int *n_vertices;
     int *vertices;
@@ -92,12 +117,13 @@ typedef struct Faces
 
 typedef struct Regions
 {
+    int n_regions;
+    int max_name_length;
+
     string_t *name;
     int *is_boundary;
 
-    // double *phi;
-    // int *type;
-    // int *function_id;
+    int flow_region;
 } Regions_t;
 
 typedef struct Mesh
@@ -105,41 +131,14 @@ typedef struct Mesh
     int dimension;
     int is_partitioned;
 
-    int n_partitions;
-    int n_partition_cells;
-    int n_partition_boundaries;
-    int n_partition_faces;
-    int n_partition_sends;
-    int n_partition_receives;
     Partition_t *partition;
-
-    int n_vertices;
     Vertices_t *vertices;
-
-    int n_global_cells;
-    int n_local_cells;
-    int n_cells;
-    int max_cell_vertices;
-    int max_cell_faces;
     Cells_t *cells;
-
-    int n_global_boundaries;
-    int n_local_boundaries;
-    int n_boundaries;
-    int max_boundary_vertices;
     Boundaries_t *boundaries;
-
-    int n_global_faces;
-    int n_local_faces;
-    int n_faces;
-    int max_face_vertices;
     Faces_t *faces;
-
-    int n_regions;
     Regions_t *regions;
 
     double total_volume;
-    int flow_region;
 } Mesh_t;
 
 //##################################################################################################################################
@@ -157,6 +156,6 @@ void allocate_vertices( Vertices_t *vertices, int n_vertices );
 void allocate_cells( Cells_t *cells, int n_cells, int max_vertices, int max_faces );
 void allocate_boundaries( Boundaries_t *boundaries, int n_boundaries, int max_vertices );
 void allocate_faces( Faces_t *faces, int n_faces, int max_vertices );
-void allocate_regions( Regions_t *regions, int n_regions, int length );
+void allocate_regions( Regions_t *regions, int n_regions, int max_name_length );
 
 #endif /* MESH_PRIVATE_H */

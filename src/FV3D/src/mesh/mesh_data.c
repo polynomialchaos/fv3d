@@ -37,78 +37,79 @@ Mesh_t *allocate_mesh()
     tmp->dimension      = 0;
     tmp->is_partitioned = 0;
 
-    tmp->n_partitions           = 0;
-    tmp->n_partition_cells      = 0;
-    tmp->n_partition_boundaries = 0;
-    tmp->n_partition_faces      = 0;
-    tmp->n_partition_sends      = 0;
-    tmp->n_partition_receives   = 0;
-    tmp->partition              = allocate( sizeof( Partition_t ) );
+    tmp->partition                          = allocate( sizeof( Partition_t ) );
+    tmp->partition->n_partitions            = 0;
+    tmp->partition->n_partition_cells       = 0;
+    tmp->partition->n_partition_boundaries  = 0;
+    tmp->partition->n_partition_faces       = 0;
+    tmp->partition->n_partition_sends       = 0;
+    tmp->partition->n_partition_receives    = 0;
 
-    tmp->n_vertices = 0;
-    tmp->vertices   = allocate( sizeof( Vertices_t ) );
+    tmp->vertices               = allocate( sizeof( Vertices_t ) );
+    tmp->vertices->n_vertices   = 0;
 
-    tmp->n_global_cells     = 0;
-    tmp->n_local_cells      = 0;
-    tmp->n_cells            = 0;
-    tmp->max_cell_vertices  = 0;
-    tmp->max_cell_faces     = 0;
-    tmp->cells              = allocate( sizeof( Cells_t ) );
+    tmp->cells                      = allocate( sizeof( Cells_t ) );
+    tmp->cells->n_global_cells      = 0;
+    tmp->cells->n_local_cells       = 0;
+    tmp->cells->n_cells             = 0;
+    tmp->cells->max_cell_vertices   = 0;
+    tmp->cells->max_cell_faces      = 0;
 
-    tmp->n_global_boundaries    = 0;
-    tmp->n_local_boundaries     = 0;
-    tmp->n_boundaries           = 0;
-    tmp->max_boundary_vertices  = 0;
-    tmp->boundaries             = allocate( sizeof( Boundaries_t ) );
+    tmp->boundaries                         = allocate( sizeof( Boundaries_t ) );
+    tmp->boundaries->n_global_boundaries    = 0;
+    tmp->boundaries->n_local_boundaries     = 0;
+    tmp->boundaries->n_boundaries           = 0;
+    tmp->boundaries->max_boundary_vertices  = 0;
 
-    tmp->n_global_faces     = 0;
-    tmp->n_local_faces      = 0;
-    tmp->n_faces            = 0;
-    tmp->max_face_vertices  = 0;
-    tmp->faces              = allocate( sizeof( Faces_t ) );
+    tmp->faces                      = allocate( sizeof( Faces_t ) );
+    tmp->faces->n_global_faces      = 0;
+    tmp->faces->n_local_faces       = 0;
+    tmp->faces->n_faces             = 0;
+    tmp->faces->max_face_vertices   = 0;
 
-    tmp->n_regions  = 0;
-    tmp->regions    = allocate( sizeof( Regions_t ) );
+    tmp->regions                = allocate( sizeof( Regions_t ) );
+    tmp->regions->n_regions     = 0;
+    tmp->regions->flow_region   = -1;
 
     tmp->total_volume = 0.0;
-    tmp->flow_region = -1;
+
     return tmp;
 }
 
 void print_mesh_info( Mesh_t *mesh )
 {
-    printf_r( "%d\n", mesh->dimension      );
-    printf_r( "%d\n", mesh->is_partitioned );
+    printf_r( "dimension      = %d\n", mesh->dimension      );
+    printf_r( "is_partitioned = %d\n", mesh->is_partitioned );
 
-    printf_r( "%d\n", mesh->n_partitions           );
-    printf_r( "%d\n", mesh->n_partition_cells      );
-    printf_r( "%d\n", mesh->n_partition_boundaries );
-    printf_r( "%d\n", mesh->n_partition_faces      );
-    printf_r( "%d\n", mesh->n_partition_sends      );
-    printf_r( "%d\n", mesh->n_partition_receives   );
+    printf_r( "n_partitions           = %d\n", mesh->partition->n_partitions           );
+    printf_r( "n_partition_cells      = %d\n", mesh->partition->n_partition_cells      );
+    printf_r( "n_partition_boundaries = %d\n", mesh->partition->n_partition_boundaries );
+    printf_r( "n_partition_faces      = %d\n", mesh->partition->n_partition_faces      );
+    printf_r( "n_partition_sends      = %d\n", mesh->partition->n_partition_sends      );
+    printf_r( "n_partition_receives   = %d\n", mesh->partition->n_partition_receives   );
 
-    printf_r( "%d\n", mesh->n_vertices );
+    printf_r( "n_vertices = %d\n", mesh->vertices->n_vertices );
 
-    printf_r( "%d\n", mesh->n_global_cells    );
-    printf_r( "%d\n", mesh->n_local_cells     );
-    printf_r( "%d\n", mesh->n_cells           );
-    printf_r( "%d\n", mesh->max_cell_vertices );
-    printf_r( "%d\n", mesh->max_cell_faces    );
+    printf_r( "n_global_cells    = %d\n", mesh->cells->n_global_cells    );
+    printf_r( "n_local_cells     = %d\n", mesh->cells->n_local_cells     );
+    printf_r( "n_cells           = %d\n", mesh->cells->n_cells           );
+    printf_r( "max_cell_vertices = %d\n", mesh->cells->max_cell_vertices );
+    printf_r( "max_cell_faces    = %d\n", mesh->cells->max_cell_faces    );
 
-    printf_r( "%d\n", mesh->n_global_boundaries   );
-    printf_r( "%d\n", mesh->n_local_boundaries    );
-    printf_r( "%d\n", mesh->n_boundaries          );
-    printf_r( "%d\n", mesh->max_boundary_vertices );
+    printf_r( "n_global_boundaries   = %d\n", mesh->boundaries->n_global_boundaries   );
+    printf_r( "n_local_boundaries    = %d\n", mesh->boundaries->n_local_boundaries    );
+    printf_r( "n_boundaries          = %d\n", mesh->boundaries->n_boundaries          );
+    printf_r( "max_boundary_vertices = %d\n", mesh->boundaries->max_boundary_vertices );
 
-    printf_r( "%d\n", mesh->n_global_faces    );
-    printf_r( "%d\n", mesh->n_local_faces     );
-    printf_r( "%d\n", mesh->n_faces           );
-    printf_r( "%d\n", mesh->max_face_vertices );
+    printf_r( "n_global_faces    = %d\n", mesh->faces->n_global_faces    );
+    printf_r( "n_local_faces     = %d\n", mesh->faces->n_local_faces     );
+    printf_r( "n_faces           = %d\n", mesh->faces->n_faces           );
+    printf_r( "max_face_vertices = %d\n", mesh->faces->max_face_vertices );
 
-    printf_r( "%d\n", mesh->n_regions );
+    printf_r( "n_regions   = %d\n", mesh->regions->n_regions   );
+    printf_r( "flow_region = %d\n", mesh->regions->flow_region );
 
-    printf_r( "%d\n", mesh->total_volume );
-    printf_r( "%d\n", mesh->flow_region  );
+    printf_r( "total_volume = %e\n", mesh->total_volume );
 }
 
 void deallocate_mesh( Mesh_t **mesh )
@@ -203,14 +204,19 @@ void allocate_faces( Faces_t *faces, int n_faces, int max_vertices )
     faces->boundary_faces   = NULL;
 }
 
-void allocate_regions( Regions_t *regions, int n_regions, int length )
+void allocate_regions( Regions_t *regions, int n_regions, int max_name_length )
 {
-    regions->name           = allocate_hdf5_string_buffer( n_regions, length );
+    regions->n_regions          = n_regions;
+    regions->max_name_length    = max_name_length;
+
+    regions->name           = allocate_hdf5_string_buffer( n_regions, max_name_length );
     regions->is_boundary    = allocate( sizeof( int ) * n_regions );
 }
 
 void deallocate_partition( Partition_t **partition )
 {
+    if ((*partition) == NULL) return;
+
     deallocate( (*partition)->partition_cells );
     deallocate( (*partition)->partition_boundaries );
     deallocate( (*partition)->partition_faces );
@@ -229,6 +235,8 @@ void deallocate_partition( Partition_t **partition )
 
 void deallocate_vertices( Vertices_t **vertices )
 {
+    if ((*vertices) == NULL) return;
+
     deallocate( (*vertices)->x );
 
     deallocate( *vertices );
@@ -236,6 +244,8 @@ void deallocate_vertices( Vertices_t **vertices )
 
 void deallocate_cells( Cells_t **cells )
 {
+    if ((*cells) == NULL) return;
+
     deallocate( (*cells)->id );
     deallocate( (*cells)->type );
     deallocate( (*cells)->n_vertices );
@@ -251,6 +261,8 @@ void deallocate_cells( Cells_t **cells )
 
 void deallocate_boundaries( Boundaries_t **boundaries )
 {
+    if ((*boundaries) == NULL) return;
+
     deallocate( (*boundaries)->id );
     deallocate( (*boundaries)->type );
     deallocate( (*boundaries)->n_vertices );
@@ -266,6 +278,8 @@ void deallocate_boundaries( Boundaries_t **boundaries )
 
 void deallocate_faces( Faces_t **faces )
 {
+    if ((*faces) == NULL) return;
+
     deallocate( (*faces)->type );
     deallocate( (*faces)->n_vertices );
     deallocate( (*faces)->vertices );
@@ -288,8 +302,10 @@ void deallocate_faces( Faces_t **faces )
 
 void deallocate_regions( Regions_t **regions )
 {
+    if ((*regions) == NULL) return;
+
     deallocate_hdf5_string_buffer( &(*regions)->name );
-    // deallocate( (*regions)->is_boundary );
+    deallocate( (*regions)->is_boundary );
 
     deallocate( *regions );
 }
