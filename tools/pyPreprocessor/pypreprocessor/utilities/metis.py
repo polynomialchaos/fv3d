@@ -25,7 +25,7 @@ lib.METIS_PartMeshNodal.restype     = c_int
 # Functions
 #-----------------------------------------------------------------------------------------------------------------------------------
 def wrap_vector( ctype, values ):
-    """Helper function for list wrapping."""
+    """Helper function for list wrapping"""
     return (ctype * len( values ))( *values )
 
 def metis_part_mesh_nodal( mesh ):

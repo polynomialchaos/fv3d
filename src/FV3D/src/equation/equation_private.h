@@ -18,24 +18,27 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-extern int n_variables;
+typedef struct Variable
+{
+    string_t name;
+} Variable_t;
 
-    // character(len=_STRLEN_)             :: equation = 'Navier-Stokes'               !< The equation to solve
+typedef struct Variables
+{
+    int n_sol_variables;
+    int n_dep_variables;
 
-    // type variable_t
-    //     character(len=:),   allocatable :: name                                     !< variable name
-    //     logical                         :: is_active = .true.                       !< variable active flag
-    // end type variable_t
+    Variable_t *sol_variables;
+    Variable_t *dep_variables;
+} Variables_t;
 
-    // integer                             :: n_variables = 0                          !< number of variables (only active)
-    // integer                             :: n_tot_variables = 0                      !< number of total variables
-    // type(variable_t),       allocatable :: variables(:)                             !< variables array
+extern Variables_t *all_variables;
 
-    // procedure(),    pointer             :: exact_func_routine => null()             !< calculate exact function
-    // procedure(),    pointer             :: update_routine => null()                 !< update cell and boundary values
-    // procedure(),    pointer             :: update_gradients_routine => null()       !< update gradients at boundaries
-    // procedure(),    pointer             :: calc_time_step_routine => null()         !< time step routine
-    // procedure(),    pointer             :: calc_flux_routine => null()              !< flux calculation routine
+// procedure(),    pointer             :: exact_func_routine => null()             !< calculate exact function
+// procedure(),    pointer             :: update_routine => null()                 !< update cell and boundary values
+// procedure(),    pointer             :: update_gradients_routine => null()       !< update gradients at boundaries
+// procedure(),    pointer             :: calc_time_step_routine => null()         !< time step routine
+// procedure(),    pointer             :: calc_flux_routine => null()              !< flux calculation routine
 
 //##################################################################################################################################
 // FUNCTIONS

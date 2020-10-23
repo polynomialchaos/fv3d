@@ -66,7 +66,7 @@ void main_define()
     register_finalize_routine( main_finalize );
 
     string_t tmp = "UNTITLED";
-    set_parameter( "General/title", ParameterString, &tmp, "The project title.", NULL, 0 );
+    set_parameter( "General/title", ParameterString, &tmp, "The project title", NULL, 0 );
 }
 
 void main_initialize()

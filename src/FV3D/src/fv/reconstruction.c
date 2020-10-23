@@ -44,7 +44,7 @@ void reconstruction_define()
     string_t tmp = tmp_opt[0];
 
     set_parameter( "FV/Reconstruction/reconstruction", ParameterString, &tmp,
-        "The reconstruction method.", &tmp_opt, tmp_opt_n );
+        "The reconstruction method", &tmp_opt, tmp_opt_n );
 }
 
 void reconstruction_initialize()

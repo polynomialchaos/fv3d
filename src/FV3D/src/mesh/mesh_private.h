@@ -138,7 +138,8 @@ typedef struct Mesh
     Faces_t *faces;
     Regions_t *regions;
 
-    double total_volume;
+    double local_volume;
+    double global_volume;
 } Mesh_t;
 
 //##################################################################################################################################
@@ -150,12 +151,12 @@ Mesh_t *allocate_mesh();
 void print_mesh_info( Mesh_t *mesh );
 void deallocate_mesh( Mesh_t **mesh );
 
-void allocate_partition( Partition_t *partition, int n_partitions,
-    int n_cells, int n_boundaries, int n_faces, int n_sends, int n_receives );
-void allocate_vertices( Vertices_t *vertices, int n_vertices );
-void allocate_cells( Cells_t *cells, int n_cells, int max_vertices, int max_faces );
-void allocate_boundaries( Boundaries_t *boundaries, int n_boundaries, int max_vertices );
-void allocate_faces( Faces_t *faces, int n_faces, int max_vertices );
-void allocate_regions( Regions_t *regions, int n_regions, int max_name_length );
+Partition_t *allocate_partition( Mesh_t *mesh, int n_partitions, int n_partition_cells, int n_partition_boundaries,
+    int n_partition_faces, int n_partition_sends, int n_partition_receives );
+Vertices_t *allocate_vertices( Mesh_t *mesh, int n_vertices );
+Cells_t *allocate_cells( Mesh_t *mesh, int n_cells, int max_cell_vertices, int max_cell_faces );
+Boundaries_t *allocate_boundaries( Mesh_t *mesh, int n_boundaries, int max_boundary_vertices );
+Faces_t *allocate_faces( Mesh_t *mesh, int n_faces, int max_face_vertices );
+Regions_t *allocate_regions( Mesh_t *mesh, int n_regions, int max_name_length );
 
 #endif /* MESH_PRIVATE_H */

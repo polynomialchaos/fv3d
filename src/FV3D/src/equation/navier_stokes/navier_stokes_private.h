@@ -19,6 +19,7 @@
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
 extern int navier_stokes_active;
+
     // real,   parameter               :: RM = 8.31446261815324            !< Universal gas constant, J mol-1 K-1
     // real,   parameter               :: molar_mass_air = 28.96e-3        !< Molar mass of dry air, kg mol-1
 

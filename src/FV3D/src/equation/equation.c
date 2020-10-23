@@ -16,15 +16,21 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-string_t equation_name = NULL;
+string_t equation_name      = NULL;
 
-int n_variables = 0;
+Variables_t *all_variables  = NULL;
 
 //##################################################################################################################################
 // LOCAL FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
 void equation_initialize();
 void equation_finalize();
+
+Variables_t *allocate_variables();
+void deallocate_variables( Variables_t **tmp );
+
+int add_sol_variable( Variables_t *variables, string_t name );
+int add_dep_variable( Variables_t *variables, string_t name );
 
 //##################################################################################################################################
 // FUNCTIONS
@@ -39,7 +45,7 @@ void equation_define()
     string_t tmp = tmp_opt[0];
 
     set_parameter( "Equation/equation", ParameterString, &tmp,
-        "The limiter method.", &tmp_opt, tmp_opt_n );
+        "The eqaution to solve", &tmp_opt, tmp_opt_n );
 
     navier_stokes_define();
 }
@@ -56,47 +62,72 @@ void equation_initialize()
     {
         check_error( 0 );
     }
+
+    all_variables = allocate_variables();
 }
 
 void equation_finalize()
 {
     deallocate( equation_name );
+    deallocate_variables( &all_variables );
 
-        //     _DEALLOCATE( variables )
-
-        // nullify( exact_func_routine )
-        // nullify( update_routine )
-        // nullify( update_gradients_routine )
-        // nullify( calc_time_step_routine )
-        // nullify( calc_flux_routine )
+    // nullify( exact_func_routine )
+    // nullify( update_routine )
+    // nullify( update_gradients_routine )
+    // nullify( calc_time_step_routine )
+    // nullify( calc_flux_routine )
 }
 
-int add_variable( string_t name, int is_active )
+int add_sol_variable( Variables_t *variables, string_t name )
 {
-        // if( allocated( variables ) ) then
-        //     if( .not. variables(n_tot_variables)%is_active .and. is_active ) &
-        //         call add_error( __LINE__, __FILE__, &
-        //             'Cannot add active variable after inactive variable (' // set_string( name ) // ')!' )
+    variables->n_sol_variables  += 1;
+    variables->sol_variables = reallocate( variables->sol_variables, sizeof( Variable_t ) * variables->n_sol_variables );
 
-        //     allocate( tmp( n_tot_variables ) )
-        //     do i = 1, n_tot_variables
-        //         tmp(i) = variables(i)
-        //     end do
+    int i_var = variables->n_sol_variables - 1;
+    Variable_t *tmp = &variables->sol_variables[i_var];
+    tmp->name = allocate_strcpy( name );
 
-        //     _DEALLOCATE( variables )
-        // end if
+    return i_var;
+}
 
-        // if( is_active ) n_variables = n_variables + 1
-        // n_tot_variables = n_tot_variables + 1
-        // allocate( variables(n_tot_variables) )
+int add_dep_variable( Variables_t *variables, string_t name )
+{
+    variables->n_dep_variables  += 1;
+    variables->dep_variables     = reallocate( variables->dep_variables, sizeof( Variable_t ) * variables->n_dep_variables );
 
-        // do i = 1, n_tot_variables - 1
-        //     variables(i) = tmp(i)
-        // end do
+    int i_var = variables->n_dep_variables - 1;
+    Variable_t *tmp = &variables->dep_variables[i_var];
+    tmp->name = allocate_strcpy( name );
 
-        // variables(n_tot_variables)%name       = name
-        // variables(n_tot_variables)%is_active  = is_active
+    return i_var;
+}
 
-        // res = n_tot_variables
-    return 9;
+Variables_t *allocate_variables()
+{
+    Variables_t *tmp = allocate( sizeof( Variables_t ) );
+
+    tmp->n_sol_variables    = 0;
+    tmp->n_dep_variables    = 0;
+
+    tmp->sol_variables  = NULL;
+    tmp->dep_variables  = NULL;
+
+    return tmp;
+}
+
+void deallocate_variables( Variables_t **variables )
+{
+    if (*variables == NULL) return;
+
+    for (int i = 0; i < (*variables)->n_sol_variables; i++ )
+        deallocate( (&(*variables)->sol_variables[i])->name );
+
+    deallocate( (*variables)->sol_variables );
+
+    for (int i = 0; i < (*variables)->n_dep_variables; i++ )
+        deallocate( (&(*variables)->dep_variables[i])->name );
+
+    deallocate( (*variables)->dep_variables );
+
+    deallocate( (*variables) );
 }

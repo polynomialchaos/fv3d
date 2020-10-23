@@ -32,7 +32,7 @@ void analyze_define()
     register_initialize_routine( analyze_initialize );
     register_finalize_routine( analyze_finalize );
 
-    residual = allocate( sizeof( residual ) * n_variables );
+    // residual = allocate( sizeof( residual ) * all_variables->n_variables );
 }
 
 void analyze_initialize()

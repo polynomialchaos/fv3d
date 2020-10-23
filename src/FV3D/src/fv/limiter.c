@@ -40,7 +40,7 @@ void limiter_define()
     string_t tmp = tmp_opt[0];
 
     set_parameter( "FV/Limiter/limiter", ParameterString, &tmp,
-        "The limiter method.", &tmp_opt, tmp_opt_n );
+        "The limiter method", &tmp_opt, tmp_opt_n );
 }
 
 void limiter_initialize()
