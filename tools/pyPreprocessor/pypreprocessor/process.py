@@ -51,6 +51,12 @@ class ProcessMesh( Mesh ):
             boundary.t2         = calc_t2( boundary )
             boundary.distance   = calc_distance( self.cells, self.faces, boundary )
 
+        for cell in self.cells:
+            cell.dx = np.array( cell.dx )
+            for idx in cell.face_ids:
+                face = self.faces[idx]
+                cell.dx += np.abs( face.n ) * face.area
+
     def _element_to_cell_boundaries( self ):
         face_type = self._get_face_type()
 

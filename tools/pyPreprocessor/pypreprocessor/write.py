@@ -95,8 +95,9 @@ def write_mesh( file_name, mesh ):
         fp_g.create_dataset( 'n_faces', data=[x.n_face_ids for x in mesh.cells] )
         fp_g.create_dataset( 'faces', data=fill_array( [x.face_ids for x in mesh.cells], -1, np.int32, sy=max_cell_faces ) )
 
-        fp_g.create_dataset( 'x', data=np.array( [x.x for x in mesh.cells] ) )
         fp_g.create_dataset( 'volume', data=np.array( [x.volume for x in mesh.cells] ) )
+        fp_g.create_dataset( 'x', data=np.array( [x.x for x in mesh.cells] ) )
+        fp_g.create_dataset( 'dx', data=np.array( [x.dx for x in mesh.cells] ) )
 
         if mesh.is_partitioned:
             fp_g.create_dataset( 'pid', data=[x.partition_id for x in mesh.cells] )

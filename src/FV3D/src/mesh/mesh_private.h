@@ -10,6 +10,8 @@
 //##################################################################################################################################
 // DEFINES
 //----------------------------------------------------------------------------------------------------------------------------------
+#define FACE_CELLS 2
+#define DIM 3
 
 //##################################################################################################################################
 // MACROS
@@ -49,7 +51,7 @@ typedef struct Cells
     int *faces;
     double *x;
     double *volume;
-    double *ds;
+    double *dx;
 } Cells_t;
 
 typedef struct Boundaries
@@ -78,14 +80,24 @@ typedef struct Faces
     double *n;
     double *t1;
     double *t2;
+
+    double *dist_cell_1;
+    double *dist_cell_2;
+
+    int n_internal_faces;
+    int *internal_faces;
+    int n_boundary_faces;
+    int *boundary_faces;
 } Faces_t;
 
 typedef struct Regions
 {
     string_t *name;
-    double *phi;
-    int *type;
-    int *function_id;
+    // int *is_boundary;
+
+    // double *phi;
+    // int *type;
+    // int *function_id;
 } Regions_t;
 
 typedef struct Mesh
@@ -126,16 +138,7 @@ typedef struct Mesh
     int n_regions;
     Regions_t *regions;
 
-    // double *dist_cell_1;
-    // double *dist_cell_2;
-
-    // double total_volume;
-    // int flow_region;
-
-    // int n_internal_faces;
-    // int *internal_faces;
-    // int n_boundary_faces;
-    // int *boundary_faces;
+    double total_volume;
 } Mesh_t;
 
 //##################################################################################################################################

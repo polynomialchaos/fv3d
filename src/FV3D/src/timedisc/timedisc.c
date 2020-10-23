@@ -65,7 +65,7 @@ void timedisc_initialize()
     get_parameter( "TimeDisc/t_start", ParameterNumber, &t_start );
     get_parameter( "TimeDisc/t_end", ParameterNumber, &t_end );
 
-    if (transient == 0) t_end = DOUBLEMAX;
+    if (transient == 0) t_end = DOUBLE_MAX;
 
     if (is_equal( time_step_name, "Explicit" ))
     {

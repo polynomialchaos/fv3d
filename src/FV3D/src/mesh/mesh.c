@@ -206,6 +206,11 @@ void read_mesh_file( Mesh_t *mesh )
                 get_hdf5_dataset_select_n_m( group_id, "x", HDF5Double, mesh->cells->x,
                     2, dims, NULL, offset, count, stride, mesh->n_local_cells );
 
+                dims[0] = mesh->n_local_cells; offset[0] = 0; count[0] = mesh->n_local_cells;
+                dims[1] = 3; offset[1] = 0; count[1] = 3;
+                get_hdf5_dataset_select_n_m( group_id, "dx", HDF5Double, mesh->cells->dx,
+                    2, dims, NULL, offset, count, stride, mesh->n_local_cells );
+
                 deallocate( stride );
             close_hdf5_group( group_id );
         }
@@ -367,8 +372,6 @@ void read_mesh_file( Mesh_t *mesh )
         // the regions
         {
             hsize_t dims[2];
-            hsize_t offset[2];
-            hsize_t count[2];
 
             hid_t group_id = open_hdf5_group( file_id, "REGIONS" );
                 get_hdf5_attribute( group_id, "n_regions", HDF5Int, &mesh->n_regions );
@@ -386,145 +389,169 @@ void read_mesh_file( Mesh_t *mesh )
 
 void remap_local_mesh( Mesh_t *mesh )
 {
-        // global_cells        = 0
-        // global_boundaries   = 0
-        // global_faces        = 0
+    int *global_cells       = allocate( sizeof( int ) * mesh->n_global_cells );
+    int *global_boundaries  = allocate( sizeof( int ) * mesh->n_global_boundaries );
+    int *global_faces       = allocate( sizeof( int ) * mesh->n_global_faces );
 
-        // ! define the global index arrays
-        // do i = 1, n_cells
-        //     global_cells(partition_cells(i)) = i
-        // end do
+    set_value_int_n( -1, global_cells, mesh->n_global_cells );
+    set_value_int_n( -1, global_boundaries, mesh->n_global_boundaries );
+    set_value_int_n( -1, global_faces, mesh->n_global_faces );
 
-        // do i = 1, n_partition_receives
-        //     global_cells(partition_receives(i)) = n_cells + i
-        // end do
+    Partition_t *partition = mesh->partition;
 
-        // do i = 1, n_partition_sends
-        //     partition_sends(i) = global_cells(partition_sends(i))
-        // end do
+    for ( int i = 0; i < mesh->n_cells; i++ )
+        global_cells[partition->partition_cells[i]] = i;
 
-        // do i = 1, n_partition_receives
-        //     partition_receives(i) = global_cells(partition_receives(i))
-        // end do
+    for ( int i = 0; i < mesh->n_partition_sends; i++ )
+        check_error( (global_cells[partition->partition_sends[i]] != -1) );
 
-        // do i = 1, n_boundaries
-        //     global_boundaries(partition_boundaries(i)) = i
-        // end do
+    for ( int i = 0; i < mesh->n_partition_receives; i++ )
+        global_cells[partition->partition_receives[i]] = mesh->n_cells + i;
 
-        // do i = 1, n_faces
-        //     global_faces(partition_faces(i)) = i
-        // end do
+    for ( int i = 0; i < mesh->n_partition_sends; i++ )
+        partition->partition_sends[i] = global_cells[partition->partition_sends[i]];
 
-        // ! set the local cell indices
-        // do i = 1, n_local_cells
-        //     do j = 1, cells(i)%n_faces
-        //         cells(i)%faces(j) = global_faces(cells(i)%faces(j))
-        //     end do
-        // end do
+    for ( int i = 0; i < mesh->n_partition_receives; i++ )
+        partition->partition_receives[i] = global_cells[partition->partition_receives[i]];
 
-        // ! set the local boundary indices
-        // do i = 1, n_boundaries
-        //     boundaries(i)%face = global_faces(boundaries(i)%face)
-        // end do
+    for ( int i = 0; i < mesh->n_boundaries; i++ )
+        global_boundaries[partition->partition_boundaries[i]] = i;
 
-        // ! set the local face cell indices
-        // do i = 1, n_faces
-        //     faces(i)%cells(1) = global_cells(faces(i)%cells(1))
+    for ( int i = 0; i < mesh->n_faces; i++ )
+        global_faces[partition->partition_faces[i]] = i;
 
-        //     if( faces(i)%cells(2) .gt. 0 ) then
-        //         faces(i)%cells(2) = global_cells(faces(i)%cells(2))
-        //     else
-        //         faces(i)%boundary = global_boundaries(faces(i)%boundary)
-        //     end if
-        // end do
+    for ( int i = 0; i < mesh->n_local_cells; i++ )
+    {
+        int *cell_faces = &mesh->cells->faces[i*mesh->max_cell_faces];
 
-        // ! set the sends to and receives from list
-        // allocate( n_partition_sends_to(n_partitions) ); n_partition_sends_to = 0
-        // allocate( partition_sends_to(n_partition_sends,n_partitions) ); partition_sends_to = 0
-        // allocate( n_partition_receives_from(n_partitions) ); n_partition_receives_from = 0
-        // allocate( partition_receives_from(n_partition_receives,n_partitions) ); partition_receives_from = 0
+        for ( int j = 0; j < mesh->cells->n_faces[i]; j++ )
+            cell_faces[j] = global_faces[cell_faces[j]];
+    }
 
-        // do i = 1, n_partitions
-        //     if( i-1 .eq. get_i_rank() ) cycle
+    for ( int i = 0; i < mesh->n_local_boundaries; i++ )
+    {
+        int *boundary_face  = &mesh->boundaries->face[i];
 
-        //     do j = 1, n_partition_sends
-        //         if( partition_sends_pid(j) .ne. i ) cycle
-        //         n_partition_sends_to(i) = n_partition_sends_to(i) + 1
-        //         partition_sends_to(n_partition_sends_to(i),i) = partition_sends(j)
-        //     end do
+        boundary_face[0] = global_faces[boundary_face[0]];
+    }
 
-        //     do j = 1, n_partition_receives
-        //         if( partition_receives_pid(j) .ne. i ) cycle
-        //         n_partition_receives_from(i) = n_partition_receives_from(i) + 1
-        //         partition_receives_from(n_partition_receives_from(i),i) = partition_receives(j)
-        //     end do
-        // end do
+    for ( int i = 0; i < mesh->n_local_faces; i++ )
+    {
+        int *face_cells     = &mesh->faces->cells[i*FACE_CELLS];
+        int *face_boundary  = &mesh->faces->boundary[i];
+
+        face_cells[0] = global_cells[face_cells[0]];
+
+        if (face_cells[1] >= 0)
+        {
+            face_cells[1] = global_cells[face_cells[1]];
+        }
+        else
+        {
+            face_boundary[0] = global_boundaries[face_boundary[0]];
+        }
+
+        if (face_cells[0] >= mesh->n_cells)
+        {
+            int n = mesh->cells->n_faces[face_cells[0]];
+            int *cell_faces = &mesh->cells->faces[face_cells[0]*mesh->max_cell_faces];
+
+            mesh->cells->n_faces[face_cells[0]] = 0;
+            for ( int j = 0; j < n; j++ )
+            {
+                if (cell_faces[j] < 0) continue;
+                cell_faces[mesh->cells->n_faces[face_cells[0]]] = cell_faces[j];
+                mesh->cells->n_faces[face_cells[0]] += 1;
+            }
+        }
+
+        if (face_cells[1] >= mesh->n_cells)
+        {
+            int n = mesh->cells->n_faces[face_cells[1]];
+            int *cell_faces = &mesh->cells->faces[face_cells[1]*mesh->max_cell_faces];
+
+            mesh->cells->n_faces[face_cells[1]] = 0;
+            for ( int j = 0; j < n; j++ )
+            {
+                if (cell_faces[j] < 0) continue;
+                cell_faces[mesh->cells->n_faces[face_cells[1]]] = cell_faces[j];
+                mesh->cells->n_faces[face_cells[1]] += 1;
+            }
+        }
+    }
+
+    for ( int i = 0; i < mesh->n_partitions; i++ )
+    {
+        if (i == get_rank()) continue;
+
+        int *partition_sends_to = &partition->partition_sends_to[i*mesh->n_partition_sends];
+        for ( int j = 0; j < mesh->n_partition_sends; j++ )
+        {
+            if (partition->partition_sends_pid[j] != i) continue;
+            partition_sends_to[partition->n_partition_sends_to[i]] =
+                partition->partition_sends[j];
+            partition->n_partition_sends_to[i] += 1;
+        }
+
+        int *partition_receives_from = &partition->partition_receives_from[i*mesh->n_partition_receives];
+        for ( int j = 0; j < mesh->n_partition_receives; j++ )
+        {
+            if (partition->partition_receives_pid[j] != i) continue;
+            partition_receives_from[partition->n_partition_receives_from[i]] =
+                partition->partition_receives[j];
+            partition->n_partition_receives_from[i] += 1;
+        }
+    }
+
+    deallocate( global_cells );
+    deallocate( global_boundaries );
+    deallocate( global_faces );
 }
 
 void calc_mesh_metrics( Mesh_t *mesh )
 {
-        // total_volume_loc = sum( cells(:)%volume )
-        // call allreduce_mpi( total_volume_loc, total_volume, MPI_SUM )
+    mesh->total_volume = sum_n( &mesh->cells->volume[0], mesh->n_cells );
+    mpi_all_reduce( &mesh->total_volume, &mesh->total_volume, MPIDouble, MPISum );
 
-        // allocate( dist_cell_1(3,n_faces) ); dist_cell_1 = 0.0
-        // allocate( dist_cell_2(3,n_faces) ); dist_cell_2 = 0.0
+    mesh->faces->n_internal_faces = 0;
+    for ( int i = 0; i < mesh->n_local_faces; i++)
+        if (mesh->faces->boundary[i] < 0)
+            mesh->faces->n_internal_faces += 1;
 
-        // n_internal_faces = count( faces(:)%boundary .eq. 0 )
-        // n_boundary_faces = n_faces - n_internal_faces
-        // allocate(internal_faces(n_internal_faces)); internal_faces = 0
-        // allocate(boundary_faces(n_boundary_faces)); boundary_faces = 0
+    mesh->faces->n_boundary_faces = mesh->n_local_faces - mesh->faces->n_internal_faces;
 
-        // ! define the cell metrics
-        // do i = 1, n_cells
-        //     do j = 1, cells(i)%n_faces
-        //         cells(i)%ds = cells(i)%ds + &
-        //             abs( faces(cells(i)%faces(j))%n ) * faces(cells(i)%faces(j))%area
-        //     end do
-        // end do
+    mesh->faces->dist_cell_1    = allocate( sizeof( double ) * mesh->n_local_faces * DIM );
+    mesh->faces->dist_cell_2    = allocate( sizeof( double ) * mesh->n_local_faces * DIM );
+    mesh->faces->internal_faces = allocate( sizeof( double ) * mesh->faces->n_internal_faces );
+    mesh->faces->boundary_faces = allocate( sizeof( double ) * mesh->faces->n_boundary_faces );
 
-        // ! communication faces need to be updated with valid faces
-        // do i = 1, n_faces
-        //     fc = faces(i)%cells
+    int k = 0; int l = 0;
+    for ( int i = 0; i < mesh->n_local_faces; i++)
+    {
+        int *face_cells = &mesh->faces->cells[i*FACE_CELLS];
 
-        //     if( fc(1) .gt. n_cells ) then
-        //         cells(fc(1))%n_faces = count( cells(fc(1))%faces .gt. 0 )
-        //         cells(fc(1))%faces(1:cells(fc(1))%n_faces-1) = &
-        //             pack( cells(fc(1))%faces, cells(fc(1))%faces .gt. 0 )
-        //     endif
+        for ( int j = 0; j < DIM; j++)
+            mesh->faces->dist_cell_1[i*DIM+j] = mesh->faces->x[i*DIM+j] -
+                mesh->cells->x[face_cells[0]*DIM+j];
 
-        //     if( fc(2) .gt. n_cells ) then
-        //         cells(fc(2))%n_faces = count( cells(fc(2))%faces .gt. 0 )
-        //         cells(fc(2))%faces(1:cells(fc(1))%n_faces-1) = &
-        //             pack( cells(fc(2))%faces, cells(fc(2))%faces .gt. 0 )
-        //     endif
-        // end do
+        if (face_cells[1] >= 0)
+        {
+            for ( int j = 0; j < DIM; j++)
+                mesh->faces->dist_cell_2[i*DIM+j] = mesh->faces->x[i*DIM+j] -
+                    mesh->cells->x[face_cells[1]*DIM+j];
 
-        // iif = 0; ibf = 0
-        // do i = 1, n_faces
-        //     fc = faces(i)%cells
+            mesh->faces->internal_faces[k] = i;
+            k += 1;
+        }
+        else
+        {
+            for ( int j = 0; j < DIM; j++)
+                mesh->faces->dist_cell_2[i*DIM+j] = 0.0;
 
-        //     dist_cell_1(:,i) = faces(i)%x - cells(fc(1))%x
+            face_cells[1] = mesh->n_local_cells + mesh->faces->boundary[i];
 
-        //     if( fc(2) .gt. 0 ) then
-        //         dist_cell_2(:,i)    = faces(i)%x - cells(fc(2))%x
-        //         iif                 = iif + 1
-        //         internal_faces(iif) = i
-        //     else
-        //         dist_cell_2(:,i)    = 0.0
-        //         faces(i)%cells(2)   = n_local_cells + faces(i)%boundary
-        //         ibf                 = ibf + 1
-        //         boundary_faces(ibf) = i
-        //     end if
-        // end do
-
-        // do i = 1, n_boundaries
-        //     regions(boundaries(i)%id)%is_boundary = .true.
-        // end do
-
-        // do i = 1, n_regions
-        //     if( regions(i)%is_boundary ) then
-        //         flow_region = i
-        //         exit
-        //     end if
-        // end do
+            mesh->faces->boundary_faces[l] = i;
+            l += 1;
+        }
+    }
 }

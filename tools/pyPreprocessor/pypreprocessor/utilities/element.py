@@ -15,7 +15,7 @@ class ElementType( Enum ):
     TRIANGLE    = 3
     QUADRANGLE  = 4
     TETRAEDER   = 5
-    HEXAEDER    = 6 
+    HEXAEDER    = 6
     PRISM       = 7
     PYRAMID     = 8
 
@@ -36,17 +36,18 @@ class Element( object ):
         return '{:}'.format( self.__dict__ )
 
 class Cell( Element ):
-    def __init__( self, element_type, vertice_ids, region_id, face_ids=None, x=None, volume=None, partition_id=None ):
+    def __init__( self, element_type, vertice_ids, region_id, face_ids=None, volume=None, x=None, dx=None, partition_id=None ):
         super().__init__( element_type, vertice_ids, region_id )
-        self.face_ids       = [] if face_ids is None else list( np.atleast_1d( face_ids ) ) 
+        self.face_ids       = [] if face_ids is None else list( np.atleast_1d( face_ids ) )
         self.x              = x
         self.volume         = volume
+        self.dx             = [0.0, 0.0, 0.0] if dx is None else list( np.atleast_1d( dx ) )
         self.partition_id   = partition_id
 
     def get_faces( self ):
         v = self.vertice_ids
         tmp_faces = []
-    
+
         if self.element_type == ElementType.LINE:
             tmp_faces.append( Face( ElementType.POINT, v[0] ) )
             tmp_faces.append( Face( ElementType.POINT, v[1] ) )
@@ -85,7 +86,7 @@ class Cell( Element ):
             tmp_faces.append( Face( ElementType.TRIANGLE, (v[0], v[3], v[1]) ) )
         else:
             raise TypeError( self.element_type )
-        
+
         return tmp_faces
 
     @property
@@ -93,7 +94,7 @@ class Cell( Element ):
         return len( self.face_ids )
 
 class Boundary( Element ):
-    def __init__( self, element_type, vertice_ids, region_id, 
+    def __init__( self, element_type, vertice_ids, region_id,
         face_id=None, n=None, t1=None, t2=None, distance=None, partition_id=None ):
         super().__init__( element_type, vertice_ids, region_id )
         self.face_id        = face_id
