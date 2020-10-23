@@ -2,9 +2,8 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#include "navier_stokes_private.h"
-#include "equation/navier_stokes/boundary_private.h"
-#include "equation/navier_stokes/flux_private.h"
+#include "equation/equation_module.h"
+#include "navier_stokes_module.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -25,15 +24,30 @@ int navier_stokes_active = 0;
 void navier_stokes_initialize();
 void navier_stokes_finalize();
 
+void update( double t );
+void update_gradients();
+void calc_exact_func( int id, double t, double *x, double *phi );
+void calc_time_step( double dt_min );
+
 const double RM = 8.31446261815324;
 const double molar_mass_air = 28.96e-3;
 
-double cfl_scale = 1.00;
-double dfl_scale = 1.00;
-double mu_mix = 18.13e-6;
-double R_mix = RM / molar_mass_air;
-double Pr = 0.718;
-double kappa = 1.4;
+double cfl_scale    = 1.00;
+double dfl_scale    = 1.00;
+double mu_mix       = 18.13e-6;
+double R_mix        = RM / molar_mass_air;
+double Pr           = 0.718;
+double kappa        = 1.4;
+
+double kappa_m1;
+double kappa_p1;
+double s_kappa;
+double s_kappa_m1;
+double s_kappa_p1;
+double cv;
+double cp;
+double kappa_pr;
+double lambda;
 
 //##################################################################################################################################
 // FUNCTIONS
@@ -65,57 +79,37 @@ void navier_stokes_initialize()
     get_parameter( "Equation/Navier-Stokes/Pr", ParameterNumber, &Pr );
     get_parameter( "Equation/Navier-Stokes/kappa", ParameterNumber, &kappa );
 
-        // IC_RHO      = add_variable( 'rho', is_active=.true. )
-        // IC_RHO_U    = add_variable( 'rho_u', is_active=.true. )
-        // IC_RHO_V    = add_variable( 'rho_v', is_active=.true. )
-        // IC_RHO_W    = add_variable( 'rho_w', is_active=.true. )
-        // IC_RHO_E    = add_variable( 'rho_e', is_active=.true. )
-        // IC_RHO_UVW  = [IC_RHO_U, IC_RHO_V, IC_RHO_W]
-        // IC          = [IC_RHO, IC_RHO_U, IC_RHO_V, IC_RHO_W, IC_RHO_E]
+    add_sol_variable( all_variables, "rho" );
+    add_sol_variable( all_variables, "rho_u" );
+    add_sol_variable( all_variables, "rho_v" );
+    add_sol_variable( all_variables, "rho_w" );
+    add_sol_variable( all_variables, "rho_e" );
 
-        // IP_U        = add_variable( 'u (prim)', is_active=.false. )
-        // IP_V        = add_variable( 'v (prim)', is_active=.false. )
-        // IP_W        = add_variable( 'w (prim)', is_active=.false. )
-        // IP_P        = add_variable( 'p (prim)', is_active=.false. )
-        // IP_T        = add_variable( 'T (prim)', is_active=.false. )
-        // IP_UVW      = [IP_U, IP_V, IP_W]
-        // IP          = [IP_U, IP_V, IP_W, IP_P, IP_T]
+    add_dep_variable( all_variables, "u" );
+    add_dep_variable( all_variables, "v" );
+    add_dep_variable( all_variables, "w" );
+    add_dep_variable( all_variables, "p" );
+    add_dep_variable( all_variables, "T" );
 
-        // kappa_m1    = kappa - 1.0
-        // kappa_p1    = kappa + 1.0
-        // s_kappa     = 1.0 / kappa
-        // s_kappa_m1  = 1.0 / kappa_m1
-        // s_kappa_p1  = 1.0 / kappa_p1
+    kappa_m1    = kappa - 1.0;
+    kappa_p1    = kappa + 1.0;
+    s_kappa     = 1.0 / kappa;
+    s_kappa_m1  = 1.0 / kappa_m1;
+    s_kappa_p1  = 1.0 / kappa_p1;
+    cv          = R_mix * s_kappa_m1;
+    cp          = kappa * cv;
+    kappa_pr    = kappa / Pr;
+    lambda      = mu_mix * cp / Pr;
 
-        // cv          = R_mix * s_kappa_m1
-        // cp          = kappa * cv
-        // kappa_pr    = kappa / Pr
-        // lambda      = mu_mix * cp / Pr
-
-        // exact_func_routine => exact_func
-        // update_routine => update
-        // update_gradients_routine => update_bc_gradients
-
-        // calc_time_step_routine => calc_time_step
-        // calc_flux_routine => calc_flux
-
+    update_function_pointer             = update;
+    update_gradients_function_pointer   = update_gradients;
+    calc_exact_function_pointer         = calc_exact_func;
+    calc_time_step_function_pointer     = calc_time_step;
+    calc_flux_function_pointer          = calc_flux;
 }
 
 void navier_stokes_finalize()
 {
-}
-
-void exact_func( int id, double t, double *x, double *phi )
-{
-
-        // select case ( id )
-        //     case ( 0 )
-        //         phi = regions(flow_region)%phi
-        //     case default
-        //         call add_error( __LINE__, __FILE__, &
-        //             'Unknown initial function selected (got: ' // set_string( id ) // ')!' )
-        // end select
-
 }
 
 void update( double t )
@@ -126,6 +120,30 @@ void update( double t )
         // end do
 
         // call update_bc( t )
+
+}
+
+void update_gradients()
+{
+
+        // do i = 1, n_cells
+        //     phi_total(:,i) = con_2_prim( phi_total(:,i) )
+        // end do
+
+        // call update_bc( t )
+
+}
+
+void calc_exact_func( int id, double t, double *x, double *phi )
+{
+
+        // select case ( id )
+        //     case ( 0 )
+        //         phi = regions(flow_region)%phi
+        //     case default
+        //         call add_error( __LINE__, __FILE__, &
+        //             'Unknown initial function selected (got: ' // set_string( id ) // ')!' )
+        // end select
 
 }
 

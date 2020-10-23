@@ -2,9 +2,9 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#include "fv_private.h"
-#include "reconstruction_private.h"
-#include "limiter_private.h"
+#include "fv_module.h"
+#include "mesh/mesh_module.h"
+#include "equation/equation_module.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -17,12 +17,23 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
+double *phi_total           = NULL;
+double *grad_phi_total_x    = NULL;
+double *grad_phi_total_y    = NULL;
+double *grad_phi_total_z    = NULL;
+
+double *phi_total_left      = NULL;
+double *phi_total_right     = NULL;
+
+double *phi_dt              = NULL;
+double *flux                = NULL;
 
 //##################################################################################################################################
 // LOCAL FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
 void fv_initialize();
 void fv_finalize();
+
 void set_solution();
 
 //##################################################################################################################################
@@ -39,67 +50,85 @@ void fv_define()
 
 void fv_initialize()
 {
-        //     ! generate total arrays
-        // allocate( phi_total(n_tot_variables,n_cells+n_partition_receives+n_boundaries) ); phi_total = 0.0
+    int n_local_cells       = global_mesh->cells->n_local_cells;
+    int n_local_boundaries  = global_mesh->boundaries->n_local_boundaries;
+    int n_local_faces       = global_mesh->faces->n_local_faces;
 
-        // allocate( grad_phi_total_x(n_tot_variables,n_cells+n_partition_receives+n_boundaries) ); grad_phi_total_x = 0.0
-        // allocate( grad_phi_total_y(n_tot_variables,n_cells+n_partition_receives+n_boundaries) ); grad_phi_total_y = 0.0
-        // allocate( grad_phi_total_z(n_tot_variables,n_cells+n_partition_receives+n_boundaries) ); grad_phi_total_z = 0.0
+    phi_total           = allocate( sizeof( double ) * all_variables->n_tot_variables * (n_local_cells + n_local_boundaries) );
+    grad_phi_total_x    = allocate( sizeof( double ) * all_variables->n_tot_variables * (n_local_cells + n_local_boundaries) );
+    grad_phi_total_y    = allocate( sizeof( double ) * all_variables->n_tot_variables * (n_local_cells + n_local_boundaries) );
+    grad_phi_total_z    = allocate( sizeof( double ) * all_variables->n_tot_variables * (n_local_cells + n_local_boundaries) );
 
-        // allocate( phi_dt(n_variables,n_cells+n_partition_receives+n_boundaries) ); phi_dt = 0.0
+    phi_total_left      = allocate( sizeof( double ) * all_variables->n_tot_variables * n_local_faces );
+    phi_total_left      = allocate( sizeof( double ) * all_variables->n_tot_variables * n_local_faces );
 
-        // phi => phi_total(:n_variables,:)
+    phi_dt              = allocate( sizeof( double ) * all_variables->n_sol_variables * (n_local_cells + n_local_boundaries) );
+    flux                = allocate( sizeof( double ) * all_variables->n_sol_variables * n_local_faces );
 
-        // ! generate solver arrays
-        // allocate( phi_total_left(n_tot_variables,n_faces) ); phi_total_left = 0.0
-        // allocate( phi_total_right(n_tot_variables,n_faces) ); phi_total_right = 0.0
-        // allocate( flux(n_variables,n_faces) ); flux = 0.0
-
-        // call initialize_solution()
+    set_solution();
 }
 
 void fv_finalize()
 {
-//             _DEALLOCATE( phi_total )
-
-//         _DEALLOCATE( grad_phi_total_x )
-//         _DEALLOCATE( grad_phi_total_y )
-//         _DEALLOCATE( grad_phi_total_z )
-
-//         _DEALLOCATE( phi_total_left )
-//         _DEALLOCATE( phi_total_left )
-
-//         nullify( phi )
-//         _DEALLOCATE( phi_dt )
-//         _DEALLOCATE( flux )
+    deallocate( phi_total );
+    deallocate( grad_phi_total_x );
+    deallocate( grad_phi_total_y );
+    deallocate( grad_phi_total_z );
+    deallocate( phi_dt );
+    deallocate( phi_total_left );
+    deallocate( phi_total_left );
+    deallocate( flux );
 }
 
 void fv_time_derivative( double t )
 {
-        // call update_routine( t )
-        // call reconstruction_routine()
+    int n_local_cells       = global_mesh->cells->n_local_cells;
+    int n_cells             = global_mesh->cells->n_cells;
+    int n_local_boundaries  = global_mesh->boundaries->n_local_boundaries;
+    int n_local_faces       = global_mesh->faces->n_local_faces;
+    int n_sol_variables     = all_variables->n_sol_variables;
 
-        // call calc_flux_routine()
+    update_function_pointer( t );
+    reconstruction_function_pointer();
 
-        // ! the temporal derivative
-        // phi_dt = 0.0
-        // do i = 1, n_faces
-        //     fc = faces(i)%cells
+    calc_flux_function_pointer();
 
-        //     phi_dt(:,fc(1)) = phi_dt(:,fc(1)) + flux(:,i) * faces(i)%area
-        //     phi_dt(:,fc(2)) = phi_dt(:,fc(2)) - flux(:,i) * faces(i)%area
-        // end do
+    // the temporal derivative
+    set_value_n( 0.0, phi_dt, n_sol_variables * (n_local_cells + n_local_boundaries) );
 
-        // do i = 1, n_cells
-        //     phi_dt(:,i) = -phi_dt(:,i) / cells(i)%volume
-        // end do
+    for ( int i = 0; i < n_local_faces; i++ )
+    {
+        int *fc = &global_mesh->faces->cells[i*FACE_CELLS];
+        double area = global_mesh->faces->area[i];
+
+        for ( int j = 0; j < n_sol_variables; j++ )
+        {
+            phi_dt[n_sol_variables*fc[0]+j] += flux[n_sol_variables*i+j] * area;
+            phi_dt[n_sol_variables*fc[1]+j] -= flux[n_sol_variables*i+j] * area;
+        }
+    }
+
+    for ( int i = 0; i < n_cells; i++ )
+    {
+        double volume = global_mesh->cells->volume[i];
+
+        for ( int j = 0; j < n_sol_variables; j++ )
+        {
+            phi_dt[i*n_sol_variables+j] = -phi_dt[i*n_sol_variables+j] / volume;
+        }
+    }
 }
 
 void set_solution()
 {
-        // do i = 1, n_cells
-        //     call exact_func_routine( 0, 0.0, cells(i)%x, phi_total(:,i) )
-        // end do
+    int n_cells     = global_mesh->cells->n_cells;
+    int n_variables = all_variables->n_tot_variables;
 
-        // call update_routine( 0.0 )
+    if (calc_exact_function_pointer != NULL)
+        for ( int i = 0; i < n_cells; i++ )
+            calc_exact_function_pointer( 0, 0.0, global_mesh->cells->x[i*DIM],
+                phi_total[i*n_variables] );
+
+    if (update_function_pointer != NULL)
+        update_function_pointer( 0.0 );
 }

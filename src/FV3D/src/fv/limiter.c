@@ -2,7 +2,9 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#include "limiter_private.h"
+#include "fv_module.h"
+#include "mesh/mesh_module.h"
+#include "equation/equation_module.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -15,7 +17,7 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-void_limiter_fp_t limiter_routine = NULL;
+double_limiter_fp_t limiter_function_pointer = NULL;
 
 string_t limiter_name = NULL;
 
@@ -24,8 +26,9 @@ string_t limiter_name = NULL;
 //----------------------------------------------------------------------------------------------------------------------------------
 void limiter_initialize();
 void limiter_finalize();
-void limiter_none( size_t i, double *slope, double *lim, int n );
-void limiter_barth_jespersenn( size_t i, double *slope, double *lim, int n );
+
+double limiter_none( int i_cell, int i_var, double slope );
+double limiter_barth_jespersenn( int i_cell, int i_var, double slope );
 
 //##################################################################################################################################
 // FUNCTIONS
@@ -49,11 +52,11 @@ void limiter_initialize()
 
     if (is_equal( limiter_name, "None" ))
     {
-        limiter_routine = limiter_none;
+        limiter_function_pointer = limiter_none;
     }
     else if (is_equal( limiter_name, "Barth-Jespersenn" ))
     {
-        limiter_routine = limiter_barth_jespersenn;
+        limiter_function_pointer = limiter_barth_jespersenn;
     }
     else
     {
@@ -64,36 +67,28 @@ void limiter_initialize()
 void limiter_finalize()
 {
     deallocate( limiter_name );
-    limiter_routine = NULL;
+    limiter_function_pointer = NULL;
 }
 
-void limiter_none( size_t i, double *slope, double *lim, int n )
+double limiter_none( int i_cell, int i_var, double slope )
 {
-    set_value_n( 1.0, lim, n );
+#ifdef DEBUG
+    u_unused( i_cell );
+    u_unused( i_var );
+    u_unused( slope );
+#endif /* DEBUG */
+    return 1.0;
 }
 
-void limiter_barth_jespersenn( size_t i, double *slope, double *lim, int n )
+double limiter_barth_jespersenn( int i_cell, int i_var, double slope )
 {
-    set_value_n( 1.0, lim, n );
-}
-//  !###############################################################################################################################
-//     !> Calculate Barth-Jespersenn's limiter.
-//     !-------------------------------------------------------------------------------------------------------------------------------
-//     subroutine limiter_barth_jespersenn( i_cell, slope, lim )
-//         use mod_equation_vars,  only: n_tot_variables
-//         use mod_mesh_vars,      only: cells, faces
-//         use mod_fv_vars,        only: phi_total
-//         implicit none
-//         !---------------------------------------------------------------------------------------------------------------------------
-//         integer,    intent(in)  :: i_cell
-//         real,       intent(in)  :: slope(n_tot_variables)
-//         real,       intent(out) :: lim(n_tot_variables)
-//         !---------------------------------------------------------------------------------------------------------------------------
-//         integer         :: i, j, k
-//         real            :: y, u_min(n_tot_variables), u_max(n_tot_variables)
-//         !---------------------------------------------------------------------------------------------------------------------------
+    int n_tot_variables = all_variables->n_tot_variables;
+    double u_min        = phi_total[i_cell*n_tot_variables+i_var];
+    double u_max        = phi_total[i_cell*n_tot_variables+i_var];
 
-//         u_min = phi_total(:,i_cell)
+    return 1.0;
+
+    //         u_min = phi_total(:,i_cell)
 //         u_max = phi_total(:,i_cell)
 
 //         do i = 1, cells(i_cell)%n_faces
@@ -125,7 +120,4 @@ void limiter_barth_jespersenn( size_t i, double *slope, double *lim, int n )
 //                 lim(k) = min( lim(k), y )
 //             end do
 //         end do
-
-//     end subroutine limiter_barth_jespersenn
-
-// end module mod_fv_limiter
+}

@@ -2,7 +2,7 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#include "boundary_private.h"
+#include "navier_stokes_module.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -76,7 +76,11 @@ void boundary_initialize()
 
 void boundary_finalize()
 {
-        //     do i = 1, n_boundaries
+}
+
+void update_boundaries( double t )
+{
+       //     do i = 1, n_boundaries
         //     j   = n_cells + n_partition_receives + i
         //     bf  = boundaries(i)%face
         //     fc  = faces(bf)%cells(1)
@@ -145,12 +149,7 @@ void boundary_finalize()
         // end do
 }
 
-void update_bc( double t )
-{
-
-}
-
-void update_bc_gradients()
+void update_gradients_boundaries( double t )
 {
     //    do i = 1, n_boundaries
     //         j   = n_cells + n_partition_receives + i

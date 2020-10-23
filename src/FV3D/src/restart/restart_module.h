@@ -2,8 +2,8 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#ifndef EXPLICIT_PRIVATE_H
-#define EXPLICIT_PRIVATE_H
+#ifndef RESTART_MODULE_H
+#define RESTART_MODULE_H
 
 #include "fv3d_module.h"
 
@@ -18,16 +18,21 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-extern int explicit_active;
-    // character(len=_STRLEN_) :: scheme = 'RK3-3'             !< The explicit scheme
+// ! logical                 :: use_restart = .false.    !< The flag to start from restart
 
-    // integer                 :: n_rk_stages = 0              !< Number of Runge Kutta stages
-    // real,   allocatable     :: rk_a(:), rk_b(:), rk_g(:)    !< Runge Kutta coefficients
+// ! integer                 :: iter_restart = 0         !< Current iteration number
+// ! real                    :: time_restart = 0.0       !< Current time
+
+// ! real,   allocatable     :: phi_restart(:,:)         !< Restart solution vector
+// ! real,   allocatable     :: phi_total_restart(:,:)   !< Restart total solution vector
+// ! real,   allocatable     :: phi_dt_restart(:,:)      !< Restart temporal derivative solution vector
+
+// ! integer                 :: n_old_stages = 0         !< Number of old stages found in file
+// ! real,   allocatable     :: phi_old_restart(:,:,:)   !< Restart solution array (old timesteps for implicit)
 
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
-void explicit_define();
-void time_step_lserkw2( double t, double dt, int iter );
+void restart_define();
 
-#endif /* EXPLICIT_PRIVATE_H */
+#endif /* RESTART_MODULE_H */

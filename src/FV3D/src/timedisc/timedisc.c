@@ -4,8 +4,8 @@
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
 #include "timedisc_private.h"
-#include "explicit_private.h"
-#include "implicit_private.h"
+#include "explicit/explicit_private.h"
+#include "implicit/implicit_private.h"
 
 //##################################################################################################################################
 // DEFINES

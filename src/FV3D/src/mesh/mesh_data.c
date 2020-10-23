@@ -3,7 +3,7 @@
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
 #include <string.h>
-#include "mesh_private.h"
+#include "mesh_module.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -412,4 +412,7 @@ void print_regions( Regions_t *regions )
 
     printf_r( "n_regions   = %d\n", regions->n_regions   );
     printf_r( "flow_region = %d\n", regions->flow_region );
+
+    for ( int i = 0; i < regions->n_regions; i++ )
+        printf_r( "%d: %s\n", i, regions->name[i] );
 }

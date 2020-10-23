@@ -2,7 +2,9 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#include "reconstruction_private.h"
+#include "fv_module.h"
+#include "mesh/mesh_module.h"
+#include "equation/equation_module.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -15,7 +17,7 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-void_reconstruction_fp_t reconstruction_routine = NULL;
+void_reconstruction_fp_t reconstruction_function_pointer = NULL;
 string_t reconstruction_name = NULL;
 
 double *send_buffer = NULL;
@@ -26,6 +28,7 @@ double *receive_buffer = NULL;
 //----------------------------------------------------------------------------------------------------------------------------------
 void reconstruction_initialize();
 void reconstruction_finalize();
+
 void reconstruction_first_order();
 void reconstruction_linear();
 void calc_gradients();
@@ -53,81 +56,121 @@ void reconstruction_initialize()
 
     if (is_equal( reconstruction_name, "First-Order" ))
     {
-        reconstruction_routine = reconstruction_first_order;
+        reconstruction_function_pointer = reconstruction_first_order;
     }
     else if (is_equal( reconstruction_name, "Linear" ))
     {
-        reconstruction_routine = reconstruction_linear;
+        reconstruction_function_pointer = reconstruction_linear;
     }
     else
     {
         check_error( 0 );
     }
 
-    // ! allocate( send_buffer(n_tot_variables * n_partition_sends) )
-    // ! allocate( receive_buffer(n_tot_variables * n_partition_receives) )
+    int n_tot_variables         = all_variables->n_tot_variables;
+    int n_partition_sends       = global_mesh->partition->n_partition_sends;
+    int n_partition_receives    = global_mesh->partition->n_partition_receives;
+
+    send_buffer     = allocate( sizeof( double ) * n_tot_variables * n_partition_sends );
+    receive_buffer  = allocate( sizeof( double ) * n_tot_variables * n_partition_receives );
 }
 
 void reconstruction_finalize()
 {
     deallocate( reconstruction_name );
-    reconstruction_routine = NULL;
+    reconstruction_function_pointer = NULL;
 
-    send_buffer = NULL;
-    receive_buffer = NULL;
+    deallocate( send_buffer );
+    deallocate( receive_buffer );
 }
 
 void reconstruction_first_order()
 {
-//     !         call calc_gradients()
+    int n_local_faces   = global_mesh->faces->n_local_faces;
+    int n_tot_variables = all_variables->n_tot_variables;
 
-// !         do i = 1, n_faces
-// !             fc = faces(i)%cells
+    calc_gradients();
 
-// !             ! reconstruction of variables
-// !             phi_total_left(:,i)     = phi_total(:,fc(1))
-// !             phi_total_right(:,i)    = phi_total(:,fc(2))
-// !         end do
+    for ( int i = 0; i < n_local_faces; i++ )
+    {
+        int *fc = &global_mesh->faces->cells[i*FACE_CELLS];
+
+        for ( int j = 0; j < n_tot_variables; j++ )
+        {
+            phi_total_left[i*n_tot_variables+j]     = phi_total[fc[0]*n_tot_variables+j];
+            phi_total_right[i*n_tot_variables+j]    = phi_total[fc[1]*n_tot_variables+j];
+        }
+    }
 }
 
 void reconstruction_linear()
 {
-//     !         call calc_gradients()
+    int n_internal_faces    = global_mesh->faces->n_internal_faces;
+    int n_boundary_faces    = global_mesh->faces->n_boundary_faces;
+    int n_tot_variables     = all_variables->n_tot_variables;
 
-// !         do ii = 1, n_internal_faces
-// !             i  = internal_faces(ii)
-// !             fc = faces(i)%cells
+    calc_gradients();
 
-// !             r       => dist_cell_1(:,i)
-// !             slope   = r(1) * grad_phi_total_x(:,fc(1)) + r(2) * grad_phi_total_y(:,fc(1)) + r(3) * grad_phi_total_z(:,fc(1))
-// !             call limiter_routine( fc(1), slope, lim )
+    for ( int ii = 0; ii < n_internal_faces; ii++ )
+    {
+        int i = global_mesh->faces->internal_faces[ii];
+        int *fc = &global_mesh->faces->cells[i*FACE_CELLS];
 
-// !             phi_total_left(:,i)     = phi_total(:,fc(1)) + lim * slope
+        double *r                  = &global_mesh->faces->dist_cell_1[i*DIM];
+        double *grad_phi_total_x_i = &grad_phi_total_x[n_tot_variables*fc[0]];
+        double *grad_phi_total_y_i = &grad_phi_total_y[n_tot_variables*fc[0]];
+        double *grad_phi_total_z_i = &grad_phi_total_z[n_tot_variables*fc[0]];
 
-// !             r       => dist_cell_2(:,i)
-// !             slope   = r(1) * grad_phi_total_x(:,fc(2)) + r(2) * grad_phi_total_y(:,fc(2)) + r(3) * grad_phi_total_z(:,fc(2))
-// !             call limiter_routine( fc(2), slope, lim )
+        for ( int j = 0; j < n_tot_variables; j++ )
+        {
+            double slope    = r[0] * grad_phi_total_x_i[i] + r[1] * grad_phi_total_y_i[i] + r[2] * grad_phi_total_z_i[i];
+            double lim      = limiter_function_pointer( fc[0], j, slope );
 
-// !             phi_total_right(:,i)    = phi_total(:,fc(2)) + lim * slope
-// !         end do
+            phi_total_left[i*n_tot_variables+j] = phi_total[fc[0]*n_tot_variables+j] + lim * slope;
+        }
 
-// !         do ii = 1, n_boundary_faces
-// !             i  = boundary_faces(ii)
-// !             fc = faces(i)%cells
+        r                   = &global_mesh->faces->dist_cell_2[i*DIM];
+        grad_phi_total_x_i  = &grad_phi_total_x[n_tot_variables*fc[1]];
+        grad_phi_total_y_i  = &grad_phi_total_y[n_tot_variables*fc[1]];
+        grad_phi_total_z_i  = &grad_phi_total_z[n_tot_variables*fc[1]];
 
-// !             r       => dist_cell_1(:,i)
-// !             slope   = r(1) * grad_phi_total_x(:,fc(1)) + r(2) * grad_phi_total_y(:,fc(1)) + r(3) * grad_phi_total_z(:,fc(1))
-// !             call limiter_routine( fc(1), slope, lim )
+        for ( int j = 0; j < n_tot_variables; j++ )
+        {
+            double slope    = r[0] * grad_phi_total_x_i[i] + r[1] * grad_phi_total_y_i[i] + r[2] * grad_phi_total_z_i[i];
+            double lim      = limiter_function_pointer( fc[1], j, slope );
 
-// !             phi_total_left(:,i)     = phi_total(:,fc(1)) + lim * slope
+            phi_total_right[i*n_tot_variables+j] = phi_total[fc[1]*n_tot_variables+j] + lim * slope;
+        }
+    }
 
-// !             phi_total_right(:,i)    = phi_total(:,fc(2))
-// !         end do
+    for ( int ii = 0; ii < n_boundary_faces; ii++ )
+    {
+        int i = global_mesh->faces->boundary_faces[ii];
+        int *fc = &global_mesh->faces->cells[i*FACE_CELLS];
+
+        double *r                  = &global_mesh->faces->dist_cell_1[i*DIM];
+        double *grad_phi_total_x_i = &grad_phi_total_x[n_tot_variables*fc[0]];
+        double *grad_phi_total_y_i = &grad_phi_total_y[n_tot_variables*fc[0]];
+        double *grad_phi_total_z_i = &grad_phi_total_z[n_tot_variables*fc[0]];
+
+        for ( int j = 0; j < n_tot_variables; j++ )
+        {
+            double slope    = r[0] * grad_phi_total_x_i[i] + r[1] * grad_phi_total_y_i[i] + r[2] * grad_phi_total_z_i[i];
+            double lim      = limiter_function_pointer( fc[0], j, slope );
+
+            phi_total_left[i*n_tot_variables+j] = phi_total[fc[0]*n_tot_variables+j] + lim * slope;
+        }
+
+        for ( int j = 0; j < n_tot_variables; j++ )
+        {
+            phi_total_right[i*n_tot_variables+j] = phi_total[fc[1]*n_tot_variables+j];
+        }
+    }
 }
 
 void calc_gradients()
 {
-// !         if( get_is_parallel() ) call update_parallel( phi_total )
+    if (get_is_parallel()) update_parallel( phi_total );
 
 // !         grad_phi_total_x = 0.0
 // !         grad_phi_total_y = 0.0
@@ -147,9 +190,9 @@ void calc_gradients()
 // !             grad_phi_total_z(:,fc(2))   = grad_phi_total_z(:,fc(2)) - phi_mean(:) * faces(i)%n(3) * faces(i)%area
 // !         end do
 
-// !         if( get_is_parallel() ) call update_parallel( grad_phi_total_x )
-// !         if( get_is_parallel() ) call update_parallel( grad_phi_total_y )
-// !         if( get_is_parallel() ) call update_parallel( grad_phi_total_z )
+    if (get_is_parallel()) update_parallel( grad_phi_total_x );
+    if (get_is_parallel()) update_parallel( grad_phi_total_y );
+    if (get_is_parallel()) update_parallel( grad_phi_total_z );
 
 // !         do i = 1, n_cells + n_partition_receives
 // !             s_volume = 1.0 / cells(i)%volume
@@ -159,33 +202,58 @@ void calc_gradients()
 // !             grad_phi_total_z(:,i)   = grad_phi_total_z(:,i) * s_volume
 // !         end do
 
-// !         call update_gradients_routine()
+    if (update_gradients_function_pointer != NULL) update_gradients_function_pointer();
 }
 
-void update_parallel()
+void update_parallel( double *phi_local )
 {
-// !         t_rank = get_i_rank()
+    int rank                        = get_rank();
+    int n_partitions                = global_mesh->partition->n_partitions;
+    int n_partitions_sends          = global_mesh->partition->n_partition_sends;
+    int *n_partitions_sends_to      = global_mesh->partition->n_partition_sends_to;
+    int n_partition_receives        = global_mesh->partition->n_partition_receives;
+    int *n_partition_receives_from  = global_mesh->partition->n_partition_receives_from;
+    int n_tot_variables             = all_variables->n_tot_variables;
 
-// !         do s_rank = 1, n_partitions
-// !             if( t_rank .eq. s_rank-1 ) then
-// !                 do r_rank = 1, n_partitions
-// !                     if( n_partition_sends_to(r_rank) .eq. 0 ) cycle
+    for ( int s_rank = 0; s_rank < n_partitions; s_rank++ )
+    {
 
-// !                     do i = 1, n_partition_sends_to(r_rank)
-// !                         j = (i - 1) * n_tot_variables
-// !                         send_buffer(j+1:j+n_tot_variables) = phi_local(:,partition_sends_to(i,r_rank))
-// !                     end do
+        if (s_rank == rank)
+        {
+            for ( int r_rank = 0; r_rank < n_partitions; r_rank++ )
+            {
+                if (n_partitions_sends_to[r_rank] == 0) continue;
+                int *partition_sends_to = &global_mesh->partition->partition_sends_to[r_rank*n_partitions_sends];
 
-// !                     call send_mpi( send_buffer(:j+n_tot_variables), r_rank-1 )
-// !                 end do
-// !             else if( n_partition_receives_from(s_rank) .gt. 0 ) then
-// !                 k = (n_partition_receives_from(s_rank) - 1) * n_tot_variables
-// !                 call receive_mpi( receive_buffer(:k+n_tot_variables), s_rank-1 )
+                for ( int i = 0; i < n_partitions_sends_to[r_rank]; i++ )
+                {
+                    double *phi_local_i = &phi_local[partition_sends_to[i]*n_tot_variables];
 
-// !                 do i = 1, n_partition_receives_from(s_rank)
-// !                     j = (i - 1) * n_tot_variables
-// !                     phi_local(:,partition_receives_from(i,s_rank)) = receive_buffer(j+1:j+n_tot_variables)
-// !                 end do
-// !             end if
-// !         end do
+                    for ( int j = 0; j < n_tot_variables; j++ )
+                    {
+                        send_buffer[i*n_tot_variables+j] = phi_local_i[j];
+                    }
+                }
+
+                mpi_send( send_buffer, n_partitions_sends_to[r_rank] * n_tot_variables, MPIDouble, r_rank );
+            }
+        }
+        else
+        {
+            if (n_partition_receives_from[s_rank] == 0) continue;
+            int *partition_receives_from = &global_mesh->partition->partition_receives_from[s_rank*n_partition_receives];
+
+            mpi_receive( receive_buffer, n_partition_receives_from[s_rank] * n_tot_variables, MPIDouble, s_rank );
+
+            for ( int i = 0; i < n_partition_receives_from[s_rank]; i++ )
+            {
+                double *phi_local_i = &phi_local[partition_receives_from[i]*n_tot_variables];
+
+                for ( int j = 0; j < n_tot_variables; j++ )
+                {
+                    phi_local_i[j] = receive_buffer[i*n_tot_variables+j];
+                }
+            }
+        }
+    }
 }

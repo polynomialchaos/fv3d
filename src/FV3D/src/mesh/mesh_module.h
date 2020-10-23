@@ -2,8 +2,8 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#ifndef MESH_PRIVATE_H
-#define MESH_PRIVATE_H
+#ifndef MESH_MODULE_H
+#define MESH_MODULE_H
 
 #include "fv3d_module.h"
 
@@ -142,6 +142,8 @@ typedef struct Mesh
     double global_volume;
 } Mesh_t;
 
+extern Mesh_t *global_mesh;
+
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
@@ -159,4 +161,4 @@ Boundaries_t *allocate_boundaries( Mesh_t *mesh, int n_boundaries, int max_bound
 Faces_t *allocate_faces( Mesh_t *mesh, int n_faces, int max_face_vertices );
 Regions_t *allocate_regions( Mesh_t *mesh, int n_regions, int max_name_length );
 
-#endif /* MESH_PRIVATE_H */
+#endif /* MESH_MODULE_H */

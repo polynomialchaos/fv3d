@@ -2,8 +2,8 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#include "equation_private.h"
-#include "navier_stokes/navier_stokes_private.h"
+#include "equation_module.h"
+#include "navier_stokes/navier_stokes_module.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -16,9 +16,15 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-string_t equation_name      = NULL;
+string_t equation_name = NULL;
 
-Variables_t *all_variables  = NULL;
+Variables_t *all_variables = NULL;
+
+void_update_fp_t update_function_pointer                        = NULL;
+void_update_gradients_fp_t update_gradients_function_pointer    = NULL;
+void_calc_exact_fp_t calc_exact_function_pointer                = NULL;
+void_calc_timestep_fp_t calc_time_step_function_pointer         = NULL;
+void_calc_flux_fp_t calc_flux_function_pointer                  = NULL;
 
 //##################################################################################################################################
 // LOCAL FUNCTIONS
@@ -27,10 +33,8 @@ void equation_initialize();
 void equation_finalize();
 
 Variables_t *allocate_variables();
+void print_variables( Variables_t *variables );
 void deallocate_variables( Variables_t **tmp );
-
-int add_sol_variable( Variables_t *variables, string_t name );
-int add_dep_variable( Variables_t *variables, string_t name );
 
 //##################################################################################################################################
 // FUNCTIONS
@@ -69,18 +73,15 @@ void equation_initialize()
 void equation_finalize()
 {
     deallocate( equation_name );
-    deallocate_variables( &all_variables );
 
-    // nullify( exact_func_routine )
-    // nullify( update_routine )
-    // nullify( update_gradients_routine )
-    // nullify( calc_time_step_routine )
-    // nullify( calc_flux_routine )
+    print_variables( all_variables );
+    deallocate_variables( &all_variables );
 }
 
 int add_sol_variable( Variables_t *variables, string_t name )
 {
     variables->n_sol_variables  += 1;
+    variables->n_tot_variables  += 1;
     variables->sol_variables = reallocate( variables->sol_variables, sizeof( Variable_t ) * variables->n_sol_variables );
 
     int i_var = variables->n_sol_variables - 1;
@@ -93,6 +94,7 @@ int add_sol_variable( Variables_t *variables, string_t name )
 int add_dep_variable( Variables_t *variables, string_t name )
 {
     variables->n_dep_variables  += 1;
+    variables->n_tot_variables  += 1;
     variables->dep_variables     = reallocate( variables->dep_variables, sizeof( Variable_t ) * variables->n_dep_variables );
 
     int i_var = variables->n_dep_variables - 1;
@@ -113,6 +115,19 @@ Variables_t *allocate_variables()
     tmp->dep_variables  = NULL;
 
     return tmp;
+}
+
+void print_variables( Variables_t *variables )
+{
+    printf_r( "VARIABLES\n" );
+
+    printf_r( "n_sol_variables = %d\n", variables->n_sol_variables );
+    for (int i = 0; i < variables->n_sol_variables; i++ )
+        printf_r( "%d: %s\n", i, (&variables->sol_variables[i])->name );
+
+    printf_r( "n_dep_variables  = %d\n", variables->n_dep_variables );
+    for (int i = 0; i < variables->n_dep_variables; i++ )
+        printf_r( "%d: %s\n", i, (&variables->dep_variables[i])->name );
 }
 
 void deallocate_variables( Variables_t **variables )

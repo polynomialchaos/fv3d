@@ -3,13 +3,13 @@
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
 #include "main_private.h"
-#include "mesh/mesh_private.h"
-#include "equation/equation_private.h"
-#include "fv/fv_private.h"
-#include "analyze/analyze_private.h"
-#include "output/output_private.h"
-#include "restart/restart_private.h"
-#include "timedisc/timedisc_private.h"
+#include "mesh/mesh_module.h"
+#include "equation/equation_module.h"
+#include "fv/fv_module.h"
+#include "analyze/analyze_module.h"
+#include "output/output_module.h"
+#include "restart/restart_module.h"
+// #include "timedisc/timedisc_private.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -44,7 +44,7 @@ int main( int argc, string_t *argv )
     analyze_define();
     output_define();
     restart_define();
-    timedisc_define();
+    // timedisc_define();
 
     // call the global initialize routine
     global_initialize( argc, argv, 1, 1 );
@@ -52,7 +52,7 @@ int main( int argc, string_t *argv )
     // calculation
     printf_r( "\n" );
     printf_r_block( '=', "Calculation" );
-    timedisc();
+    // timedisc();
     printf_r_emtpy_block( '=' );
 
     // end the program
@@ -65,7 +65,7 @@ void main_define()
     register_initialize_routine( main_initialize );
     register_finalize_routine( main_finalize );
 
-    string_t tmp = "UNTITLED";
+    string_t tmp = "untitled";
     set_parameter( "General/title", ParameterString, &tmp, "The project title", NULL, 0 );
 }
 

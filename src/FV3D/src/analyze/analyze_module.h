@@ -2,8 +2,8 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#ifndef NAVIER_STOKES_FLUX_PRIVATE_H
-#define NAVIER_STOKES_FLUX_PRIVATE_H
+#ifndef ANALYZE_MODULE_H
+#define ANALYZE_MODULE_H
 
 #include "fv3d_module.h"
 
@@ -18,13 +18,13 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-    // character(len=_STRLEN_) :: flux_scheme = 'AUSM'             !< The Riemann solver
-
-    // procedure(),    pointer :: flux_scheme_routine => null()    !< Riemann solver routine
+extern double *residual;
 
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
-void flux_define();
+void analyze_define();
 
-#endif /* NAVIER_STOKES_FLUX_PRIVATE_H */
+void calc_global_residual( double dt );
+
+#endif /* ANALYZE_MODULE_H */

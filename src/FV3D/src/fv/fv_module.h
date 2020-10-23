@@ -2,8 +2,8 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#ifndef ANALYZE_PRIVATE_H
-#define ANALYZE_PRIVATE_H
+#ifndef FV_MODULE_H
+#define FV_MODULE_H
 
 #include "fv3d_module.h"
 
@@ -18,12 +18,30 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-extern double *residual;
+extern double *phi_total;
+extern double *grad_phi_total_x;
+extern double *grad_phi_total_y;
+extern double *grad_phi_total_z;
+
+extern double *phi_total_left;
+extern double *phi_total_right;
+
+extern double *phi_dt;
+extern double *flux;
+
+typedef void (*void_reconstruction_fp_t)();
+extern void_reconstruction_fp_t reconstruction_function_pointer;
+
+typedef double (*double_limiter_fp_t)( int i_cell, int i_var, double slope );
+extern double_limiter_fp_t limiter_function_pointer;
 
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
-void analyze_define();
-void calc_global_residual( double dt );
+void fv_define();
+void reconstruction_define();
+void limiter_define();
 
-#endif /* ANALYZE_PRIVATE_H */
+void fv_time_derivative( double t );
+
+#endif /* FV_MODULE_H */

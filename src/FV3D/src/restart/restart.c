@@ -2,8 +2,8 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#include "restart_private.h"
-#include "output/output_private.h"
+#include "restart_module.h"
+#include "output/output_module.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -33,7 +33,6 @@ void restart_define()
     register_initialize_routine( restart_initialize );
     register_finalize_routine( restart_finalize );
 
-    string_t tmp = "untitled_mesh.h5";
     set_parameter( "Restart/use_restart", ParameterBool, &use_restart, "The flag to start from restart", NULL, 0 );
 }
 
@@ -43,8 +42,6 @@ void restart_initialize()
 
     if (use_restart == 1)
         read_restart_data();
-    else
-        create_file_header();
 }
 
 void restart_finalize()

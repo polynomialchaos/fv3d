@@ -2,8 +2,8 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#ifndef IMPLICIT_PRIVATE_H
-#define IMPLICIT_PRIVATE_H
+#ifndef IMPLICIT_MODULE_H
+#define IMPLICIT_MODULE_H
 
 #include "fv3d_module.h"
 
@@ -61,4 +61,4 @@ extern int implicit_active;
 void implicit_define();
 void time_step_newton( double t, double dt, int iter );
 
-#endif /* IMPLICIT_PRIVATE_H */
+#endif /* IMPLICIT_MODULE_H */

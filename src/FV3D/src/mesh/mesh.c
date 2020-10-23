@@ -3,7 +3,7 @@
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
 #include <string.h>
-#include "mesh_private.h"
+#include "mesh_module.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -166,16 +166,16 @@ void read_mesh_file( Mesh_t *mesh )
             hsize_t offset[2];
             hsize_t count[2];
 
-            int n_cells             = 0;
+            int n_global_cells      = 0;
             int max_cell_vertices   = 0;
             int max_cell_faces      = 0;
 
             hid_t group_id = open_hdf5_group( file_id, "CELLS" );
-                get_hdf5_attribute( group_id, "n_cells", HDF5Int, &n_cells );
+                get_hdf5_attribute( group_id, "n_cells", HDF5Int, &n_global_cells );
                 get_hdf5_attribute( group_id, "max_cell_vertices", HDF5Int, &max_cell_vertices );
                 get_hdf5_attribute( group_id, "max_cell_faces", HDF5Int, &max_cell_faces );
 
-                cells = allocate_cells( mesh, n_cells, max_cell_vertices, max_cell_faces );
+                cells = allocate_cells( mesh, n_global_cells, max_cell_vertices, max_cell_faces );
 
                 hsize_t *stride = allocate( sizeof( hsize_t ) * cells->n_local_cells );
                 if (is_parallel)
@@ -241,14 +241,14 @@ void read_mesh_file( Mesh_t *mesh )
             hsize_t offset[2];
             hsize_t count[2];
 
-            int n_boundaries            = 0;
+            int n_global_boundaries     = 0;
             int max_boundary_vertices   = 0;
 
             hid_t group_id = open_hdf5_group( file_id, "BOUNDARIES" );
-                get_hdf5_attribute( group_id, "n_boundaries", HDF5Int, &n_boundaries );
+                get_hdf5_attribute( group_id, "n_boundaries", HDF5Int, &n_global_boundaries );
                 get_hdf5_attribute( group_id, "max_boundary_vertices", HDF5Int, &max_boundary_vertices );
 
-                boundaries = allocate_boundaries( mesh, n_boundaries, max_boundary_vertices );
+                boundaries = allocate_boundaries( mesh, n_global_boundaries, max_boundary_vertices );
 
                 hsize_t *stride = allocate( sizeof( hsize_t ) * boundaries->n_local_boundaries );
                 if (is_parallel)
@@ -312,14 +312,14 @@ void read_mesh_file( Mesh_t *mesh )
             hsize_t offset[2];
             hsize_t count[2];
 
-            int n_faces             = 0;
+            int n_global_faces      = 0;
             int max_face_vertices   = 0;
 
             hid_t group_id = open_hdf5_group( file_id, "FACES" );
-                get_hdf5_attribute( group_id, "n_faces", HDF5Int, &n_faces );
+                get_hdf5_attribute( group_id, "n_faces", HDF5Int, &n_global_faces );
                 get_hdf5_attribute( group_id, "max_face_vertices", HDF5Int, &max_face_vertices );
 
-                faces = allocate_faces( mesh, n_faces, max_face_vertices );
+                faces = allocate_faces( mesh, n_global_faces, max_face_vertices );
 
                 hsize_t *stride = allocate( sizeof( hsize_t ) * faces->n_local_faces );
                 if (is_parallel)

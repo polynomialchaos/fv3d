@@ -2,8 +2,8 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#ifndef TIMEDISC_PRIVATE_H
-#define TIMEDISC_PRIVATE_H
+#ifndef TIMEDISC_MODULE_H
+#define TIMEDISC_MODULE_H
 
 #include "fv3d_module.h"
 
@@ -43,4 +43,4 @@ extern void_timedisc_fp_t time_step;
 void timedisc_define();
 void timedisc();
 
-#endif /* TIMEDISC_PRIVATE_H */
+#endif /* TIMEDISC_MODULE_H */

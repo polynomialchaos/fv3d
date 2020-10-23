@@ -2,8 +2,8 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#ifndef FV_PRIVATE_H
-#define FV_PRIVATE_H
+#ifndef OUTPUT_MODULE_H
+#define OUTPUT_MODULE_H
 
 #include "fv3d_module.h"
 
@@ -18,23 +18,16 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-    // real,   allocatable,    target  :: phi_total(:,:)           !< solution vector of all variables
+    // integer                 :: i_output_data = -1       !< The output file frequency  (-1 ... first/last, 0 ... disable)
 
-    // real,   allocatable,    target  :: grad_phi_total_x(:,:)    !< gradient vector of all variables (x)
-    // real,   allocatable,    target  :: grad_phi_total_y(:,:)    !< gradient vector of all variables (y)
-    // real,   allocatable,    target  :: grad_phi_total_z(:,:)    !< gradient vector of all variables (z)
-
-    // real,   allocatable,    target  :: phi_total_left(:,:)      !< reconstruction vector of all variables (master)
-    // real,   allocatable,    target  :: phi_total_right(:,:)     !< reconstruction vector of all variables (slave)
-
-    // real,   pointer                 :: phi(:,:)                 !< solution vector of active variables
-    // real,   allocatable             :: phi_dt(:,:)              !< time derivative solution vector of active variables
-    // real,   allocatable             :: flux(:,:)                !< flux vector of variables
+    // character(len=_STRLEN_) :: output_file = ''         !< Output file
+    // logical                 :: do_output_data = .false. !< Flag to write output file
 
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
-void fv_define();
-void fv_time_derivative( double t );
+void output_define();
+void create_file_header();
+void write_output( int iter, double time );
 
-#endif /* FV_PRIVATE_H */
+#endif /* OUTPUT_MODULE_H */

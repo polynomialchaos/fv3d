@@ -2,8 +2,8 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#ifndef EQUATION_PRIVATE_H
-#define EQUATION_PRIVATE_H
+#ifndef EXPLICIT_MODULE_H
+#define EXPLICIT_MODULE_H
 
 #include "fv3d_module.h"
 
@@ -18,31 +18,16 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-typedef struct Variable
-{
-    string_t name;
-} Variable_t;
+extern int explicit_active;
+    // character(len=_STRLEN_) :: scheme = 'RK3-3'             !< The explicit scheme
 
-typedef struct Variables
-{
-    int n_sol_variables;
-    int n_dep_variables;
-
-    Variable_t *sol_variables;
-    Variable_t *dep_variables;
-} Variables_t;
-
-extern Variables_t *all_variables;
-
-// procedure(),    pointer             :: exact_func_routine => null()             !< calculate exact function
-// procedure(),    pointer             :: update_routine => null()                 !< update cell and boundary values
-// procedure(),    pointer             :: update_gradients_routine => null()       !< update gradients at boundaries
-// procedure(),    pointer             :: calc_time_step_routine => null()         !< time step routine
-// procedure(),    pointer             :: calc_flux_routine => null()              !< flux calculation routine
+    // integer                 :: n_rk_stages = 0              !< Number of Runge Kutta stages
+    // real,   allocatable     :: rk_a(:), rk_b(:), rk_g(:)    !< Runge Kutta coefficients
 
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
-void equation_define();
+void explicit_define();
+void time_step_lserkw2( double t, double dt, int iter );
 
-#endif /* EQUATION_PRIVATE_H */
+#endif /* EXPLICIT_MODULE_H */
