@@ -31,6 +31,7 @@ typedef struct Variables
 
     Variable_t *sol_variables;
     Variable_t *dep_variables;
+    Variable_t **tot_variables;
 } Variables_t;
 
 extern Variables_t *all_variables;

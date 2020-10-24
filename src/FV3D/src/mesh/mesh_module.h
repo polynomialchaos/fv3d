@@ -54,7 +54,7 @@ typedef struct Cells
 {
     int n_global_cells;
     int n_local_cells;
-    int n_cells;
+    int n_domain_cells;
     int max_cell_vertices;
     int max_cell_faces;
 
@@ -72,7 +72,6 @@ typedef struct Cells
 typedef struct Boundaries
 {
     int n_global_boundaries;
-    int n_local_boundaries;
     int n_boundaries;
     int max_boundary_vertices;
 
@@ -90,7 +89,6 @@ typedef struct Boundaries
 typedef struct Faces
 {
     int n_global_faces;
-    int n_local_faces;
     int n_faces;
     int max_face_vertices;
 
@@ -124,6 +122,10 @@ typedef struct Regions
     int *is_boundary;
 
     int flow_region;
+
+    int *type;
+    int *function_id;
+    double *phi_total;
 } Regions_t;
 
 typedef struct Mesh

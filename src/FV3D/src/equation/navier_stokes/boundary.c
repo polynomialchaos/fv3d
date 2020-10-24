@@ -3,15 +3,31 @@
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
 #include "navier_stokes_module.h"
+#include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
+#include "fv/fv_module.h"
 
 //##################################################################################################################################
 // DEFINES
 //----------------------------------------------------------------------------------------------------------------------------------
 enum BoundaryType {
-    BoundaryFlow, BoundaryInflow, BoundaryOutflow, BoundaryAdiabaticWall,
-    BoundaryIsothermalWall, BoundarySlipWall, BoundarySymmetry, BoundaryState, BoundaryFunction,
+    BoundaryFlow, BoundaryInflow, BoundaryOutflow,
+    BoundaryAdiabaticWall, BoundaryIsothermalWall, BoundarySlipWall,
+    BoundarySymmetry, BoundaryState, BoundaryFunction,
     BoundaryTypeMax
+};
+
+string_t boundary_type_strings[BoundaryTypeMax] =
+{
+    "FLOW",
+    "INFLOW",
+    "OUTFLOW",
+    "ADIABATIC_WALL",
+    "ISOTHERMAL_WALL",
+    "SLIP_WALL",
+    "SYMMETRY",
+    "STATE",
+    "FUNCTION"
 };
 
 //##################################################################################################################################
@@ -28,6 +44,8 @@ enum BoundaryType {
 void boundary_initialize();
 void boundary_finalize();
 
+void parse_primitive_state( const_string_t prefix, double *phi );
+
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
@@ -39,164 +57,290 @@ void boundary_define()
 
 void boundary_initialize()
 {
-        // do i = 1, n_regions
-        //     prefix = 'Equation/Navier-Stokes/Boundary/' // strip( regions(i)%name )
-        //     if( .not. parameter_exists( prefix ) ) &
-        //         call add_error( __LINE__, __FILE__, &
-        //             'Missing boundary specification (' // set_string( prefix ) // ')!' )
+    Regions_t *regions  = global_mesh->regions;
+    int n_regions       = regions->n_regions;
+    int n_tot_variables = all_variables->n_tot_variables;
 
-        //     call get_parameter( prefix // '/type', bnd_type )
+    regions->type           = allocate( sizeof( int ) * n_regions );
+    regions->function_id    = allocate( sizeof( int ) * n_regions );
+    regions->phi_total      = allocate( sizeof( double ) * n_tot_variables * n_regions );
 
-        //     allocate( regions(i)%phi(n_tot_variables) ); regions(i)%phi = 0.0
+    for ( int i = 0; i < n_regions; i++ )
+    {
+        string_t path = allocate_strcat( "Equation/Navier-Stokes/Boundary/", regions->name[i] );
+        check_error( (parameter_exists( path ) == 1) );
 
-        //     select case( to_lower( strip( bnd_type ) ) )
-        //         case ( bnd_type_names(BND_FLOW) )
-        //             regions(i)%type     = BND_FLOW
-        //             flow_region         = i
-        //             regions(i)%phi      = prim_to_con( parse_primitive_state( prefix ) )
-        //         case ( bnd_type_names(BND_INFLOW) )
-        //             regions(i)%type     = BND_INFLOW
-        //             regions(i)%phi      = prim_to_con( parse_primitive_state( prefix ) )
-        //         case ( bnd_type_names(BND_OUTFLOW) )
-        //             regions(i)%type     = BND_OUTFLOW
-        //         case ( bnd_type_names(BND_AD_WALL) )
-        //             regions(i)%type     = BND_AD_WALL
-        //         case ( bnd_type_names(BND_IT_WALL) )
-        //             regions(i)%type     = BND_IT_WALL
-        //             call get_parameter( prefix // '/T', regions(i)%phi(IP_T) )
-        //         case ( bnd_type_names(BND_SLIP_WALL) )
-        //             regions(i)%type     = BND_SLIP_WALL
-        //         case ( bnd_type_names(BND_SYMM) )
-        //             regions(i)%type     = BND_SYMM
-        //         case ( bnd_type_names(BND_STATE) )
-        //             regions(i)%phi      = prim_to_con( parse_primitive_state( prefix ) )
-        //         case ( bnd_type_names(BND_FUNC) )
-        //             regions(i)%type = BND_FUNC
-        //             call get_parameter( prefix // '/function_id', regions(i)%function_id )
-        //         case default
-        //             call add_error( __LINE__, __FILE__, &
-        //                 'Unknown boundary type provided (' // set_string( bnd_type ) // ')!' )
-        //     end select
-        // end do
+        string_t type = allocate_strcat( path, "/type" );
+        string_t tmp;
+        get_parameter( type, ParameterString, &tmp );
+
+        if (is_equal( tmp, boundary_type_strings[BoundaryFlow] ))
+        {
+            check_error( (regions->flow_region == i) );
+            regions->type[i] = BoundaryFlow;
+            parse_primitive_state( path, &regions->phi_total[i*n_tot_variables] );
+            prim_to_con( &regions->phi_total[i*n_tot_variables] );
+        }
+        else if (is_equal( tmp, boundary_type_strings[BoundaryInflow] ))
+        {
+            regions->type[i] = BoundaryInflow;
+            parse_primitive_state( path, &regions->phi_total[i*n_tot_variables] );
+            prim_to_con( &regions->phi_total[i*n_tot_variables] );
+        }
+        else if (is_equal( tmp, boundary_type_strings[BoundaryOutflow] ))
+        {
+            regions->type[i] = BoundaryOutflow;
+        }
+        else if (is_equal( tmp, boundary_type_strings[BoundaryAdiabaticWall] ))
+        {
+            regions->type[i] = BoundaryAdiabaticWall;
+        }
+        else if (is_equal( tmp, boundary_type_strings[BoundaryIsothermalWall] ))
+        {
+            regions->type[i]    = BoundaryIsothermalWall;
+            string_t tmp_T      = allocate_strcat( path, "/T" );
+            get_parameter( tmp_T, ParameterNumber, &regions->phi_total[i*n_tot_variables+ip_T] );
+            deallocate( tmp_T );
+        }
+        else if (is_equal( tmp, boundary_type_strings[BoundarySlipWall] ))
+        {
+            regions->type[i] = BoundarySlipWall;
+        }
+        else if (is_equal( tmp, boundary_type_strings[BoundarySymmetry] ))
+        {
+            regions->type[i] = BoundarySymmetry;
+        }
+        else if (is_equal( tmp, boundary_type_strings[BoundaryState] ))
+        {
+            regions->type[i] = BoundaryState;
+            parse_primitive_state( path, &regions->phi_total[i*n_tot_variables] );
+            prim_to_con( &regions->phi_total[i*n_tot_variables] );
+        }
+        else if (is_equal( tmp, boundary_type_strings[BoundaryFunction] ))
+        {
+            regions->type[i]    = BoundaryFunction;
+            string_t tmp_f      = allocate_strcat( path, "/function_id" );
+            get_parameter( tmp_f, ParameterDigit, &regions->function_id[i] );
+            deallocate( tmp_f );
+        }
+        else
+        {
+            check_error( 0 );
+        }
+
+        deallocate( tmp );
+        deallocate( type );
+        deallocate( path );
+    }
 }
 
 void boundary_finalize()
 {
+    Regions_t *regions = global_mesh->regions;
+
+    deallocate( regions->type );
+    deallocate( regions->function_id );
+    deallocate( regions->phi_total );
 }
 
 void update_boundaries( double t )
 {
-       //     do i = 1, n_boundaries
-        //     j   = n_cells + n_partition_receives + i
-        //     bf  = boundaries(i)%face
-        //     fc  = faces(bf)%cells(1)
-        //     ir  = boundaries(i)%id
+    Cells_t *cells              = global_mesh->cells;
+    Boundaries_t *boundaries    = global_mesh->boundaries;
+    Faces_t *faces              = global_mesh->faces;
+    Regions_t *regions          = global_mesh->regions;
 
-        //     phi_total(:,j)  = phi_total(:,fc)
+    int n_local_cells           = cells->n_local_cells;
+    int n_boundaries            = boundaries->n_boundaries;
+    int n_tot_variables         = all_variables->n_tot_variables;
 
-        //     select case ( regions(ir)%type )
-        //         case ( BND_INFLOW )
-        //             phi_total(:,j)      = regions(ir)%phi
-        //         case ( BND_AD_WALL )
-        //             ! rotate into local coordinate system
-        //             phi_total(IP_U,j)   = dot_product( phi_total(IP_UVW,j), faces(bf)%n )
-        //             phi_total(IP_V,j)   = dot_product( phi_total(IP_UVW,j), faces(bf)%t1 )
-        //             phi_total(IP_W,j)   = dot_product( phi_total(IP_UVW,j), faces(bf)%t2 )
+    double tmp_u;
+    double tmp_v;
+    double tmp_w;
 
-        //             ! apply boundary specific behaviour
-        //             phi_total(IP_P,j)   = pressure_riemann( phi_total(:,j) )
-        //             phi_total(IP_UVW,j) = 0.0
-        //             phi_total(IC_RHO,j) = ig_density( phi_total(IP_P,j), phi_total(IP_T,j), R_mix )
+    for ( int i = 0; i < n_boundaries; i++ )
+    {
+        int bf  = boundaries->face[i];
+        int bc  = faces->cells[bf*FACE_CELLS];
+        int id  = boundaries->id[i];
 
-        //             ! rotate back to global coordinate system
-        //             phi_total(IP_UVW,j) = phi_total(IP_U,j) * faces(bf)%n + &
-        //                 phi_total(IP_V,j) * faces(bf)%t1 + phi_total(IP_W,j) * faces(bf)%t2
-        //         case ( BND_IT_WALL )
-        //             ! rotate into local coordinate system
-        //             phi_total(IP_U,j)   = dot_product( phi_total(IP_UVW,j), faces(bf)%n )
-        //             phi_total(IP_V,j)   = dot_product( phi_total(IP_UVW,j), faces(bf)%t1 )
-        //             phi_total(IP_W,j)   = dot_product( phi_total(IP_UVW,j), faces(bf)%t2 )
+        double *phi_total_i = &phi_total[(n_local_cells + i) * n_tot_variables];
+        copy_n( &phi_total[bc * n_tot_variables], phi_total_i, n_tot_variables );
 
-        //             ! apply boundary specific behaviour
-        //             phi_total(IP_P,j)   = pressure_riemann( phi_total(:,j) )
-        //             phi_total(IP_UVW,j) = 0.0
-        //             phi_total(IP_T,j)   = regions(ir)%phi(IP_T)
-        //             phi_total(IC_RHO,j) = ig_density( phi_total(IP_P,j), phi_total(IP_T,j), R_mix )
+        switch (regions->type[id])
+        {
+            case BoundaryInflow:
+            case BoundaryState:
+                copy_n( &regions->phi_total[id*n_tot_variables], phi_total_i, n_tot_variables );
+                break;
+            case BoundaryOutflow:
+                break;
+            case BoundaryAdiabaticWall:
+                // rotate into local coordinate system
+                phi_total_i[ip_u]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->n[bf*DIM], DIM );
+                phi_total_i[ip_v]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->t1[bf*DIM], DIM );
+                phi_total_i[ip_w]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->t2[bf*DIM], DIM );
 
-        //             ! rotate back to global coordinate system
-        //             phi_total(IP_UVW,j) = phi_total(IP_U,j) * faces(bf)%n + &
-        //                 phi_total(IP_V,j) * faces(bf)%t1 + phi_total(IP_W,j) * faces(bf)%t2
-        //         case ( BND_SLIP_WALL, BND_SYMM )
-        //             ! rotate into local coordinate system
-        //             phi_total(IP_U,j)   = dot_product( phi_total(IP_UVW,j), faces(bf)%n )
-        //             phi_total(IP_V,j)   = dot_product( phi_total(IP_UVW,j), faces(bf)%t1 )
-        //             phi_total(IP_W,j)   = dot_product( phi_total(IP_UVW,j), faces(bf)%t2 )
+                //apply boundary specific behaviour
+                phi_total_i[ip_p]   = calc_riemann_p( phi_total_i );
+                set_value_n( 0.0, &phi_total_i[ip_u], DIM );
+                phi_total_i[ic_rho] = calc_ig_rho( phi_total_i[ip_p], phi_total_i[ip_T], R_mix );
 
-        //             ! apply boundary specific behaviour
-        //             phi_total(IP_P,j)   = pressure_riemann( phi_total(:,j) )
-        //             phi_total(IP_U,j)   = 0.0
-        //             phi_total(IP_T,j)   = ig_temperature( phi_total(IP_P,j), phi_total(IC_RHO,j), R_mix )
+                // rotate back to global coordinate system
+                tmp_u   = phi_total_i[ip_u] * faces->n[bf*DIM] +
+                    phi_total_i[ip_v] * faces->t1[bf*DIM] + phi_total_i[ip_w] * faces->t2[bf*DIM];
+                tmp_v   = phi_total_i[ip_u] * faces->n[bf*DIM+1] +
+                    phi_total_i[ip_v] * faces->t1[bf*DIM+1] + phi_total_i[ip_w] * faces->t2[bf*DIM+1];
+                tmp_w   = phi_total_i[ip_u] * faces->n[bf*DIM+2] +
+                    phi_total_i[ip_v] * faces->t1[bf*DIM+2] + phi_total_i[ip_w] * faces->t2[bf*DIM+2];
 
-        //             ! rotate back to global coordinate system
-        //             phi_total(IP_UVW,j) = phi_total(IP_U,j) * faces(bf)%n + &
-        //                 phi_total(IP_V,j) * faces(bf)%t1 + phi_total(IP_W,j) * faces(bf)%t2
-        //         case ( BND_STATE )
-        //             phi_total(IP,j)     = regions(ir)%phi(IP)
-        //         case ( BND_FUNC )
-        //             call exact_func_routine( regions(ir)%function_id, t, faces(bf)%x, phi_total(:,j) )
-        //             phi_total(:,j) = con_to_prim( phi_total(:,j) )
-        //         case ( BND_OUTFLOW )
-        //         case default
-        //             call add_error( __LINE__, __FILE__, &
-        //                 'Unsupported region type provided (' // set_string( regions(ir)%type ) // ')!' )
-        //     end select
+                phi_total_i[ip_u]   = tmp_u;
+                phi_total_i[ip_v]   = tmp_v;
+                phi_total_i[ip_w]   = tmp_w;
+                break;
+            case BoundaryIsothermalWall:
+                // rotate into local coordinate system
+                phi_total_i[ip_u]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->n[bf*DIM], DIM );
+                phi_total_i[ip_v]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->t1[bf*DIM], DIM );
+                phi_total_i[ip_w]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->t2[bf*DIM], DIM );
 
-        //     phi_total(:,j) = prim_to_con( phi_total(:,j) )
-        // end do
+                //apply boundary specific behaviour
+                phi_total_i[ip_p]   = calc_riemann_p( phi_total_i );
+                set_value_n( 0.0, &phi_total_i[ip_u], DIM );
+                phi_total_i[ip_T]   = regions->phi_total[id*n_tot_variables+ip_T];
+                phi_total_i[ic_rho] = calc_ig_rho( phi_total_i[ip_p], phi_total_i[ip_T], R_mix );
+
+                // rotate back to global coordinate system
+                tmp_u   = phi_total_i[ip_u] * faces->n[bf*DIM] +
+                    phi_total_i[ip_v] * faces->t1[bf*DIM] + phi_total_i[ip_w] * faces->t2[bf*DIM];
+                tmp_v   = phi_total_i[ip_u] * faces->n[bf*DIM+1] +
+                    phi_total_i[ip_v] * faces->t1[bf*DIM+1] + phi_total_i[ip_w] * faces->t2[bf*DIM+1];
+                tmp_w   = phi_total_i[ip_u] * faces->n[bf*DIM+2] +
+                    phi_total_i[ip_v] * faces->t1[bf*DIM+2] + phi_total_i[ip_w] * faces->t2[bf*DIM+2];
+
+                phi_total_i[ip_u]   = tmp_u;
+                phi_total_i[ip_v]   = tmp_v;
+                phi_total_i[ip_w]   = tmp_w;
+                break;
+            case BoundarySlipWall:
+            case BoundarySymmetry:
+                // rotate into local coordinate system
+                phi_total_i[ip_u]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->n[bf*DIM], DIM );
+                phi_total_i[ip_v]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->t1[bf*DIM], DIM );
+                phi_total_i[ip_w]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->t2[bf*DIM], DIM );
+
+                //apply boundary specific behaviour
+                phi_total_i[ip_p]   = calc_riemann_p( phi_total_i );
+                phi_total_i[ip_u]   = 0.0;
+                phi_total_i[ip_T]   = calc_ig_T( phi_total_i[ip_p], phi_total_i[ic_rho], R_mix );
+
+                // rotate back to global coordinate system
+                tmp_u   = phi_total_i[ip_u] * faces->n[bf*DIM] +
+                    phi_total_i[ip_v] * faces->t1[bf*DIM] + phi_total_i[ip_w] * faces->t2[bf*DIM];
+                tmp_v   = phi_total_i[ip_u] * faces->n[bf*DIM+1] +
+                    phi_total_i[ip_v] * faces->t1[bf*DIM+1] + phi_total_i[ip_w] * faces->t2[bf*DIM+1];
+                tmp_w   = phi_total_i[ip_u] * faces->n[bf*DIM+2] +
+                    phi_total_i[ip_v] * faces->t1[bf*DIM+2] + phi_total_i[ip_w] * faces->t2[bf*DIM+2];
+
+                phi_total_i[ip_u]   = tmp_u;
+                phi_total_i[ip_v]   = tmp_v;
+                phi_total_i[ip_w]   = tmp_w;
+                break;
+            case BoundaryFunction:
+                calc_exact_function_pointer( regions->function_id[id], t, &faces->x[bf*DIM], phi_total_i );
+                con_to_prim( phi_total_i );
+                break;
+            default:
+                check_error( 0 );
+                break;
+        }
+
+        prim_to_con( phi_total_i );
+    }
 }
 
 void update_gradients_boundaries( double t )
 {
-    //    do i = 1, n_boundaries
-    //         j   = n_cells + n_partition_receives + i
-    //         bf  = boundaries(i)%face
-    //         bc  = faces(bf)%cells(1)
+    Cells_t *cells              = global_mesh->cells;
+    Boundaries_t *boundaries    = global_mesh->boundaries;
+    Faces_t *faces              = global_mesh->faces;
+    Regions_t *regions          = global_mesh->regions;
 
-    //         ! rotate neighbour cell gradient into local coordinates
-    //         grad_phi_total_x_r  = grad_phi_total_x(:,bc) * faces(bf)%n(1) + &
-    //             grad_phi_total_y(:,bc) * faces(bf)%n(2) + grad_phi_total_z(:,bc) * faces(bf)%n(3)
+    int n_local_cells           = cells->n_local_cells;
+    int n_boundaries            = boundaries->n_boundaries;
+    int n_tot_variables         = all_variables->n_tot_variables;
 
-    //         grad_phi_total_y_r  = grad_phi_total_x(:,bc) * faces(bf)%t1(1) + &
-    //             grad_phi_total_y(:,bc) * faces(bf)%t1(2) + grad_phi_total_z(:,bc) * faces(bf)%t1(3)
+    double tmp_x[n_tot_variables];
+    double tmp_y[n_tot_variables];
+    double tmp_z[n_tot_variables];
 
-    //         grad_phi_total_z_r  = grad_phi_total_x(:,bc) * faces(bf)%t2(1) + &
-    //             grad_phi_total_y(:,bc) * faces(bf)%t2(2) + grad_phi_total_z(:,bc) * faces(bf)%t2(3)
+    for ( int i = 0; i < n_boundaries; i++ )
+    {
+        int bf  = boundaries->face[i];
+        int bc  = faces->cells[bf*FACE_CELLS];
+        int id  = boundaries->id[i];
 
-    //         select case ( regions(boundaries(i)%id)%type )
-    //             case ( BND_SLIP_WALL, BND_SYMM )
-    //                 grad_phi_total_x_r(:) = 0.0
-    //         end select
+        double *grad_phi_total_x_i = &grad_phi_total_x[(n_local_cells + i) * n_tot_variables];
+        double *grad_phi_total_y_i = &grad_phi_total_y[(n_local_cells + i) * n_tot_variables];
+        double *grad_phi_total_z_i = &grad_phi_total_z[(n_local_cells + i) * n_tot_variables];
+        copy_n( &grad_phi_total_x[bc*n_tot_variables], grad_phi_total_x_i, n_tot_variables );
+        copy_n( &grad_phi_total_y[bc*n_tot_variables], grad_phi_total_y_i, n_tot_variables );
+        copy_n( &grad_phi_total_z[bc*n_tot_variables], grad_phi_total_z_i, n_tot_variables );
 
-    //         ! rotate neighbour cell gradient back from local coordinates
-    //         grad_phi_total_x(:,j) = grad_phi_total_x_r * faces(bf)%n(1) + &
-    //             grad_phi_total_y_r * faces(bf)%t1(1) + grad_phi_total_z_r * faces(bf)%t2(1)
+        switch (regions->type[id])
+        {
+            case BoundaryInflow:
+            case BoundaryState:
+            case BoundaryOutflow:
+            case BoundaryAdiabaticWall:
+            case BoundaryIsothermalWall:
+            case BoundaryFunction:
+                break;
+            case BoundarySlipWall:
+            case BoundarySymmetry:
+                // rotate neighbour cell gradient into local coordinates
+                for ( int j = 0; j < n_tot_variables; j++ )
+                {
+                    tmp_x[j] = grad_phi_total_x_i[j] * faces->n[bf*DIM] +
+                        grad_phi_total_y_i[j] * faces->n[bf*DIM+1] + grad_phi_total_z_i[j] * faces->n[bf*DIM+2];
+                    tmp_y[j] = grad_phi_total_x_i[j] * faces->t1[bf*DIM] +
+                        grad_phi_total_y_i[j] * faces->t1[bf*DIM+1] + grad_phi_total_z_i[j] * faces->t1[bf*DIM+2];
+                    tmp_z[j] = grad_phi_total_x_i[j] * faces->t2[bf*DIM] +
+                        grad_phi_total_y_i[j] * faces->t2[bf*DIM+1] + grad_phi_total_z_i[j] * faces->t2[bf*DIM+2];
+                }
 
-    //         grad_phi_total_y(:,j) = grad_phi_total_x_r * faces(bf)%n(2) + &
-    //             grad_phi_total_y_r * faces(bf)%t1(2) + grad_phi_total_z_r * faces(bf)%t2(2)
+                //apply boundary specific behaviour
+                for ( int j = 0; j < n_tot_variables; j++ )
+                {
+                    tmp_x[j] = 0.0;
+                }
 
-    //         grad_phi_total_z(:,j) = grad_phi_total_x_r * faces(bf)%n(3) + &
-    //             grad_phi_total_y_r * faces(bf)%t1(3) + grad_phi_total_z_r * faces(bf)%t2(3)
-    //     end do
+                // rotate neighbour cell gradient back from local coordinates
+                for ( int j = 0; j < n_tot_variables; j++ )
+                {
+                    grad_phi_total_x_i[j] = tmp_x[j] * faces->n[bf*DIM] +
+                        tmp_y[j] * faces->t1[bf*DIM] + tmp_z[j] * faces->t2[bf*DIM];
+                    grad_phi_total_y_i[j] = tmp_x[j] * faces->n[bf*DIM+1] +
+                        tmp_y[j] * faces->t1[bf*DIM+1] + tmp_z[j] * faces->t2[bf*DIM+1];
+                    grad_phi_total_z_i[j] = tmp_x[j] * faces->n[bf*DIM+2] +
+                        tmp_y[j] * faces->t1[bf*DIM+2] + tmp_z[j] * faces->t2[bf*DIM+2];
+                }
+                break;
+            default:
+                check_error( 0 );
+                break;
+        }
+    }
 }
 
-void parse_primitive_state( const_string_t prefix, double *phi_total_i )
+void parse_primitive_state( const_string_t prefix, double *phi )
 {
-    string_t tmp_rho    = allocate_strcat( prefix, "rho" );
-    string_t tmp_u      = allocate_strcat( prefix, "u" );
-    string_t tmp_v      = allocate_strcat( prefix, "v" );
-    string_t tmp_w      = allocate_strcat( prefix, "w" );
-    string_t tmp_p      = allocate_strcat( prefix, "p" );
-    string_t tmp_T      = allocate_strcat( prefix, "T" );
+    string_t tmp_rho    = allocate_strcat( prefix, "/rho" );
+    string_t tmp_u      = allocate_strcat( prefix, "/u" );
+    string_t tmp_v      = allocate_strcat( prefix, "/v" );
+    string_t tmp_w      = allocate_strcat( prefix, "/w" );
+    string_t tmp_p      = allocate_strcat( prefix, "/p" );
+    string_t tmp_T      = allocate_strcat( prefix, "/T" );
 
     int has_rho = parameter_exists( tmp_rho );
     int has_u   = parameter_exists( tmp_u );
@@ -205,43 +349,17 @@ void parse_primitive_state( const_string_t prefix, double *phi_total_i )
     int has_p   = parameter_exists( tmp_p );
     int has_T   = parameter_exists( tmp_T );
 
-    set_value_n( 0.0, phi_total_i, all_variables->n_tot_variables );
+    set_value_n( 0.0, phi, all_variables->n_tot_variables );
 
     // check the provided data and fill the arrays
-    if (has_rho && has_u && has_v && has_w && has_p)
+    if (has_u && has_v && has_w && has_p && has_T)
     {
-        // get_parameter( tmp_rho, res[ic_rho] );
-        // get_parameter( tmp_u, res[ip_u] );
-        // get_parameter( tmp_v, res[ip_v] );
-        // get_parameter( tmp_w, res[ip_w] );
-        // get_parameter( tmp_p, res[ip_p] );
-        // ip_T =
-        // get_parameter( tmp_T, res[] );
-
-        // call get_parameter( prefix // '/rho', res(IC_RHO) )
-        // call get_parameter( prefix // '/v_x', res(IP_U) )
-        // call get_parameter( prefix // '/v_y', res(IP_V) )
-        // call get_parameter( prefix // '/v_z', res(IP_W) )
-        // call get_parameter( prefix // '/p', res(IP_P) )
-        // res(IP_T) = ig_temperature( res(IP_P), res(IC_RHO), R_mix )
-    }
-    else if (has_rho && has_u && has_v && has_w && has_T)
-    {
-        // call get_parameter( prefix // '/rho', res(IC_RHO) )
-        // call get_parameter( prefix // '/v_x', res(IP_U) )
-        // call get_parameter( prefix // '/v_y', res(IP_V) )
-        // call get_parameter( prefix // '/v_z', res(IP_W) )
-        // call get_parameter( prefix // '/T', res(IP_T) )
-        // res(IP_P) = ig_pressure( res(IC_RHO), res(IP_T), R_mix )
-    }
-    else if (has_u && has_v && has_w && has_p && has_T)
-    {
-        // call get_parameter( prefix // '/v_x', res(IP_U) )
-        // call get_parameter( prefix // '/v_y', res(IP_V) )
-        // call get_parameter( prefix // '/v_z', res(IP_W) )
-        // call get_parameter( prefix // '/p', res(IP_P) )
-        // call get_parameter( prefix // '/T', res(IP_T) )
-        // res(IC_RHO) = ig_density( res(IP_P), res(IP_T), R_mix )
+        get_parameter( tmp_u, ParameterNumber, &phi[ip_u] );
+        get_parameter( tmp_v, ParameterNumber, &phi[ip_v] );
+        get_parameter( tmp_w, ParameterNumber, &phi[ip_w] );
+        get_parameter( tmp_p, ParameterNumber, &phi[ip_p] );
+        get_parameter( tmp_T, ParameterNumber, &phi[ip_T] );
+        phi[ic_rho] = calc_ig_rho( phi[ip_p], phi[ip_T], R_mix );
     }
     else
     {

@@ -139,13 +139,13 @@ Cells_t *allocate_cells( Mesh_t *mesh, int n_cells, int max_cell_vertices, int m
 
     cells->n_global_cells       = n_cells;
     cells->n_local_cells        = n_cells;
-    cells->n_cells              = n_cells;
+    cells->n_domain_cells       = n_cells;
     cells->max_cell_vertices    = max_cell_vertices;
     cells->max_cell_faces       = max_cell_faces;
 
     if (get_is_parallel())
     {
-        cells->n_cells          = mesh->partition->n_partition_cells;
+        cells->n_domain_cells   = mesh->partition->n_partition_cells;
         cells->n_local_cells    = mesh->partition->n_partition_cells + mesh->partition->n_partition_receives;
         n_cells                 = cells->n_local_cells;
     }
@@ -172,15 +172,13 @@ Boundaries_t *allocate_boundaries( Mesh_t *mesh, int n_boundaries, int max_bound
     Boundaries_t *boundaries = mesh->boundaries;
 
     boundaries->n_global_boundaries     = n_boundaries;
-    boundaries->n_local_boundaries      = n_boundaries;
     boundaries->n_boundaries            = n_boundaries;
     boundaries->max_boundary_vertices   = max_boundary_vertices;
 
     if (get_is_parallel())
     {
-        boundaries->n_boundaries        = mesh->partition->n_partition_boundaries;
-        boundaries->n_local_boundaries  = mesh->partition->n_partition_boundaries;
-        n_boundaries                    = boundaries->n_local_boundaries;
+        boundaries->n_boundaries    = mesh->partition->n_partition_boundaries;
+        n_boundaries                = boundaries->n_boundaries;
     }
 
     boundaries->id          = allocate( sizeof( int ) * n_boundaries );
@@ -204,15 +202,13 @@ Faces_t *allocate_faces( Mesh_t *mesh, int n_faces, int max_face_vertices )
     Faces_t *faces = mesh->faces;
 
     faces->n_global_faces       = n_faces;
-    faces->n_local_faces        = n_faces;
     faces->n_faces              = n_faces;
     faces->max_face_vertices    = max_face_vertices;
 
     if (get_is_parallel())
     {
-        faces->n_faces          = mesh->partition->n_partition_faces;
-        faces->n_local_faces    = mesh->partition->n_partition_faces;
-        n_faces                 = faces->n_local_faces;
+        faces->n_faces  = mesh->partition->n_partition_faces;
+        n_faces         = faces->n_faces;
     }
 
     faces->type         = allocate( sizeof( int ) * n_faces );
@@ -327,7 +323,7 @@ void print_cells( Cells_t *cells )
 
     printf_r( "n_global_cells    = %d\n", cells->n_global_cells    );
     printf_r( "n_local_cells     = %d\n", cells->n_local_cells     );
-    printf_r( "n_cells           = %d\n", cells->n_cells           );
+    printf_r( "n_domain_cells    = %d\n", cells->n_domain_cells    );
     printf_r( "max_cell_vertices = %d\n", cells->max_cell_vertices );
     printf_r( "max_cell_faces    = %d\n", cells->max_cell_faces    );
 }
@@ -355,7 +351,6 @@ void print_boundaries( Boundaries_t *boundaries )
     printf_r( "BOUNDARIES\n" );
 
     printf_r( "n_global_boundaries   = %d\n", boundaries->n_global_boundaries   );
-    printf_r( "n_local_boundaries    = %d\n", boundaries->n_local_boundaries    );
     printf_r( "n_boundaries          = %d\n", boundaries->n_boundaries          );
     printf_r( "max_boundary_vertices = %d\n", boundaries->max_boundary_vertices );
 }
@@ -390,7 +385,6 @@ void print_faces( Faces_t *faces )
     printf_r( "FACES\n" );
 
     printf_r( "n_global_faces    = %d\n", faces->n_global_faces    );
-    printf_r( "n_local_faces     = %d\n", faces->n_local_faces     );
     printf_r( "n_faces           = %d\n", faces->n_faces           );
     printf_r( "max_face_vertices = %d\n", faces->max_face_vertices );
 }

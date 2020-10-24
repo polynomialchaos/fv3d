@@ -60,7 +60,6 @@ void boundary_define();
 void flux_define();
 
 void update_boundaries( double t );
-void update_gradients_boundaries( double t );
 
 void prim_to_con( double *phi );
 void copy_prim_to_con( double *phi_i, double *phi_j );

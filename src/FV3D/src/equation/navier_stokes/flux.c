@@ -3,6 +3,7 @@
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
 #include "navier_stokes_module.h"
+#include "equation/equation_module.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -66,18 +67,18 @@ void calc_flux()
         //     fc  = faces(i)%cells
 
         //     ! rotate master and slave to face local coordinates
-        //     phi_master_r(IC_RHO)    = phi_total_left(IC_RHO,i)
-        //     phi_master_r(IC_RHO_U)  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%n )
-        //     phi_master_r(IC_RHO_V)  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%t1 )
-        //     phi_master_r(IC_RHO_W)  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%t2 )
-        //     phi_master_r(IC_RHO_E)  = phi_total_left(IC_RHO_E,i)
+        //     phi_master_r[ic_rho]    = phi_total_left(IC_RHO,i)
+        //     phi_master_r[ic_rho_u]  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%n )
+        //     phi_master_r[ic_rho_v]  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%t1 )
+        //     phi_master_r[ic_rho_w]  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%t2 )
+        //     phi_master_r[ic_rho_e]  = phi_total_left(IC_RHO_E,i)
         //     phi_master_r            = con_to_prim( phi_master_r )
 
-        //     phi_slave_r(IC_RHO)     = phi_total_right(IC_RHO,i)
-        //     phi_slave_r(IC_RHO_U)   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%n )
-        //     phi_slave_r(IC_RHO_V)   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%t1 )
-        //     phi_slave_r(IC_RHO_W)   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%t2 )
-        //     phi_slave_r(IC_RHO_E)   = phi_total_right(IC_RHO_E,i)
+        //     phi_slave_r[ic_rho]     = phi_total_right(IC_RHO,i)
+        //     phi_slave_r[ic_rho_u]   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%n )
+        //     phi_slave_r[ic_rho_v]   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%t1 )
+        //     phi_slave_r[ic_rho_w]   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%t2 )
+        //     phi_slave_r[ic_rho_e]   = phi_total_right(IC_RHO_E,i)
         //     phi_slave_r             = con_to_prim( phi_slave_r )
 
         //     ! calculate convective flux
@@ -103,18 +104,18 @@ void calc_flux()
         //     ir  = boundaries(faces(i)%boundary)%id
 
         //     ! rotate master and slave to face local coordinates
-        //     phi_master_r(IC_RHO)    = phi_total_left(IC_RHO,i)
-        //     phi_master_r(IC_RHO_U)  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%n )
-        //     phi_master_r(IC_RHO_V)  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%t1 )
-        //     phi_master_r(IC_RHO_W)  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%t2 )
-        //     phi_master_r(IC_RHO_E)  = phi_total_left(IC_RHO_E,i)
+        //     phi_master_r[ic_rho]    = phi_total_left(IC_RHO,i)
+        //     phi_master_r[ic_rho_u]  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%n )
+        //     phi_master_r[ic_rho_v]  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%t1 )
+        //     phi_master_r[ic_rho_w]  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%t2 )
+        //     phi_master_r[ic_rho_e]  = phi_total_left(IC_RHO_E,i)
         //     phi_master_r            = con_to_prim( phi_master_r )
 
-        //     phi_slave_r(IC_RHO)     = phi_total_right(IC_RHO,i)
-        //     phi_slave_r(IC_RHO_U)   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%n )
-        //     phi_slave_r(IC_RHO_V)   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%t1 )
-        //     phi_slave_r(IC_RHO_W)   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%t2 )
-        //     phi_slave_r(IC_RHO_E)   = phi_total_right(IC_RHO_E,i)
+        //     phi_slave_r[ic_rho]     = phi_total_right(IC_RHO,i)
+        //     phi_slave_r[ic_rho_u]   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%n )
+        //     phi_slave_r[ic_rho_v]   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%t1 )
+        //     phi_slave_r[ic_rho_w]   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%t2 )
+        //     phi_slave_r[ic_rho_e]   = phi_total_right(IC_RHO_E,i)
         //     phi_slave_r             = con_to_prim( phi_slave_r )
 
         //     ! calculate convective flux
@@ -144,27 +145,31 @@ void calc_flux()
 
 void riemann_rusanonv( double *phi_l, double *phi_r, double *f )
 {
-        // c_l     = sqrt( kappa * phi_l(IP_P) / phi_l(IC_RHO) )
-        // c_r     = sqrt( kappa * phi_r(IP_P) / phi_r(IC_RHO) )
-        // eigval  = max( abs( phi_l(IP_U) ) + c_l, abs( phi_r(IP_U) ) + c_r )
+    int n_sol_variables = all_variables->n_sol_variables;
 
-        // call eval_euler_flux_1d( phi_l, f_l )
-        // call eval_euler_flux_1d( phi_r, f_r )
+    double c_l      = sqrt( kappa * phi_l[ip_p] / phi_l[ic_rho] );
+    double c_r      = sqrt( kappa * phi_r[ip_p] / phi_r[ic_rho] );
+    double eigval   = u_max( u_abs( phi_l[ip_u] ) + c_l, u_abs( phi_r[ip_u] ) + c_r );
 
-        // f = 0.5 * (f_l + f_r) - 0.5 * eigval * (phi_r(:n_variables) - phi_l(:n_variables))
+    double f_l[n_sol_variables];
+    double f_r[n_sol_variables];
+    eval_euler_flux_1d( phi_l, f_l );
+    eval_euler_flux_1d( phi_r, f_r );
 
+    for ( int j = 0; j < n_sol_variables; j++ )
+        f[j] = 0.5 * (f_l[j] + f_r[j]) - 0.5 * eigval * (phi_r[j] - phi_l[j]);
 }
 
 void riemann_ausm( double *phi_l, double *phi_r, double *f )
 {
-        // c_l = sqrt( kappa * phi_l(IP_P) / phi_l(IC_RHO))
-        // c_r = sqrt( kappa * phi_r(IP_P) / phi_r(IC_RHO))
+        // c_l = sqrt( kappa * phi_l[ip_p] / phi_l[ic_rho])
+        // c_r = sqrt( kappa * phi_r[ip_p] / phi_r[ic_rho])
 
-        // M_l = phi_l(IP_U) / c_l
-        // M_r = phi_r(IP_U) / c_r
+        // M_l = phi_l[ip_u] / c_l
+        // M_r = phi_r[ip_u] / c_r
 
-        // H_l = (phi_l(IC_RHO_E) + phi_l(IP_P)) / phi_l(IC_RHO)
-        // H_r = (phi_r(IC_RHO_E) + phi_r(IP_P)) / phi_r(IC_RHO)
+        // H_l = (phi_l[ic_rho_e] + phi_l[ip_p]) / phi_l[ic_rho]
+        // H_r = (phi_r[ic_rho_e] + phi_r[ip_p]) / phi_r[ic_rho]
 
         // ! Positive M and p in the LEFT cell.
         // if( M_l .le. -1.0 ) then
@@ -172,37 +177,37 @@ void riemann_ausm( double *phi_l, double *phi_r, double *f )
         //     P_p = 0.0
         // else if( M_l .lt. 1.0 ) then
         //     M_p = 0.25 * (M_l + 1.0) * (M_l + 1.0)
-        //     P_p = 0.25 * phi_l(IP_P) * (1.0 + M_l) * (1.0 + M_l) * (2.0 - M_l) ! or use P_p = half*(1.0+M_l)*phi_l(IP_V)
+        //     P_p = 0.25 * phi_l[ip_p] * (1.0 + M_l) * (1.0 + M_l) * (2.0 - M_l) ! or use P_p = half*(1.0+M_l)*phi_l[ip_v]
         // else
         //     M_p = M_l
-        //     P_p = phi_l(IP_P)
+        //     P_p = phi_l[ip_p]
         // end if
 
         // ! Negative M and p in the RIGHT cell.
         // if( M_r .le. -1.0 ) then
         //     M_m = M_r
-        //     P_m = phi_r(IP_P)
+        //     P_m = phi_r[ip_p]
         // else if( M_r .lt. 1.0 ) then
         //     M_m = -0.25 * (M_r - 1.0) * (M_r - 1.0)
-        //     P_m =  0.25 * phi_r(IP_P) * (1.0 - M_r) * (1.0 - M_r) * (2.0 + M_r) ! or use P_m = half*(1.0-M_r)*phi_r(IP_V)
+        //     P_m =  0.25 * phi_r[ip_p] * (1.0 - M_r) * (1.0 - M_r) * (2.0 + M_r) ! or use P_m = half*(1.0-M_r)*phi_r[ip_v]
         // else
         //     M_m = 0.0
         //     P_m = 0.0
         // end if
 
         // ! Positive Part of Flux evaluated in the left cell.
-        // f_p(1)  = max( 0.0, M_p + M_m ) * c_l * phi_l(IC_RHO)
-        // f_p(2)  = max( 0.0, M_p + M_m ) * c_l * phi_l(IC_RHO) * phi_l(IP_U) + P_p
-        // f_p(3)  = max( 0.0, M_p + M_m ) * c_l * phi_l(IC_RHO) * phi_l(IP_V)
-        // f_p(4)  = max( 0.0, M_p + M_m ) * c_l * phi_l(IC_RHO) * phi_l(IP_W)
-        // f_p(5)  = max( 0.0, M_p + M_m ) * c_l * phi_l(IC_RHO) * H_l
+        // f_p(1)  = u_max( 0.0, M_p + M_m ) * c_l * phi_l[ic_rho]
+        // f_p(2)  = u_max( 0.0, M_p + M_m ) * c_l * phi_l[ic_rho] * phi_l[ip_u] + P_p
+        // f_p(3)  = u_max( 0.0, M_p + M_m ) * c_l * phi_l[ic_rho] * phi_l[ip_v]
+        // f_p(4)  = u_max( 0.0, M_p + M_m ) * c_l * phi_l[ic_rho] * phi_l[ip_w]
+        // f_p(5)  = u_max( 0.0, M_p + M_m ) * c_l * phi_l[ic_rho] * H_l
 
         // ! Negative Part of Flux evaluated in the right cell.
-        // f_m(1)  = min( 0.0, M_p + M_m ) * c_r * phi_r(IC_RHO)
-        // f_m(2)  = min( 0.0, M_p + M_m ) * c_r * phi_r(IC_RHO) * phi_r(IP_U) + P_m
-        // f_m(3)  = min( 0.0, M_p + M_m ) * c_r * phi_r(IC_RHO) * phi_r(IP_V)
-        // f_m(4)  = min( 0.0, M_p + M_m ) * c_r * phi_r(IC_RHO) * phi_r(IP_W)
-        // f_m(5)  = min( 0.0, M_p + M_m ) * c_r * phi_r(IC_RHO) * H_r
+        // f_m(1)  = u_min( 0.0, M_p + M_m ) * c_r * phi_r[ic_rho]
+        // f_m(2)  = u_min( 0.0, M_p + M_m ) * c_r * phi_r[ic_rho] * phi_r[ip_u] + P_m
+        // f_m(3)  = u_min( 0.0, M_p + M_m ) * c_r * phi_r[ic_rho] * phi_r[ip_v]
+        // f_m(4)  = u_min( 0.0, M_p + M_m ) * c_r * phi_r[ic_rho] * phi_r[ip_w]
+        // f_m(5)  = u_min( 0.0, M_p + M_m ) * c_r * phi_r[ic_rho] * H_r
 
         // f = f_p + f_m
 }
@@ -223,11 +228,11 @@ void viscous_flux( double *phi_l, double *grad_phi_x_l, double *grad_phi_y_l, do
 void eval_euler_flux_1d( double *phi, double *f )
 {
 
-        // f(1)    = phi(IC_RHO_U)                             ! rho * u
-        // f(2)    = phi(IC_RHO_U) * phi(IP_U) + phi(IP_P)     ! rho * u * u + p
-        // f(3)    = phi(IC_RHO_U) * phi(IP_V)                 ! rho * u * v
-        // f(4)    = phi(IC_RHO_U) * phi(IP_W)                 ! rho * u * w
-        // f(5)    = (phi(IC_RHO_E) + phi(IP_P)) * phi(IP_U)   ! (rho * e + p) * u
+        // f(1)    = phi[ic_rho_u]                             ! rho * u
+        // f(2)    = phi[ic_rho_u] * phi[ip_u] + phi[ip_p]     ! rho * u * u + p
+        // f(3)    = phi[ic_rho_u] * phi[ip_v]                 ! rho * u * v
+        // f(4)    = phi[ic_rho_u] * phi[ip_w]                 ! rho * u * w
+        // f(5)    = (phi[ic_rho_e] + phi[ip_p]) * phi[ip_u]   ! (rho * e + p) * u
 
 }
 
@@ -250,21 +255,21 @@ void eval_viscous_flux_1d( double *phi, double *grad_phi_x, double *grad_phi_y, 
         // f(2)    = -tau_xx                                       ! -4/3 * mu * u_x + 2/3 * mu * (v_y + w_z)
         // f(3)    = -tau_xy                                       ! -mu * (u_y + v_x)
         // f(4)    = -tau_xz                                       ! -mu * (u_z + w_x)
-        // f(5)    = -tau_xx * phi(IP_U) - tau_xy * phi(IP_V) - &
-        //     tau_xz * phi(IP_W) - lambda * grad_phi_x(IP_T)      ! -(tau_xx * phi + tau_xy * v + tau_xz * w - q_x) q_x=-lambda * T_x
+        // f(5)    = -tau_xx * phi[ip_u] - tau_xy * phi[ip_v] - &
+        //     tau_xz * phi[ip_w] - lambda * grad_phi_x[ip_T]      ! -(tau_xx * phi + tau_xy * v + tau_xz * w - q_x) q_x=-lambda * T_x
 
         // g(1)    =  0.0
         // g(2)    = -tau_xy                                       ! -mu * (u_y + v_x)
         // g(3)    = -tau_yy                                       ! -4/3 * mu * v_y + 2/3 * mu * (u_x + w_z)
         // g(4)    = -tau_yz                                       ! -mu * (y_z + w_y)
-        // g(5)    = -tau_xy * phi(IP_U) - tau_yy * phi(IP_V) - &
-        //     tau_yz * phi(IP_W) - lambda * grad_phi_y(IP_T)      ! -(tau_yx * phi + tau_yy * v + tau_yz * w - q_y) q_y=-lambda * T_y
+        // g(5)    = -tau_xy * phi[ip_u] - tau_yy * phi[ip_v] - &
+        //     tau_yz * phi[ip_w] - lambda * grad_phi_y[ip_T]      ! -(tau_yx * phi + tau_yy * v + tau_yz * w - q_y) q_y=-lambda * T_y
 
         // h(1)    =  0.0
         // h(2)    = -tau_xz                                       ! -mu * (u_z + w_x)
         // h(3)    = -tau_yz                                       ! -mu * (y_z + w_y)
         // h(4)    = -tau_zz                                       ! -4/3 * mu * w_z + 2/3 * mu * (u_x + v_y)
-        // h(5)    = -tau_xz * phi(IP_U) - tau_yz * phi(IP_V) - &
-        //     tau_zz * phi(IP_W) - lambda * grad_phi_z(IP_T)      ! -(tau_zx * phi + tau_zy * v + tau_zz * w - q_z) q_z=-lambda * T_z
+        // h(5)    = -tau_xz * phi[ip_u] - tau_yz * phi[ip_v] - &
+        //     tau_zz * phi[ip_w] - lambda * grad_phi_z[ip_T]      ! -(tau_zx * phi + tau_zy * v + tau_zz * w - q_z) q_z=-lambda * T_z
 
 }

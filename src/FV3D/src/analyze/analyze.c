@@ -48,12 +48,12 @@ void analyze_finalize()
 void calc_global_residual( double dt )
 {
     int n_sol_variables = all_variables->n_sol_variables;
-    int n_cells         = global_mesh->cells->n_cells;
+    int n_domain_cells  = global_mesh->cells->n_domain_cells;
 
     double tmp[n_sol_variables];
     set_value_n( 0.0, tmp, n_sol_variables );
 
-    for ( int i = 0; i < n_cells; i++ )
+    for ( int i = 0; i < n_domain_cells; i++ )
     {
         double volume  = global_mesh->cells->volume[i];
 

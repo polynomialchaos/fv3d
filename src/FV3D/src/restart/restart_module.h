@@ -18,7 +18,7 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-// ! logical                 :: use_restart = .false.    !< The flag to start from restart
+extern int use_restart;
 
 // ! integer                 :: iter_restart = 0         !< Current iteration number
 // ! real                    :: time_restart = 0.0       !< Current time

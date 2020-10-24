@@ -70,11 +70,15 @@ void reconstruction_initialize()
     }
 
     int n_tot_variables         = all_variables->n_tot_variables;
-    int n_partition_sends       = global_mesh->partition->n_partition_sends;
-    int n_partition_receives    = global_mesh->partition->n_partition_receives;
 
-    send_buffer     = allocate( sizeof( double ) * n_tot_variables * n_partition_sends );
-    receive_buffer  = allocate( sizeof( double ) * n_tot_variables * n_partition_receives );
+    if (get_is_parallel())
+    {
+        int n_partition_sends       = global_mesh->partition->n_partition_sends;
+        int n_partition_receives    = global_mesh->partition->n_partition_receives;
+
+        send_buffer     = allocate( sizeof( double ) * n_tot_variables * n_partition_sends );
+        receive_buffer  = allocate( sizeof( double ) * n_tot_variables * n_partition_receives );
+    }
 }
 
 void reconstruction_finalize()
@@ -88,12 +92,12 @@ void reconstruction_finalize()
 
 void reconstruction_first_order()
 {
-    int n_local_faces   = global_mesh->faces->n_local_faces;
+    int n_faces         = global_mesh->faces->n_faces;
     int n_tot_variables = all_variables->n_tot_variables;
 
     calc_gradients();
 
-    for ( int i = 0; i < n_local_faces; i++ )
+    for ( int i = 0; i < n_faces; i++ )
     {
         int *fc = &global_mesh->faces->cells[i*FACE_CELLS];
 
@@ -172,18 +176,18 @@ void reconstruction_linear()
 
 void calc_gradients()
 {
-    int n_local_cells       = global_mesh->cells->n_local_cells;
-    int n_local_boundaries  = global_mesh->boundaries->n_local_boundaries;
-    int n_local_faces       = global_mesh->faces->n_local_faces;
-    int n_tot_variables     = all_variables->n_tot_variables;
+    int n_local_cells   = global_mesh->cells->n_local_cells;
+    int n_boundaries    = global_mesh->boundaries->n_boundaries;
+    int n_faces         = global_mesh->faces->n_faces;
+    int n_tot_variables = all_variables->n_tot_variables;
 
     if (get_is_parallel()) update_parallel( phi_total );
 
-    set_value_n( 0.0, grad_phi_total_x, n_tot_variables * (n_local_cells + n_local_boundaries) );
-    set_value_n( 0.0, grad_phi_total_y, n_tot_variables * (n_local_cells + n_local_boundaries) );
-    set_value_n( 0.0, grad_phi_total_z, n_tot_variables * (n_local_cells + n_local_boundaries) );
+    set_value_n( 0.0, grad_phi_total_x, n_tot_variables * (n_local_cells + n_boundaries) );
+    set_value_n( 0.0, grad_phi_total_y, n_tot_variables * (n_local_cells + n_boundaries) );
+    set_value_n( 0.0, grad_phi_total_z, n_tot_variables * (n_local_cells + n_boundaries) );
 
-    for ( int i = 0; i < n_local_faces; i++ )
+    for ( int i = 0; i < n_faces; i++ )
     {
         int *fc = &global_mesh->faces->cells[i*FACE_CELLS];
         double *n = &global_mesh->faces->n[i*DIM];

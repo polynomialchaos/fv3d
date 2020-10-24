@@ -54,20 +54,20 @@ void fv_define()
 
 void fv_initialize()
 {
-    int n_local_cells       = global_mesh->cells->n_local_cells;
-    int n_local_boundaries  = global_mesh->boundaries->n_local_boundaries;
-    int n_local_faces       = global_mesh->faces->n_local_faces;
+    int n_local_cells   = global_mesh->cells->n_local_cells;
+    int n_boundaries    = global_mesh->boundaries->n_boundaries;
+    int n_faces         = global_mesh->faces->n_faces;
 
-    phi_total           = allocate( sizeof( double ) * all_variables->n_tot_variables * (n_local_cells + n_local_boundaries) );
-    grad_phi_total_x    = allocate( sizeof( double ) * all_variables->n_tot_variables * (n_local_cells + n_local_boundaries) );
-    grad_phi_total_y    = allocate( sizeof( double ) * all_variables->n_tot_variables * (n_local_cells + n_local_boundaries) );
-    grad_phi_total_z    = allocate( sizeof( double ) * all_variables->n_tot_variables * (n_local_cells + n_local_boundaries) );
+    phi_total           = allocate( sizeof( double ) * all_variables->n_tot_variables * (n_local_cells + n_boundaries) );
+    grad_phi_total_x    = allocate( sizeof( double ) * all_variables->n_tot_variables * (n_local_cells + n_boundaries) );
+    grad_phi_total_y    = allocate( sizeof( double ) * all_variables->n_tot_variables * (n_local_cells + n_boundaries) );
+    grad_phi_total_z    = allocate( sizeof( double ) * all_variables->n_tot_variables * (n_local_cells + n_boundaries) );
 
-    phi_total_left      = allocate( sizeof( double ) * all_variables->n_tot_variables * n_local_faces );
-    phi_total_left      = allocate( sizeof( double ) * all_variables->n_tot_variables * n_local_faces );
+    phi_total_left      = allocate( sizeof( double ) * all_variables->n_tot_variables * n_faces );
+    phi_total_left      = allocate( sizeof( double ) * all_variables->n_tot_variables * n_faces );
 
-    phi_dt              = allocate( sizeof( double ) * all_variables->n_sol_variables * (n_local_cells + n_local_boundaries) );
-    flux                = allocate( sizeof( double ) * all_variables->n_sol_variables * n_local_faces );
+    phi_dt              = allocate( sizeof( double ) * all_variables->n_sol_variables * (n_local_cells + n_boundaries) );
+    flux                = allocate( sizeof( double ) * all_variables->n_sol_variables * n_faces );
 
     set_solution();
 }
@@ -87,9 +87,9 @@ void fv_finalize()
 void fv_time_derivative( double t )
 {
     int n_local_cells       = global_mesh->cells->n_local_cells;
-    int n_cells             = global_mesh->cells->n_cells;
-    int n_local_boundaries  = global_mesh->boundaries->n_local_boundaries;
-    int n_local_faces       = global_mesh->faces->n_local_faces;
+    int n_domain_cells      = global_mesh->cells->n_domain_cells;
+    int n_boundaries        = global_mesh->boundaries->n_boundaries;
+    int n_faces             = global_mesh->faces->n_faces;
     int n_sol_variables     = all_variables->n_sol_variables;
 
     update_function_pointer( t );
@@ -98,9 +98,9 @@ void fv_time_derivative( double t )
     calc_flux_function_pointer();
 
     // the temporal derivative
-    set_value_n( 0.0, phi_dt, n_sol_variables * (n_local_cells + n_local_boundaries) );
+    set_value_n( 0.0, phi_dt, n_sol_variables * (n_local_cells + n_boundaries) );
 
-    for ( int i = 0; i < n_local_faces; i++ )
+    for ( int i = 0; i < n_faces; i++ )
     {
         int *fc = &global_mesh->faces->cells[i*FACE_CELLS];
         double area = global_mesh->faces->area[i];
@@ -112,7 +112,7 @@ void fv_time_derivative( double t )
         }
     }
 
-    for ( int i = 0; i < n_cells; i++ )
+    for ( int i = 0; i < n_domain_cells; i++ )
     {
         double volume = global_mesh->cells->volume[i];
 
@@ -125,13 +125,13 @@ void fv_time_derivative( double t )
 
 void set_solution()
 {
-    int n_cells     = global_mesh->cells->n_cells;
-    int n_variables = all_variables->n_tot_variables;
+    int n_domain_cells  = global_mesh->cells->n_domain_cells;
+    int n_tot_variables = all_variables->n_tot_variables;
 
     if (calc_exact_function_pointer != NULL)
-        for ( int i = 0; i < n_cells; i++ )
+        for ( int i = 0; i < n_domain_cells; i++ )
             calc_exact_function_pointer( 0, 0.0, &global_mesh->cells->x[i*DIM],
-                &phi_total[i*n_variables] );
+                &phi_total[i*n_tot_variables] );
 
     if (update_function_pointer != NULL)
         update_function_pointer( 0.0 );
