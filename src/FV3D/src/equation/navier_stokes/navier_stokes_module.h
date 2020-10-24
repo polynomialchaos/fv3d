@@ -19,8 +19,9 @@
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
 extern int navier_stokes_active;
-const double RM;
-const double molar_mass_air;
+
+extern const double RM;
+extern const double molar_mass_air;
 
 extern double cfl_scale;
 extern double dfl_scale;
@@ -38,34 +39,18 @@ extern double cv;
 extern double kappa_pr;
 extern double lambda;
 
-// integer,    parameter           :: n_con            = 5
-// integer                         :: IC(n_con)        = -1
-// integer                         :: IC_RHO           = -1
-// integer                         :: IC_RHO_U         = -1
-// integer                         :: IC_RHO_V         = -1
-// integer                         :: IC_RHO_W         = -1
-// integer                         :: IC_RHO_E         = -1
-// integer                         :: IC_RHO_UVW(3)    = -1
-
-// integer,    parameter           :: n_prim       = 5
-// integer                         :: IP(n_prim)   = -1
-// integer                         :: IP_U         = -1
-// integer                         :: IP_V         = -1
-// integer                         :: IP_W         = -1
-// integer                         :: IP_P         = -1
-// integer                         :: IP_T         = -1
-// integer                         :: IP_UVW(3)    = -1
-
-    // enum, bind( C )
-    //     enumerator :: BND_NULL, BND_FLOW, BND_INFLOW, BND_OUTFLOW, BND_AD_WALL, BND_IT_WALL, &
-    //         BND_SLIP_WALL, BND_SYMM, BND_STATE, BND_FUNC
-    // end enum
-
-    // character(len=_STRLEN_),    parameter   :: bnd_type_names(BND_FUNC) = [character(len=_STRLEN_)  :: &
-    //     'flow', 'inflow', 'outflow', 'wall-adiabatic', 'wall-isothermal', 'wall-slip', 'symmetry', 'state', 'function']
-    // character(len=_STRLEN_) :: flux_scheme = 'AUSM'             !< The Riemann solver
-
-    // procedure(),    pointer :: flux_scheme_routine => null()    !< Riemann solver routine
+extern const int n_cons;
+extern const int n_prins;
+extern int ic_rho;
+extern int ic_rho_u;
+extern int ic_rho_v;
+extern int ic_rho_w;
+extern int ic_rho_e;
+extern int ip_u;
+extern int ip_v;
+extern int ip_w;
+extern int ip_p;
+extern int ip_T;
 
 //##################################################################################################################################
 // FUNCTIONS
@@ -76,6 +61,15 @@ void flux_define();
 
 void update_boundaries( double t );
 void update_gradients_boundaries( double t );
+
+void prim_to_con( double *phi );
+void copy_prim_to_con( double *phi_i, double *phi_j );
+void con_to_prim( double *phi );
+void copy_con_to_prim( double *phi_i, double *phi_j );
+double calc_ig_p( double rho, double T, double R_mix );
+double calc_ig_rho( double p, double T, double R_mix );
+double calc_ig_T( double p, double rho, double R_mix );
+double calc_riemann_p( double *phi );
 
 void calc_flux();
 

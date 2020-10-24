@@ -18,8 +18,11 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-typedef void (*void_timedisc_fp_t)( double t, double dt, int iter );
-extern void_timedisc_fp_t time_step;
+typedef void (*void_timestep_fp_t)( double t, double dt, int iter );
+extern void_timestep_fp_t time_step_function_pointer;
+
+typedef void (*void_calc_timestep_fp_t)( double t );
+extern void_calc_timestep_fp_t calc_time_step_function_pointer;
 
     // character(len=_STRLEN_) :: time_step= 'Explicit'        !< The timestep mehtod
     // integer                 :: max_iter = 100000            !< The maximum number of iterations

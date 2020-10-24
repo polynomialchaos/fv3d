@@ -3,7 +3,7 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#include "timedisc_private.h"
+#include "timedisc_module.h"
 #include "explicit/explicit_private.h"
 #include "implicit/implicit_private.h"
 
@@ -18,14 +18,15 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
+void_timestep_fp_t time_step_function_pointer           = NULL;
+void_calc_timestep_fp_t calc_time_step_function_pointer = NULL;
+
 string_t time_step_name = NULL;
 int max_iter = 1000;
 int transient = 1;
 double abort_residual = 1e-10;
 double t_start = 0.0;
 double t_end = 0.2;
-
-void_timedisc_fp_t time_step = NULL;
 
 //##################################################################################################################################
 // LOCAL FUNCTIONS
@@ -84,8 +85,7 @@ void timedisc_initialize()
 void timedisc_finalize()
 {
     deallocate( time_step_name );
-    time_step = NULL;
-        // nullify( time_step_routine )
+    time_step_function_pointer = NULL;
 }
 
 void timedisc()

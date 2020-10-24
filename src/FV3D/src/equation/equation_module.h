@@ -33,19 +33,7 @@ typedef struct Variables
     Variable_t *dep_variables;
 } Variables_t;
 
-typedef void (*void_update_fp_t)( double );
-typedef void (*void_update_gradients_fp_t)();
-typedef void (*void_calc_exact_fp_t)( int, double, double, double );
-typedef void (*void_calc_timestep_fp_t)( double );
-typedef void (*void_calc_flux_fp_t)();
-
 extern Variables_t *all_variables;
-
-extern void_update_fp_t update_function_pointer;
-extern void_update_gradients_fp_t update_gradients_function_pointer;
-extern void_calc_exact_fp_t calc_exact_function_pointer;
-extern void_calc_timestep_fp_t calc_time_step_function_pointer;
-extern void_calc_flux_fp_t calc_flux_function_pointer;
 
 //##################################################################################################################################
 // FUNCTIONS

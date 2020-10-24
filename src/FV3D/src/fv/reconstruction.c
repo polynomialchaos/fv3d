@@ -17,7 +17,9 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-void_reconstruction_fp_t reconstruction_function_pointer = NULL;
+void_reconstruction_fp_t reconstruction_function_pointer        = NULL;
+void_update_gradients_fp_t update_gradients_function_pointer    = NULL;
+
 string_t reconstruction_name = NULL;
 
 double *send_buffer = NULL;
@@ -170,37 +172,53 @@ void reconstruction_linear()
 
 void calc_gradients()
 {
+    int n_local_cells       = global_mesh->cells->n_local_cells;
+    int n_local_boundaries  = global_mesh->boundaries->n_local_boundaries;
+    int n_local_faces       = global_mesh->faces->n_local_faces;
+    int n_tot_variables     = all_variables->n_tot_variables;
+
     if (get_is_parallel()) update_parallel( phi_total );
 
-// !         grad_phi_total_x = 0.0
-// !         grad_phi_total_y = 0.0
-// !         grad_phi_total_z = 0.0
+    set_value_n( 0.0, grad_phi_total_x, n_tot_variables * (n_local_cells + n_local_boundaries) );
+    set_value_n( 0.0, grad_phi_total_y, n_tot_variables * (n_local_cells + n_local_boundaries) );
+    set_value_n( 0.0, grad_phi_total_z, n_tot_variables * (n_local_cells + n_local_boundaries) );
 
-// !         do i = 1, n_faces
-// !             fc = faces(i)%cells
+    for ( int i = 0; i < n_local_faces; i++ )
+    {
+        int *fc = &global_mesh->faces->cells[i*FACE_CELLS];
+        double *n = &global_mesh->faces->n[i*DIM];
+        double area = global_mesh->faces->area[i];
 
-// !             phi_mean = phi_total(:,fc(1)) + faces(i)%lambda * (phi_total(:,fc(2)) - phi_total(:,fc(1)))
+        for ( int j = 0; j < n_tot_variables; j++ )
+        {
+            double phi_mean = phi_total[fc[0]*n_tot_variables+j] + global_mesh->faces->lambda[i] *
+                (phi_total[fc[1]*n_tot_variables+j] - phi_total[fc[0]*n_tot_variables+j]);
 
-// !             grad_phi_total_x(:,fc(1))   = grad_phi_total_x(:,fc(1)) + phi_mean(:) * faces(i)%n(1) * faces(i)%area
-// !             grad_phi_total_y(:,fc(1))   = grad_phi_total_y(:,fc(1)) + phi_mean(:) * faces(i)%n(2) * faces(i)%area
-// !             grad_phi_total_z(:,fc(1))   = grad_phi_total_z(:,fc(1)) + phi_mean(:) * faces(i)%n(3) * faces(i)%area
+            grad_phi_total_x[fc[0]*n_tot_variables+j]   += phi_mean * n[0] * area;
+            grad_phi_total_y[fc[0]*n_tot_variables+j]   += phi_mean * n[1] * area;
+            grad_phi_total_z[fc[0]*n_tot_variables+j]   += phi_mean * n[2] * area;
 
-// !             grad_phi_total_x(:,fc(2))   = grad_phi_total_x(:,fc(2)) - phi_mean(:) * faces(i)%n(1) * faces(i)%area
-// !             grad_phi_total_y(:,fc(2))   = grad_phi_total_y(:,fc(2)) - phi_mean(:) * faces(i)%n(2) * faces(i)%area
-// !             grad_phi_total_z(:,fc(2))   = grad_phi_total_z(:,fc(2)) - phi_mean(:) * faces(i)%n(3) * faces(i)%area
-// !         end do
+            grad_phi_total_x[fc[1]*n_tot_variables+j]   -= phi_mean * n[0] * area;
+            grad_phi_total_y[fc[1]*n_tot_variables+j]   -= phi_mean * n[1] * area;
+            grad_phi_total_z[fc[1]*n_tot_variables+j]   -= phi_mean * n[2] * area;
+        }
+    }
 
     if (get_is_parallel()) update_parallel( grad_phi_total_x );
     if (get_is_parallel()) update_parallel( grad_phi_total_y );
     if (get_is_parallel()) update_parallel( grad_phi_total_z );
 
-// !         do i = 1, n_cells + n_partition_receives
-// !             s_volume = 1.0 / cells(i)%volume
+    for ( int i = 0; i < n_local_cells; i++ )
+    {
+        double s_volume = 1 / global_mesh->cells->volume[i];
 
-// !             grad_phi_total_x(:,i)   = grad_phi_total_x(:,i) * s_volume
-// !             grad_phi_total_y(:,i)   = grad_phi_total_y(:,i) * s_volume
-// !             grad_phi_total_z(:,i)   = grad_phi_total_z(:,i) * s_volume
-// !         end do
+        for ( int j = 0; j < n_tot_variables; j++ )
+        {
+            grad_phi_total_x[i*n_tot_variables+j]   *= s_volume;
+            grad_phi_total_y[i*n_tot_variables+j]   *= s_volume;
+            grad_phi_total_z[i*n_tot_variables+j]   *= s_volume;
+        }
+    }
 
     if (update_gradients_function_pointer != NULL) update_gradients_function_pointer();
 }

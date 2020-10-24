@@ -71,14 +71,14 @@ void calc_flux()
         //     phi_master_r(IC_RHO_V)  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%t1 )
         //     phi_master_r(IC_RHO_W)  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%t2 )
         //     phi_master_r(IC_RHO_E)  = phi_total_left(IC_RHO_E,i)
-        //     phi_master_r            = con_2_prim( phi_master_r )
+        //     phi_master_r            = con_to_prim( phi_master_r )
 
         //     phi_slave_r(IC_RHO)     = phi_total_right(IC_RHO,i)
         //     phi_slave_r(IC_RHO_U)   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%n )
         //     phi_slave_r(IC_RHO_V)   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%t1 )
         //     phi_slave_r(IC_RHO_W)   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%t2 )
         //     phi_slave_r(IC_RHO_E)   = phi_total_right(IC_RHO_E,i)
-        //     phi_slave_r             = con_2_prim( phi_slave_r )
+        //     phi_slave_r             = con_to_prim( phi_slave_r )
 
         //     ! calculate convective flux
         //     call flux_scheme_routine( phi_master_r, phi_slave_r, flux_c )
@@ -108,14 +108,14 @@ void calc_flux()
         //     phi_master_r(IC_RHO_V)  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%t1 )
         //     phi_master_r(IC_RHO_W)  = dot_product( phi_total_left(IC_RHO_UVW,i), faces(i)%t2 )
         //     phi_master_r(IC_RHO_E)  = phi_total_left(IC_RHO_E,i)
-        //     phi_master_r            = con_2_prim( phi_master_r )
+        //     phi_master_r            = con_to_prim( phi_master_r )
 
         //     phi_slave_r(IC_RHO)     = phi_total_right(IC_RHO,i)
         //     phi_slave_r(IC_RHO_U)   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%n )
         //     phi_slave_r(IC_RHO_V)   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%t1 )
         //     phi_slave_r(IC_RHO_W)   = dot_product( phi_total_right(IC_RHO_UVW,i), faces(i)%t2 )
         //     phi_slave_r(IC_RHO_E)   = phi_total_right(IC_RHO_E,i)
-        //     phi_slave_r             = con_2_prim( phi_slave_r )
+        //     phi_slave_r             = con_to_prim( phi_slave_r )
 
         //     ! calculate convective flux
         //     select case ( regions(ir)%type )

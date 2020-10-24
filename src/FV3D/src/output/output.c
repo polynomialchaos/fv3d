@@ -47,10 +47,7 @@ void output_initialize()
     get_parameter( "Output/i_output_data", ParameterDigit, &i_output_data );
     do_output_data = (i_output_data != 0);
 
-    const_string_t suffix = ".h5";
-    output_file = allocate( sizeof( char ) * (strlen( title ) + strlen( suffix ) + 1) );
-    strcpy( output_file, title );
-    strcat( output_file, suffix );
+    output_file = allocate_strcat( title, ".h5" );
 }
 
 void output_finalize()
@@ -68,7 +65,7 @@ void create_file_header()
         {
             hid_t group_id = create_hdf5_group( file_id, "SOLUTIONS" );
 
-            int max_len = 0;
+            size_t max_len = 0;
             for ( int i = 0; i < all_variables->n_sol_variables; i++ )
                 max_len = u_max( max_len, strlen( (&all_variables->sol_variables[i])->name ) );
 
@@ -87,7 +84,7 @@ void create_file_header()
         {
             hid_t group_id = create_hdf5_group( file_id, "DEPENDENTS" );
 
-            int max_len = 0;
+            size_t max_len = 0;
             for ( int i = 0; i < all_variables->n_dep_variables; i++ )
                 max_len = u_max( max_len, strlen( (&all_variables->dep_variables[i])->name ) );
 

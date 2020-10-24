@@ -2,7 +2,9 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
+#include <math.h>
 #include "navier_stokes_module.h"
+#include "equation/equation_module.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -23,128 +25,69 @@
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
+void prim_to_con( double *phi )
+{
+    phi[ic_rho_u]   = phi[ip_u] * phi[ic_rho];          // rho * u
+    phi[ic_rho_v]   = phi[ip_v] * phi[ic_rho];          // rho * v
+    phi[ic_rho_w]   = phi[ip_w] * phi[ic_rho];          // rho * w
+    phi[ic_rho_e]   = s_kappa_m1 * phi[ip_p] +
+        0.5 * dot_n( &phi[ip_u], &phi[ic_rho_u], 3 );   // rho * e
+}
 
+void copy_prim_to_con( double *phi_i, double *phi_j )
+{
+    copy_n( phi_i, phi_j, all_variables->n_tot_variables );
+    prim_to_con( phi_j );
+}
 
-//     function prim_2_con( phi ) result( res )
-//         use mod_equation_vars,  only: n_tot_variables
-//         implicit none
-//         !---------------------------------------------------------------------------------------------------------------------------
-//         real,   intent(in)  :: phi(n_tot_variables)
-//         real                :: res(n_tot_variables)
-//         !---------------------------------------------------------------------------------------------------------------------------
-//         !---------------------------------------------------------------------------------------------------------------------------
+void con_to_prim( double *phi )
+{
+    phi[ip_u]   = phi[ic_rho_u] / phi[ic_rho];                  // u
+    phi[ip_v]   = phi[ic_rho_v] / phi[ic_rho];                  // v
+    phi[ip_w]   = phi[ic_rho_w] / phi[ic_rho];                  // w
+    phi[ip_p]   = kappa_m1 * (phi[ic_rho_e] -
+        0.5 * dot_n( &phi[ic_rho_u], &phi[ip_u], 3 ));          // p
+    phi[ip_p]   = u_max( 1.00E-10, phi[ip_p] );                 // pressure must not be negative
+    phi[ip_T]   = calc_ig_T( phi[ip_p], phi[ic_rho], R_mix );   // T
+}
 
-//         res = phi
+void copy_con_to_prim( double *phi_i, double *phi_j )
+{
+    copy_n( phi_i, phi_j, all_variables->n_tot_variables );
+    con_to_prim( phi_j );
+}
 
-//         res(IC_RHO_U)   = phi(IP_U) * phi(IC_RHO)               ! rho * u
-//         res(IC_RHO_V)   = phi(IP_V) * phi(IC_RHO)               ! rho * v
-//         res(IC_RHO_W)   = phi(IP_W) * phi(IC_RHO)               ! rho * w
+double calc_ig_p( double rho, double T, double R_mix )
+{
+    return rho * R_mix * T;
+}
 
-//         res(IC_RHO_E)   = s_kappa_m1 * phi(IP_P) + &
-//             0.5 * dot_product( phi(IP_UVW), res(IC_RHO_UVW) )   ! rho * e
+double calc_ig_rho( double p, double T, double R_mix )
+{
+    return p / (R_mix * T);
+}
 
-//     end function prim_2_con
+double calc_ig_T( double p, double rho, double R_mix )
+{
+    return p / ( rho * R_mix);
+}
 
-//     !###############################################################################################################################
-//     !> Convert a conservative variable to a primitive variable
-//     !-------------------------------------------------------------------------------------------------------------------------------
-//     function con_2_prim( phi ) result( res )
-//         use mod_equation_vars,  only: n_tot_variables
-//         implicit none
-//         !---------------------------------------------------------------------------------------------------------------------------
-//         real,   intent(in)  :: phi(n_tot_variables)
-//         real                :: res(n_tot_variables)
-//         !---------------------------------------------------------------------------------------------------------------------------
-//         !---------------------------------------------------------------------------------------------------------------------------
-
-//         res = phi
-
-//         res(IP_U)   = phi(IC_RHO_U) / phi(IC_RHO)                       ! u
-//         res(IP_V)   = phi(IC_RHO_V) / phi(IC_RHO)                       ! v
-//         res(IP_W)   = phi(IC_RHO_W) / phi(IC_RHO)                       ! w
-
-//         res(IP_P)   = kappa_m1 * (phi(IC_RHO_E) - &
-//             0.5 * dot_product( phi(IC_RHO_UVW), res(IP_UVW) ))          ! p
-
-//         res(IP_P)   = max( 1.00E-10, res(IP_P) )                        ! pressure must not be negative
-
-//         res(IP_T)   = ig_temperature( res(IP_P), phi(IC_RHO), R_mix )   ! T
-
-//     end function con_2_prim
-
-//     !###############################################################################################################################
-//     !> Calculate the ideal gas pressure.
-//     !-------------------------------------------------------------------------------------------------------------------------------
-//     function ig_pressure( rho, T, R_mix ) result(res)
-//         implicit none
-//         !---------------------------------------------------------------------------------------------------------------------------
-//         real,   intent(in)  :: T
-//         real,   intent(in)  :: rho
-//         real,   intent(in)  :: R_mix
-//         real                :: res
-//         !---------------------------------------------------------------------------------------------------------------------------
-//         !---------------------------------------------------------------------------------------------------------------------------
-
-//         res = rho * R_mix * T
-
-//     end function ig_pressure
-
-//     !###############################################################################################################################
-//     !> Calculate the ideal gas density.
-//     !-------------------------------------------------------------------------------------------------------------------------------
-//     function ig_density( p, T, R_mix ) result(res)
-//         implicit none
-//         !---------------------------------------------------------------------------------------------------------------------------
-//         real,   intent(in)  :: p
-//         real,   intent(in)  :: T
-//         real,   intent(in)  :: R_mix
-//         real                :: res
-//         !---------------------------------------------------------------------------------------------------------------------------
-//         !---------------------------------------------------------------------------------------------------------------------------
-
-//         res = p / (R_mix * T)
-
-//     end function ig_density
-
-//     !###############################################################################################################################
-//     !> Calculate the ideal gas temperature.
-//     !-------------------------------------------------------------------------------------------------------------------------------
-//     function ig_temperature( p, rho, R_mix ) result(res)
-//         implicit none
-//         !---------------------------------------------------------------------------------------------------------------------------
-//         real,   intent(in)  :: p
-//         real,   intent(in)  :: rho
-//         real,   intent(in)  :: R_mix
-//         real                :: res
-//         !---------------------------------------------------------------------------------------------------------------------------
-//         !---------------------------------------------------------------------------------------------------------------------------
-
-//         res = p / ( rho * R_mix)
-
-//     end function ig_temperature
-
-//     !###############################################################################################################################
-//     !> Calculate the pressure at boundaries.
-//     !-------------------------------------------------------------------------------------------------------------------------------
-//     function pressure_riemann( phi ) result( res )
-//         use mod_equation_vars,  only: n_tot_variables
-//         implicit none
-//         !---------------------------------------------------------------------------------------------------------------------------
-//         real,   intent(in)  :: phi(n_tot_variables)
-//         real                :: res
-//         !---------------------------------------------------------------------------------------------------------------------------
-//         real    :: c, ar, br
-//         !---------------------------------------------------------------------------------------------------------------------------
-
-//         if( phi(IP_U) .le. 0 ) then
-//             c   = sqrt( kappa * phi(IP_P) / phi(IC_RHO) )
-//             res = phi(IP_P) * max( 1e-4, 1. + 0.5 * kappa_m1 * phi(IP_U) / c )**(2 * kappa * s_kappa_m1)
-//         else
-//             ar  = 2 * s_kappa_p1 / phi(IP_U)
-//             br  = kappa_m1 * s_kappa_p1 * phi(IP_P)
-//             res = phi(IP_P) + phi(IP_U) / ar * 0.5 * (phi(IP_U) + sqrt( phi(IP_U)**2 + 4. * ar * (phi(IP_P) + br) ))
-//         end if
-
-//     end function pressure_riemann
-
-// end module mod_ns_eos
+double calc_riemann_p( double *phi )
+{
+    if (phi[ip_u] <= 0.0 )
+    {
+        double c = sqrt( kappa * phi[ip_p] / phi[ic_rho] );
+        return phi[ip_p] * pow(
+            u_max( 1e-4, 1. + 0.5 * kappa_m1 * phi[ip_u] / c ),
+            2 * kappa * s_kappa_m1
+        );
+    }
+    else
+    {
+        double ar = 2 * s_kappa_p1 / phi[ip_u];
+        double br = kappa_m1 * s_kappa_p1 * phi[ip_p];
+        return phi[ip_p] + phi[ip_u] / ar * 0.5 * (
+            phi[ip_u] + sqrt( phi[ip_u] * phi[ip_u] + 4. * ar * (phi[ip_p] + br) )
+        );
+    }
+}

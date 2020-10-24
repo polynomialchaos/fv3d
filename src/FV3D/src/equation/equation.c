@@ -20,12 +20,6 @@ string_t equation_name = NULL;
 
 Variables_t *all_variables = NULL;
 
-void_update_fp_t update_function_pointer                        = NULL;
-void_update_gradients_fp_t update_gradients_function_pointer    = NULL;
-void_calc_exact_fp_t calc_exact_function_pointer                = NULL;
-void_calc_timestep_fp_t calc_time_step_function_pointer         = NULL;
-void_calc_flux_fp_t calc_flux_function_pointer                  = NULL;
-
 //##################################################################################################################################
 // LOCAL FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
@@ -88,7 +82,7 @@ int add_sol_variable( Variables_t *variables, string_t name )
     Variable_t *tmp = &variables->sol_variables[i_var];
     tmp->name = allocate_strcpy( name );
 
-    return i_var;
+    return variables->n_tot_variables - 1;
 }
 
 int add_dep_variable( Variables_t *variables, string_t name )
@@ -101,7 +95,7 @@ int add_dep_variable( Variables_t *variables, string_t name )
     Variable_t *tmp = &variables->dep_variables[i_var];
     tmp->name = allocate_strcpy( name );
 
-    return i_var;
+    return variables->n_tot_variables - 1;
 }
 
 Variables_t *allocate_variables()

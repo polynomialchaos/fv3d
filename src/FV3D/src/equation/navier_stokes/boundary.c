@@ -3,10 +3,16 @@
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
 #include "navier_stokes_module.h"
+#include "equation/equation_module.h"
 
 //##################################################################################################################################
 // DEFINES
 //----------------------------------------------------------------------------------------------------------------------------------
+enum BoundaryType {
+    BoundaryFlow, BoundaryInflow, BoundaryOutflow, BoundaryAdiabaticWall,
+    BoundaryIsothermalWall, BoundarySlipWall, BoundarySymmetry, BoundaryState, BoundaryFunction,
+    BoundaryTypeMax
+};
 
 //##################################################################################################################################
 // MACROS
@@ -47,10 +53,10 @@ void boundary_initialize()
         //         case ( bnd_type_names(BND_FLOW) )
         //             regions(i)%type     = BND_FLOW
         //             flow_region         = i
-        //             regions(i)%phi      = prim_2_con( parse_primitive_state( prefix ) )
+        //             regions(i)%phi      = prim_to_con( parse_primitive_state( prefix ) )
         //         case ( bnd_type_names(BND_INFLOW) )
         //             regions(i)%type     = BND_INFLOW
-        //             regions(i)%phi      = prim_2_con( parse_primitive_state( prefix ) )
+        //             regions(i)%phi      = prim_to_con( parse_primitive_state( prefix ) )
         //         case ( bnd_type_names(BND_OUTFLOW) )
         //             regions(i)%type     = BND_OUTFLOW
         //         case ( bnd_type_names(BND_AD_WALL) )
@@ -63,7 +69,7 @@ void boundary_initialize()
         //         case ( bnd_type_names(BND_SYMM) )
         //             regions(i)%type     = BND_SYMM
         //         case ( bnd_type_names(BND_STATE) )
-        //             regions(i)%phi      = prim_2_con( parse_primitive_state( prefix ) )
+        //             regions(i)%phi      = prim_to_con( parse_primitive_state( prefix ) )
         //         case ( bnd_type_names(BND_FUNC) )
         //             regions(i)%type = BND_FUNC
         //             call get_parameter( prefix // '/function_id', regions(i)%function_id )
@@ -138,14 +144,14 @@ void update_boundaries( double t )
         //             phi_total(IP,j)     = regions(ir)%phi(IP)
         //         case ( BND_FUNC )
         //             call exact_func_routine( regions(ir)%function_id, t, faces(bf)%x, phi_total(:,j) )
-        //             phi_total(:,j) = con_2_prim( phi_total(:,j) )
+        //             phi_total(:,j) = con_to_prim( phi_total(:,j) )
         //         case ( BND_OUTFLOW )
         //         case default
         //             call add_error( __LINE__, __FILE__, &
         //                 'Unsupported region type provided (' // set_string( regions(ir)%type ) // ')!' )
         //     end select
 
-        //     phi_total(:,j) = prim_2_con( phi_total(:,j) )
+        //     phi_total(:,j) = prim_to_con( phi_total(:,j) )
         // end do
 }
 
@@ -183,42 +189,69 @@ void update_gradients_boundaries( double t )
     //     end do
 }
 
-void parse_primitive_state( const_string_t prefix, double *res )
+void parse_primitive_state( const_string_t prefix, double *phi_total_i )
 {
-        // has_rho = parameter_exists( prefix // '/rho' )
-        // has_v_x = parameter_exists( prefix // '/v_x' )
-        // has_v_y = parameter_exists( prefix // '/v_y' )
-        // has_v_z = parameter_exists( prefix // '/v_z' )
-        // has_p   = parameter_exists( prefix // '/p' )
-        // has_t   = parameter_exists( prefix // '/T' )
+    string_t tmp_rho    = allocate_strcat( prefix, "rho" );
+    string_t tmp_u      = allocate_strcat( prefix, "u" );
+    string_t tmp_v      = allocate_strcat( prefix, "v" );
+    string_t tmp_w      = allocate_strcat( prefix, "w" );
+    string_t tmp_p      = allocate_strcat( prefix, "p" );
+    string_t tmp_T      = allocate_strcat( prefix, "T" );
 
-        // res = 0.0
+    int has_rho = parameter_exists( tmp_rho );
+    int has_u   = parameter_exists( tmp_u );
+    int has_v   = parameter_exists( tmp_v );
+    int has_w   = parameter_exists( tmp_w );
+    int has_p   = parameter_exists( tmp_p );
+    int has_T   = parameter_exists( tmp_T );
 
-        // ! check the provided data and fill the arrays
-        // if( has_rho .and. has_v_x .and. has_v_y .and. has_v_z .and. has_p ) then
-        //     call get_parameter( prefix // '/rho', res(IC_RHO) )
-        //     call get_parameter( prefix // '/v_x', res(IP_U) )
-        //     call get_parameter( prefix // '/v_y', res(IP_V) )
-        //     call get_parameter( prefix // '/v_z', res(IP_W) )
-        //     call get_parameter( prefix // '/p', res(IP_P) )
-        //     res(IP_T) = ig_temperature( res(IP_P), res(IC_RHO), R_mix )
-        // else if( has_rho .and. has_v_x .and. has_v_y .and. has_v_z .and. has_T ) then
-        //     call get_parameter( prefix // '/rho', res(IC_RHO) )
-        //     call get_parameter( prefix // '/v_x', res(IP_U) )
-        //     call get_parameter( prefix // '/v_y', res(IP_V) )
-        //     call get_parameter( prefix // '/v_z', res(IP_W) )
-        //     call get_parameter( prefix // '/T', res(IP_T) )
-        //     res(IP_P) = ig_pressure( res(IC_RHO), res(IP_T), R_mix )
-        // else if( has_v_x .and. has_v_y .and. has_v_z .and. has_p .and. has_T ) then
-        //     call get_parameter( prefix // '/v_x', res(IP_U) )
-        //     call get_parameter( prefix // '/v_y', res(IP_V) )
-        //     call get_parameter( prefix // '/v_z', res(IP_W) )
-        //     call get_parameter( prefix // '/p', res(IP_P) )
-        //     call get_parameter( prefix // '/T', res(IP_T) )
-        //     res(IC_RHO) = ig_density( res(IP_P), res(IP_T), R_mix )
-        // else
-        //     call add_error( __LINE__, __FILE__, &
-        //         'Provided unsufficient data for primitive state parser (v_x,v_y,v_z and rho,p or rho,T or p,T)!')
-        // end if
+    set_value_n( 0.0, phi_total_i, all_variables->n_tot_variables );
 
+    // check the provided data and fill the arrays
+    if (has_rho && has_u && has_v && has_w && has_p)
+    {
+        // get_parameter( tmp_rho, res[ic_rho] );
+        // get_parameter( tmp_u, res[ip_u] );
+        // get_parameter( tmp_v, res[ip_v] );
+        // get_parameter( tmp_w, res[ip_w] );
+        // get_parameter( tmp_p, res[ip_p] );
+        // ip_T =
+        // get_parameter( tmp_T, res[] );
+
+        // call get_parameter( prefix // '/rho', res(IC_RHO) )
+        // call get_parameter( prefix // '/v_x', res(IP_U) )
+        // call get_parameter( prefix // '/v_y', res(IP_V) )
+        // call get_parameter( prefix // '/v_z', res(IP_W) )
+        // call get_parameter( prefix // '/p', res(IP_P) )
+        // res(IP_T) = ig_temperature( res(IP_P), res(IC_RHO), R_mix )
+    }
+    else if (has_rho && has_u && has_v && has_w && has_T)
+    {
+        // call get_parameter( prefix // '/rho', res(IC_RHO) )
+        // call get_parameter( prefix // '/v_x', res(IP_U) )
+        // call get_parameter( prefix // '/v_y', res(IP_V) )
+        // call get_parameter( prefix // '/v_z', res(IP_W) )
+        // call get_parameter( prefix // '/T', res(IP_T) )
+        // res(IP_P) = ig_pressure( res(IC_RHO), res(IP_T), R_mix )
+    }
+    else if (has_u && has_v && has_w && has_p && has_T)
+    {
+        // call get_parameter( prefix // '/v_x', res(IP_U) )
+        // call get_parameter( prefix // '/v_y', res(IP_V) )
+        // call get_parameter( prefix // '/v_z', res(IP_W) )
+        // call get_parameter( prefix // '/p', res(IP_P) )
+        // call get_parameter( prefix // '/T', res(IP_T) )
+        // res(IC_RHO) = ig_density( res(IP_P), res(IP_T), R_mix )
+    }
+    else
+    {
+        check_error( 0 );
+    }
+
+    deallocate( tmp_rho );
+    deallocate( tmp_u );
+    deallocate( tmp_v );
+    deallocate( tmp_w );
+    deallocate( tmp_p );
+    deallocate( tmp_T );
 }

@@ -83,41 +83,42 @@ double limiter_none( int i_cell, int i_var, double slope )
 double limiter_barth_jespersenn( int i_cell, int i_var, double slope )
 {
     int n_tot_variables = all_variables->n_tot_variables;
-    double u_min        = phi_total[i_cell*n_tot_variables+i_var];
-    double u_max        = phi_total[i_cell*n_tot_variables+i_var];
+    int *cf = &global_mesh->cells->faces[i_cell*global_mesh->cells->max_cell_faces];
 
-    return 1.0;
+    double phi_min  = phi_total[i_cell*n_tot_variables+i_var];
+    double phi_max  = phi_total[i_cell*n_tot_variables+i_var];
+    for ( int i = 0; i < global_mesh->cells->n_faces[i_cell]; i++ )
+    {
+        int *fc = &global_mesh->faces->cells[cf[i]*FACE_CELLS];
 
-    //         u_min = phi_total(:,i_cell)
-//         u_max = phi_total(:,i_cell)
+        if (fc[0] == i_cell)
+        {
+            phi_min = u_min( phi_min, phi_total[fc[1]*n_tot_variables+i_var] );
+            phi_max = u_max( phi_max, phi_total[fc[1]*n_tot_variables+i_var] );
+        }
+        else
+        {
+            phi_min = u_min( phi_min, phi_total[fc[0]*n_tot_variables+i_var] );
+            phi_max = u_max( phi_max, phi_total[fc[0]*n_tot_variables+i_var] );
+        }
+    }
 
-//         do i = 1, cells(i_cell)%n_faces
-//             j = cells(i_cell)%faces(i)
+    double tmp = 1.0;
 
-//             if( faces(j)%cells(1) .eq. i_cell ) then
-//                 u_min = min( u_min, phi_total(:,faces(j)%cells(2)) )
-//                 u_max = max( u_max, phi_total(:,faces(j)%cells(2)) )
-//             else
-//                 u_min = min( u_min, phi_total(:,faces(j)%cells(1)) )
-//                 u_max = max( u_max, phi_total(:,faces(j)%cells(1)) )
-//             end if
-//         end do
+    for ( int i = 0; i < global_mesh->cells->n_faces[i_cell]; i++ )
+    {
+        double y = 1.0;
+        if (slope > 0)
+        {
+            y = (phi_max - phi_total[i_cell*n_tot_variables+i_var]) / slope;
+        }
+        else if (slope < 0)
+        {
+            y = (phi_min - phi_total[i_cell*n_tot_variables+i_var]) / slope;
+        }
 
-//         lim = 1.0
+        tmp = u_min( tmp, y );
+    }
 
-//         do i = 1, cells(i_cell)%n_faces
-//             j = cells(i_cell)%faces(i)
-
-//             do k = 1, n_tot_variables
-//                 if( slope(k) .gt. 0 ) then
-//                     y = (u_max(k) - phi_total(k,i_cell)) / slope(k)
-//                 else if( slope(k) .lt. 0 ) then
-//                     y = (u_min(k) - phi_total(k,i_cell)) / slope(k)
-//                 else
-//                     y = 1.0
-//                 end if
-
-//                 lim(k) = min( lim(k), y )
-//             end do
-//         end do
+    return tmp;
 }

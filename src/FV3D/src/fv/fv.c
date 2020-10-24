@@ -17,6 +17,10 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
+void_update_fp_t update_function_pointer            = NULL;
+void_calc_flux_fp_t calc_flux_function_pointer      = NULL;
+void_calc_exact_fp_t calc_exact_function_pointer    = NULL;
+
 double *phi_total           = NULL;
 double *grad_phi_total_x    = NULL;
 double *grad_phi_total_y    = NULL;
@@ -126,8 +130,8 @@ void set_solution()
 
     if (calc_exact_function_pointer != NULL)
         for ( int i = 0; i < n_cells; i++ )
-            calc_exact_function_pointer( 0, 0.0, global_mesh->cells->x[i*DIM],
-                phi_total[i*n_variables] );
+            calc_exact_function_pointer( 0, 0.0, &global_mesh->cells->x[i*DIM],
+                &phi_total[i*n_variables] );
 
     if (update_function_pointer != NULL)
         update_function_pointer( 0.0 );

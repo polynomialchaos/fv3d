@@ -2,8 +2,10 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#include "equation/equation_module.h"
 #include "navier_stokes_module.h"
+#include "equation/equation_module.h"
+#include "fv/fv_module.h"
+#include "timedisc/timedisc_module.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -49,6 +51,19 @@ double cp;
 double kappa_pr;
 double lambda;
 
+const int n_cons    = 5;
+const int n_prins   = 5;
+int ic_rho          = -1;
+int ic_rho_u        = -1;
+int ic_rho_v        = -1;
+int ic_rho_w        = -1;
+int ic_rho_e        = -1;
+int ip_u            = -1;
+int ip_v            = -1;
+int ip_w            = -1;
+int ip_p            = -1;
+int ip_T            = -1;
+
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
@@ -79,18 +94,6 @@ void navier_stokes_initialize()
     get_parameter( "Equation/Navier-Stokes/Pr", ParameterNumber, &Pr );
     get_parameter( "Equation/Navier-Stokes/kappa", ParameterNumber, &kappa );
 
-    add_sol_variable( all_variables, "rho" );
-    add_sol_variable( all_variables, "rho_u" );
-    add_sol_variable( all_variables, "rho_v" );
-    add_sol_variable( all_variables, "rho_w" );
-    add_sol_variable( all_variables, "rho_e" );
-
-    add_dep_variable( all_variables, "u" );
-    add_dep_variable( all_variables, "v" );
-    add_dep_variable( all_variables, "w" );
-    add_dep_variable( all_variables, "p" );
-    add_dep_variable( all_variables, "T" );
-
     kappa_m1    = kappa - 1.0;
     kappa_p1    = kappa + 1.0;
     s_kappa     = 1.0 / kappa;
@@ -100,6 +103,18 @@ void navier_stokes_initialize()
     cp          = kappa * cv;
     kappa_pr    = kappa / Pr;
     lambda      = mu_mix * cp / Pr;
+
+    ic_rho      = add_sol_variable( all_variables, "rho" );
+    ic_rho_u    = add_sol_variable( all_variables, "rho_u" );
+    ic_rho_v    = add_sol_variable( all_variables, "rho_v" );
+    ic_rho_w    = add_sol_variable( all_variables, "rho_w" );
+    ic_rho_e    = add_sol_variable( all_variables, "rho_e" );
+
+    ip_u        = add_dep_variable( all_variables, "u" );
+    ip_v        = add_dep_variable( all_variables, "v" );
+    ip_w        = add_dep_variable( all_variables, "w" );
+    ip_p        = add_dep_variable( all_variables, "p" );
+    ip_T        = add_dep_variable( all_variables, "T" );
 
     update_function_pointer             = update;
     update_gradients_function_pointer   = update_gradients;
@@ -116,7 +131,7 @@ void update( double t )
 {
 
         // do i = 1, n_cells
-        //     phi_total(:,i) = con_2_prim( phi_total(:,i) )
+        //     phi_total(:,i) = con_to_prim( phi_total(:,i) )
         // end do
 
         // call update_bc( t )
@@ -127,7 +142,7 @@ void update_gradients()
 {
 
         // do i = 1, n_cells
-        //     phi_total(:,i) = con_2_prim( phi_total(:,i) )
+        //     phi_total(:,i) = con_to_prim( phi_total(:,i) )
         // end do
 
         // call update_bc( t )
