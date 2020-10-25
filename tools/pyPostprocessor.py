@@ -77,7 +77,7 @@ def main():
             vec_variables   = []
             if 'rho_u' in variables:
                 vec_variables.append( ('rho_uvw', ('rho_u', 'rho_v', 'rho_w')) )
-                vec_variables.append( ('uvw (prim)', ('u (prim)', 'v (prim)', 'w (prim)')) )
+                vec_variables.append( ('uvw', ('u', 'v', 'w')) )
                 for x in vec_variables:
                     for y in x[1]: variables.remove( y )
 
