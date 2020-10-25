@@ -16,8 +16,9 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-string_t mesh_file = NULL;
 Mesh_t *global_mesh = NULL;
+
+string_t mesh_file = NULL;
 
 //##################################################################################################################################
 // LOCAL FUNCTIONS
@@ -50,14 +51,13 @@ void mesh_initialize()
     read_mesh_file( global_mesh );
     if (get_is_parallel()) remap_local_mesh( global_mesh );
     calc_mesh_metrics( global_mesh );
-
-    print_mesh_info( global_mesh );
 }
 
 void mesh_finalize()
 {
-    deallocate( mesh_file );
     deallocate_mesh( &global_mesh );
+
+    deallocate( mesh_file );
 }
 
 void read_mesh_file( Mesh_t *mesh )

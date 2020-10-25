@@ -9,7 +9,7 @@
 #include "analyze/analyze_module.h"
 #include "output/output_module.h"
 #include "restart/restart_module.h"
-// #include "timedisc/timedisc_private.h"
+#include "timedisc/timedisc_module.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -44,7 +44,7 @@ int main( int argc, string_t *argv )
     analyze_define();
     output_define();
     restart_define();
-    // timedisc_define();
+    timedisc_define();
 
     // call the global initialize routine
     global_initialize( argc, argv, 1, 1 );
@@ -52,7 +52,7 @@ int main( int argc, string_t *argv )
     // calculation
     printf_r( "\n" );
     printf_r_block( '=', "Calculation" );
-    // timedisc();
+    timedisc();
     printf_r_emtpy_block( '=' );
 
     // end the program

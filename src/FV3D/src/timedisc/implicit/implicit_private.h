@@ -20,6 +20,9 @@
 //----------------------------------------------------------------------------------------------------------------------------------
 extern int implicit_active;
 
+extern int n_iter_inner;
+extern int n_iter_lsoe;
+
     // character(len=_STRLEN_)     :: scheme = 'BDF-2'                 !< The implicit scheme
     // character(len=_STRLEN_)     :: method = 'Newton'                !< The method to solve the non-linear system of equations
     // integer                     :: max_iter = 100                   !< The maximum number of inner iterations

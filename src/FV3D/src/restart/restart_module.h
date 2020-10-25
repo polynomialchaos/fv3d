@@ -20,6 +20,8 @@
 //----------------------------------------------------------------------------------------------------------------------------------
 extern int use_restart;
 
+extern int iter_restart;
+extern double t_restart;
 // ! integer                 :: iter_restart = 0         !< Current iteration number
 // ! real                    :: time_restart = 0.0       !< Current time
 

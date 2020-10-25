@@ -22,8 +22,8 @@ void_update_gradients_fp_t update_gradients_function_pointer    = NULL;
 
 string_t reconstruction_name = NULL;
 
-double *send_buffer = NULL;
-double *receive_buffer = NULL;
+double *send_buffer     = NULL;
+double *receive_buffer  = NULL;
 
 //##################################################################################################################################
 // LOCAL FUNCTIONS
@@ -83,9 +83,10 @@ void reconstruction_initialize()
 
 void reconstruction_finalize()
 {
-    deallocate( reconstruction_name );
-    reconstruction_function_pointer = NULL;
+    reconstruction_function_pointer     = NULL;
+    update_gradients_function_pointer   = NULL;
 
+    deallocate( reconstruction_name );
     deallocate( send_buffer );
     deallocate( receive_buffer );
 }
@@ -119,7 +120,7 @@ void reconstruction_linear()
 
     for ( int ii = 0; ii < n_internal_faces; ii++ )
     {
-        int i = global_mesh->faces->internal_faces[ii];
+        int i   = global_mesh->faces->internal_faces[ii];
         int *fc = &global_mesh->faces->cells[i*FACE_CELLS];
 
         double *r                  = &global_mesh->faces->dist_cell_1[i*DIM];
@@ -189,8 +190,8 @@ void calc_gradients()
 
     for ( int i = 0; i < n_faces; i++ )
     {
-        int *fc = &global_mesh->faces->cells[i*FACE_CELLS];
-        double *n = &global_mesh->faces->n[i*DIM];
+        int *fc     = &global_mesh->faces->cells[i*FACE_CELLS];
+        double *n   = &global_mesh->faces->n[i*DIM];
         double area = global_mesh->faces->area[i];
 
         for ( int j = 0; j < n_tot_variables; j++ )
@@ -277,5 +278,31 @@ void update_parallel( double *phi_local )
                 }
             }
         }
+    }
+}
+
+void calc_gradients_boundaries()
+{
+    Cells_t *cells              = global_mesh->cells;
+    Boundaries_t *boundaries    = global_mesh->boundaries;
+    Faces_t *faces              = global_mesh->faces;
+
+    int n_local_cells           = cells->n_local_cells;
+    int n_boundaries            = boundaries->n_boundaries;
+    int n_tot_variables         = all_variables->n_tot_variables;
+
+    for ( int i = 0; i < n_boundaries; i++ )
+    {
+        int bf  = boundaries->face[i];
+        int bc  = faces->cells[bf*FACE_CELLS];
+        int id  = boundaries->id[i];
+
+        double *grad_phi_total_x_i = &grad_phi_total_x[(n_local_cells + i) * n_tot_variables];
+        double *grad_phi_total_y_i = &grad_phi_total_y[(n_local_cells + i) * n_tot_variables];
+        double *grad_phi_total_z_i = &grad_phi_total_z[(n_local_cells + i) * n_tot_variables];
+
+        copy_n( &grad_phi_total_x[bc*n_tot_variables], grad_phi_total_x_i, n_tot_variables );
+        copy_n( &grad_phi_total_y[bc*n_tot_variables], grad_phi_total_y_i, n_tot_variables );
+        copy_n( &grad_phi_total_z[bc*n_tot_variables], grad_phi_total_z_i, n_tot_variables );
     }
 }

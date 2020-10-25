@@ -67,10 +67,9 @@ void equation_initialize()
 
 void equation_finalize()
 {
-    deallocate( equation_name );
-
-    print_variables( all_variables );
     deallocate_variables( &all_variables );
+
+    deallocate( equation_name );
 }
 
 int add_sol_variable( Variables_t *variables, string_t name )
@@ -129,15 +128,15 @@ void print_variables( Variables_t *variables )
     printf_r( "VARIABLES\n" );
 
     printf_r( "n_sol_variables = %d\n", variables->n_sol_variables );
-    for (int i = 0; i < variables->n_sol_variables; i++ )
+    for ( int i = 0; i < variables->n_sol_variables; i++ )
         printf_r( "%d: %s\n", i, (&variables->sol_variables[i])->name );
 
     printf_r( "n_dep_variables  = %d\n", variables->n_dep_variables );
-    for (int i = 0; i < variables->n_dep_variables; i++ )
+    for ( int i = 0; i < variables->n_dep_variables; i++ )
         printf_r( "%d: %s\n", i, (&variables->dep_variables[i])->name );
 
     printf_r( "n_tot_variables = %d\n", variables->n_tot_variables );
-    for (int i = 0; i < variables->n_tot_variables; i++ )
+    for ( int i = 0; i < variables->n_tot_variables; i++ )
         printf_r( "%d: %s\n", i, variables->tot_variables[i]->name );
 }
 
@@ -145,12 +144,12 @@ void deallocate_variables( Variables_t **variables )
 {
     if (*variables == NULL) return;
 
-    for (int i = 0; i < (*variables)->n_sol_variables; i++ )
+    for ( int i = 0; i < (*variables)->n_sol_variables; i++ )
         deallocate( (&(*variables)->sol_variables[i])->name );
 
     deallocate( (*variables)->sol_variables );
 
-    for (int i = 0; i < (*variables)->n_dep_variables; i++ )
+    for ( int i = 0; i < (*variables)->n_dep_variables; i++ )
         deallocate( (&(*variables)->dep_variables[i])->name );
 
     deallocate( (*variables)->dep_variables );

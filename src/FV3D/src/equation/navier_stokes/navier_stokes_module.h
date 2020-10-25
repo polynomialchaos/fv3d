@@ -39,8 +39,6 @@ extern double cv;
 extern double kappa_pr;
 extern double lambda;
 
-extern const int n_cons;
-extern const int n_prins;
 extern int ic_rho;
 extern int ic_rho_u;
 extern int ic_rho_v;
@@ -52,6 +50,13 @@ extern int ip_w;
 extern int ip_p;
 extern int ip_T;
 
+enum BoundaryType {
+    BoundaryFlow, BoundaryInflow, BoundaryOutflow,
+    BoundaryAdiabaticWall, BoundaryIsothermalWall, BoundarySlipWall,
+    BoundarySymmetry, BoundaryState, BoundaryFunction,
+    BoundaryTypeMax
+};
+
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
@@ -60,6 +65,7 @@ void boundary_define();
 void flux_define();
 
 void update_boundaries( double t );
+void update_gradients_boundaries();
 
 void prim_to_con( double *phi );
 void copy_prim_to_con( double *phi_i, double *phi_j );

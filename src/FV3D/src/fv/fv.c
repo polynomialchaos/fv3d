@@ -64,7 +64,7 @@ void fv_initialize()
     grad_phi_total_z    = allocate( sizeof( double ) * all_variables->n_tot_variables * (n_local_cells + n_boundaries) );
 
     phi_total_left      = allocate( sizeof( double ) * all_variables->n_tot_variables * n_faces );
-    phi_total_left      = allocate( sizeof( double ) * all_variables->n_tot_variables * n_faces );
+    phi_total_right     = allocate( sizeof( double ) * all_variables->n_tot_variables * n_faces );
 
     phi_dt              = allocate( sizeof( double ) * all_variables->n_sol_variables * (n_local_cells + n_boundaries) );
     flux                = allocate( sizeof( double ) * all_variables->n_sol_variables * n_faces );
@@ -74,13 +74,19 @@ void fv_initialize()
 
 void fv_finalize()
 {
+    update_function_pointer     = NULL;
+    calc_flux_function_pointer  = NULL;
+    calc_exact_function_pointer = NULL;
+
     deallocate( phi_total );
     deallocate( grad_phi_total_x );
     deallocate( grad_phi_total_y );
     deallocate( grad_phi_total_z );
+
+    deallocate( phi_total_left );
+    deallocate( phi_total_right );
+
     deallocate( phi_dt );
-    deallocate( phi_total_left );
-    deallocate( phi_total_left );
     deallocate( flux );
 }
 
@@ -128,11 +134,8 @@ void set_solution()
     int n_domain_cells  = global_mesh->cells->n_domain_cells;
     int n_tot_variables = all_variables->n_tot_variables;
 
-    if (calc_exact_function_pointer != NULL)
-        for ( int i = 0; i < n_domain_cells; i++ )
-            calc_exact_function_pointer( 0, 0.0, &global_mesh->cells->x[i*DIM],
-                &phi_total[i*n_tot_variables] );
+    for ( int i = 0; i < n_domain_cells; i++ )
+        calc_exact_function_pointer( 0, 0.0, &global_mesh->cells->x[i*DIM], &phi_total[i*n_tot_variables] );
 
-    if (update_function_pointer != NULL)
-        update_function_pointer( 0.0 );
+    update_function_pointer( 0.0 );
 }

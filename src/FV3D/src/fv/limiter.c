@@ -66,8 +66,9 @@ void limiter_initialize()
 
 void limiter_finalize()
 {
-    deallocate( limiter_name );
     limiter_function_pointer = NULL;
+
+    deallocate( limiter_name );
 }
 
 double limiter_none( int i_cell, int i_var, double slope )

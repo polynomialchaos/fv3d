@@ -10,13 +10,6 @@
 //##################################################################################################################################
 // DEFINES
 //----------------------------------------------------------------------------------------------------------------------------------
-enum BoundaryType {
-    BoundaryFlow, BoundaryInflow, BoundaryOutflow,
-    BoundaryAdiabaticWall, BoundaryIsothermalWall, BoundarySlipWall,
-    BoundarySymmetry, BoundaryState, BoundaryFunction,
-    BoundaryTypeMax
-};
-
 string_t boundary_type_strings[BoundaryTypeMax] =
 {
     "FLOW",
@@ -121,6 +114,7 @@ void boundary_initialize()
             regions->type[i]    = BoundaryFunction;
             string_t tmp_f      = allocate_strcat( path, "/function_id" );
             get_parameter( tmp_f, ParameterDigit, &regions->function_id[i] );
+            check_error( (regions->function_id[i] >= BoundaryTypeMax) );
             deallocate( tmp_f );
         }
         else
@@ -259,7 +253,7 @@ void update_boundaries( double t )
     }
 }
 
-void update_gradients_boundaries( double t )
+void update_gradients_boundaries()
 {
     Cells_t *cells              = global_mesh->cells;
     Boundaries_t *boundaries    = global_mesh->boundaries;
@@ -277,15 +271,11 @@ void update_gradients_boundaries( double t )
     for ( int i = 0; i < n_boundaries; i++ )
     {
         int bf  = boundaries->face[i];
-        int bc  = faces->cells[bf*FACE_CELLS];
         int id  = boundaries->id[i];
 
         double *grad_phi_total_x_i = &grad_phi_total_x[(n_local_cells + i) * n_tot_variables];
         double *grad_phi_total_y_i = &grad_phi_total_y[(n_local_cells + i) * n_tot_variables];
         double *grad_phi_total_z_i = &grad_phi_total_z[(n_local_cells + i) * n_tot_variables];
-        copy_n( &grad_phi_total_x[bc*n_tot_variables], grad_phi_total_x_i, n_tot_variables );
-        copy_n( &grad_phi_total_y[bc*n_tot_variables], grad_phi_total_y_i, n_tot_variables );
-        copy_n( &grad_phi_total_z[bc*n_tot_variables], grad_phi_total_z_i, n_tot_variables );
 
         switch (regions->type[id])
         {
@@ -335,14 +325,14 @@ void update_gradients_boundaries( double t )
 
 void parse_primitive_state( const_string_t prefix, double *phi )
 {
-    string_t tmp_rho    = allocate_strcat( prefix, "/rho" );
+    // string_t tmp_rho    = allocate_strcat( prefix, "/rho" );
     string_t tmp_u      = allocate_strcat( prefix, "/u" );
     string_t tmp_v      = allocate_strcat( prefix, "/v" );
     string_t tmp_w      = allocate_strcat( prefix, "/w" );
     string_t tmp_p      = allocate_strcat( prefix, "/p" );
     string_t tmp_T      = allocate_strcat( prefix, "/T" );
 
-    int has_rho = parameter_exists( tmp_rho );
+    // int has_rho = parameter_exists( tmp_rho );
     int has_u   = parameter_exists( tmp_u );
     int has_v   = parameter_exists( tmp_v );
     int has_w   = parameter_exists( tmp_w );
@@ -366,7 +356,7 @@ void parse_primitive_state( const_string_t prefix, double *phi )
         check_error( 0 );
     }
 
-    deallocate( tmp_rho );
+    // deallocate( tmp_rho );
     deallocate( tmp_u );
     deallocate( tmp_v );
     deallocate( tmp_w );

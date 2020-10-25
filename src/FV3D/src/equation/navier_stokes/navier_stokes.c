@@ -2,7 +2,9 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
+#include <math.h>
 #include "navier_stokes_module.h"
+#include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
 #include "fv/fv_module.h"
 #include "timedisc/timedisc_module.h"
@@ -29,7 +31,7 @@ void navier_stokes_finalize();
 void update( double t );
 void update_gradients();
 void calc_exact_func( int id, double t, double *x, double *phi );
-void calc_time_step( double dt_min );
+double calc_time_step();
 
 const double RM = 8.31446261815324;
 const double molar_mass_air = 28.96e-3;
@@ -51,8 +53,6 @@ double cp;
 double kappa_pr;
 double lambda;
 
-const int n_cons    = 5;
-const int n_prins   = 5;
 int ic_rho          = -1;
 int ic_rho_u        = -1;
 int ic_rho_v        = -1;
@@ -129,58 +129,63 @@ void navier_stokes_finalize()
 
 void update( double t )
 {
+    int n_domain_cells  = global_mesh->cells->n_domain_cells;
+    int n_tot_variables = all_variables->n_tot_variables;
 
-        // do i = 1, n_cells
-        //     phi_total(:,i) = con_to_prim( phi_total(:,i) )
-        // end do
+    for ( int i = 0; i < n_domain_cells; i++ )
+        con_to_prim( &phi_total[i*n_tot_variables] );
 
-        // call update_bc( t )
-
+    update_boundaries( t );
 }
 
 void update_gradients()
 {
-
-        // do i = 1, n_cells
-        //     phi_total(:,i) = con_to_prim( phi_total(:,i) )
-        // end do
-
-        // call update_bc( t )
-
+    update_gradients_boundaries();
 }
 
 void calc_exact_func( int id, double t, double *x, double *phi )
 {
+    Regions_t *regions  = global_mesh->regions;
+    int n_tot_variables = all_variables->n_tot_variables;
 
-        // select case ( id )
-        //     case ( 0 )
-        //         phi = regions(flow_region)%phi
-        //     case default
-        //         call add_error( __LINE__, __FILE__, &
-        //             'Unknown initial function selected (got: ' // set_string( id ) // ')!' )
-        // end select
-
+    switch (id)
+    {
+        case BoundaryFlow:
+            copy_n( &regions->phi_total[regions->flow_region*n_tot_variables], phi, n_tot_variables );
+            break;
+        default:
+            check_error( 0 );
+            break;
+    }
 }
 
-void calc_time_step( double dt_min )
+double calc_time_step()
 {
-        // lambda_conv = huge( lambda_conv )
-        // lambda_visc = huge( lambda_visc )
+    Cells_t *cells      = global_mesh->cells;
+    int n_cells         = cells->n_domain_cells;
+    int n_tot_variables = all_variables->n_tot_variables;
 
-        // do i = 1, n_cells
-        //     s_rho   = 1 / phi(IC_RHO,i)
-        //     c       = sqrt( kappa * phi_total(IP_P,i) * s_rho ) ! speed of
+    double lambda_conv = DOUBLE_MAX;
+    double lambda_visc = DOUBLE_MAX;
 
-        //     ds          = dot_product( abs( phi_total(IP_UVW,i) ) + c, cells(i)%ds )
-        //     lambda_conv = min( lambda_conv, cells(i)%volume / ds )
+    for ( int i = 0; i < n_cells; i++ )
+    {
+        double *phi_total_i = &phi_total[i*n_tot_variables];
+        double s_rho        = 1 / phi_total_i[ic_rho];
+        double c            = sqrt( kappa * phi_total_i[ip_p] * s_rho );
 
-        //     ds          = dot_product( cells(i)%ds, cells(i)%ds )
-        //     lambda_visc = min( lambda_visc, s_rho * ds / cells(i)%volume )
-        // end do
+        double ds1  = (u_abs( phi_total_i[ip_u] ) + c) * cells->dx[i*DIM] +
+            (u_abs( phi_total_i[ip_v] ) + c) * cells->dx[i*DIM+1] + (u_abs( phi_total_i[ip_w] ) + c) * cells->dx[i*DIM+2];
+        lambda_conv = u_min( lambda_conv, cells->volume[i] / ds1 );
 
-        // dt_loc(1)   = cfl_scale * lambda_conv
-        // dt_loc(2)   = dfl_scale * mu_mix * kappa_pr * lambda_visc
+        double ds2  = dot_n( &cells->dx[i*DIM], &cells->dx[i*DIM], DIM );
+        lambda_visc = u_min( lambda_visc, s_rho * ds2 / cells->volume[i] );
+    }
 
-        // is_viscous_dt = (dt_loc(2) .lt. dt_loc(1))
-        // dt_min = minval( dt_loc )
+    lambda_conv *= cfl_scale;
+    lambda_visc *= dfl_scale * mu_mix * kappa_pr * lambda_visc;
+
+    is_viscous_dt   = (lambda_visc < lambda_conv);
+
+    return u_min( lambda_conv, lambda_visc );
 }

@@ -17,16 +17,18 @@
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
 int implicit_active = 0;
+int n_iter_inner    = 0;
+int n_iter_lsoe     = 0;
 
-string_t implicit_scheme_name = NULL;
-string_t method_name = NULL;
-int max_iter_inner = 100;
-string_t solver_name = NULL;
-string_t jacobian_type_name = NULL;
-double tolerance_lsoe = 1e-12;
-int max_iter_lsoe = 100;
-int max_krylov_dims = 15;
-int max_krylov_restarts = 2;
+string_t implicit_scheme_name   = NULL;
+string_t method_name            = NULL;
+int max_iter_inner              = 100;
+string_t solver_name            = NULL;
+string_t jacobian_type_name     = NULL;
+double tolerance_lsoe           = 1e-12;
+int max_iter_lsoe               = 100;
+int max_krylov_dims             = 15;
+int max_krylov_restarts         = 2;
 
 //##################################################################################################################################
 // LOCAL FUNCTIONS
@@ -145,11 +147,11 @@ void implicit_finalize()
     deallocate( solver_name );
     deallocate( jacobian_type_name );
 
-        //     _DEALLOCATE( phi_old )
-        // _DEALLOCATE( bdf_a )
+    // _DEALLOCATE( phi_old )
+    // _DEALLOCATE( bdf_a )
 
-        // _DEALLOCATE( Y_n )
-        // _DEALLOCATE( Y_dt_n )
+    // _DEALLOCATE( Y_n )
+    // _DEALLOCATE( Y_dt_n )
 }
 
 void time_step_newton( double t, double dt, int iter )
