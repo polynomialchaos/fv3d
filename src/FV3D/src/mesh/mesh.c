@@ -153,10 +153,9 @@ void read_mesh_file( Mesh_t *mesh )
 
                 vertices = allocate_vertices( mesh, n_vertices );
 
-                dims[0] = 3;
-                dims[1] = vertices->n_vertices;
-                get_hdf5_dataset_chunk_n_m( group_id, "x", HDF5Int, vertices->x,
-                    2, dims, NULL, NULL, NULL, NULL, NULL );
+                dims[0] = vertices->n_vertices;
+                dims[1] = 3;
+                get_hdf5_dataset_n_m( group_id, "x", HDF5Double, vertices->x, 2, dims );
             close_hdf5_group( group_id );
         }
 
@@ -400,12 +399,10 @@ void read_mesh_file( Mesh_t *mesh )
                 regions = allocate_regions( mesh, n_regions, max_length );
 
                 dims[0] = regions->n_regions;
-                get_hdf5_dataset_chunk_n( group_id, "name", HDF5String, regions->name[0],
-                    1, dims, NULL, NULL, NULL, NULL, NULL );
+                get_hdf5_dataset_n( group_id, "name", HDF5String, regions->name[0], 1, dims );
 
                 dims[0] = regions->n_regions;
-                get_hdf5_dataset_chunk_n( group_id, "is_boundary", HDF5Int, regions->is_boundary,
-                    1, dims, NULL, NULL, NULL, NULL, NULL );
+                get_hdf5_dataset_n( group_id, "is_boundary", HDF5Int, regions->is_boundary, 1, dims );
             close_hdf5_group( group_id );
         }
     close_hdf5_file( file_id );

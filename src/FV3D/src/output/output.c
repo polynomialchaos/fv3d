@@ -71,7 +71,7 @@ void create_file_header()
             strcpy( tmp[i], all_variables->tot_variables[i]->name );
 
         hsize_t dims[2] = {all_variables->n_tot_variables, max_len+1};
-            set_hdf5_dataset_chunk_n( file_id, "variables", HDF5String, tmp[0], dims, dims, NULL, NULL, NULL, NULL );
+            set_hdf5_dataset_n( file_id, "variables", HDF5String, tmp[0], dims );
 
         deallocate_hdf5_string_buffer( &tmp );
 
@@ -119,8 +119,7 @@ void write_output( int iter, double time )
                 else
                 {
                     hsize_t dims[2] = {n_domain_cells, n_tot_variables};
-                    set_hdf5_dataset_chunk_n_m( solution_id, "phi_total", HDF5Double, phi_total,
-                        2, dims, dims, NULL, NULL, NULL, NULL );
+                    set_hdf5_dataset_n_m( solution_id, "phi_total", HDF5Double, phi_total, 2, dims );
 
                     // call set_hdf5_dataset( solution_id, 'phi', phi(:,:n_cells) )
                     // call set_hdf5_dataset( solution_id, 'phi_total', phi_total(:,:n_cells) )
