@@ -538,6 +538,9 @@ void calc_mesh_metrics( Mesh_t *mesh )
         }
     }
 
+    check_error( (k == faces->n_internal_faces) );
+    check_error( (l == faces->n_boundary_faces) );
+
     for ( int i = 0; i < regions->n_regions; i++)
     {
         if (regions->is_boundary[i] == 0)

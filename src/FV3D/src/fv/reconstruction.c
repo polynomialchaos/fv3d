@@ -126,9 +126,9 @@ void reconstruction_linear()
         int *fc = &faces->cells[i*FACE_CELLS];
 
         double *r                  = &faces->dist_cell_1[i*DIM];
-        double *grad_phi_total_x_i = &grad_phi_total_x[n_tot_variables*fc[0]];
-        double *grad_phi_total_y_i = &grad_phi_total_y[n_tot_variables*fc[0]];
-        double *grad_phi_total_z_i = &grad_phi_total_z[n_tot_variables*fc[0]];
+        double *grad_phi_total_x_i = &grad_phi_total_x[fc[0]*n_tot_variables];
+        double *grad_phi_total_y_i = &grad_phi_total_y[fc[0]*n_tot_variables];
+        double *grad_phi_total_z_i = &grad_phi_total_z[fc[0]*n_tot_variables];
 
         for ( int j = 0; j < n_tot_variables; j++ )
         {
@@ -139,9 +139,9 @@ void reconstruction_linear()
         }
 
         r                   = &faces->dist_cell_2[i*DIM];
-        grad_phi_total_x_i  = &grad_phi_total_x[n_tot_variables*fc[1]];
-        grad_phi_total_y_i  = &grad_phi_total_y[n_tot_variables*fc[1]];
-        grad_phi_total_z_i  = &grad_phi_total_z[n_tot_variables*fc[1]];
+        grad_phi_total_x_i  = &grad_phi_total_x[fc[1]*n_tot_variables];
+        grad_phi_total_y_i  = &grad_phi_total_y[fc[1]*n_tot_variables];
+        grad_phi_total_z_i  = &grad_phi_total_z[fc[1]*n_tot_variables];
 
         for ( int j = 0; j < n_tot_variables; j++ )
         {
@@ -158,9 +158,9 @@ void reconstruction_linear()
         int *fc = &faces->cells[i*FACE_CELLS];
 
         double *r                  = &faces->dist_cell_1[i*DIM];
-        double *grad_phi_total_x_i = &grad_phi_total_x[n_tot_variables*fc[0]];
-        double *grad_phi_total_y_i = &grad_phi_total_y[n_tot_variables*fc[0]];
-        double *grad_phi_total_z_i = &grad_phi_total_z[n_tot_variables*fc[0]];
+        double *grad_phi_total_x_i = &grad_phi_total_x[fc[0]*n_tot_variables];
+        double *grad_phi_total_y_i = &grad_phi_total_y[fc[0]*n_tot_variables];
+        double *grad_phi_total_z_i = &grad_phi_total_z[fc[0]*n_tot_variables];
 
         for ( int j = 0; j < n_tot_variables; j++ )
         {
@@ -230,7 +230,7 @@ void calc_gradients()
         }
     }
 
-    if (update_gradients_function_pointer != NULL) update_gradients_function_pointer();
+    update_gradients_function_pointer();
 }
 
 void update_parallel( double *phi_local )
