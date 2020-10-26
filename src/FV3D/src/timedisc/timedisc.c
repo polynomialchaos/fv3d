@@ -173,7 +173,7 @@ void timedisc()
         if ((do_output_data == 1) && (do_output == 1))
         {
             write_output( iter, t );
-            do_output = 1;
+            do_output = 0;
         }
 
         // stop if required

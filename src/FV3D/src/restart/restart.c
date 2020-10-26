@@ -3,7 +3,10 @@
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
 #include "restart_module.h"
+#include "mesh/mesh_module.h"
+#include "equation/equation_module.h"
 #include "output/output_module.h"
+#include "fv/fv_module.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -21,11 +24,16 @@ int use_restart = 0;
 int iter_restart = 0;
 double t_restart = 0;
 
+double *phi_total_restart   = NULL;
+double *phi_dt_restart      = NULL;
+double *phi_old_restart     = NULL;
+
 //##################################################################################################################################
 // LOCAL FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
 void restart_initialize();
 void restart_finalize();
+
 void read_restart_data();
 
 //##################################################################################################################################
@@ -51,58 +59,82 @@ void restart_initialize()
 
 void restart_finalize()
 {
-        //     _DEALLOCATE( phi_restart )
-        // _DEALLOCATE( phi_dt_restart )
-        // _DEALLOCATE( phi_old_restart )
+    deallocate( phi_total_restart );
+    deallocate( phi_dt_restart );
+    deallocate( phi_old_restart );
 }
 
 void read_restart_data()
 {
-        // file_id = open_hdf5_file( output_file )
-        // last_id = open_hdf5_group( file_id, 'SOLUTION' )
+    Cells_t *cells      = global_mesh->cells;
+    int n_domain_cells  = cells->n_domain_cells;
+    int n_tot_variables = all_variables->n_tot_variables;
+    int n_sol_variables = all_variables->n_sol_variables;
 
-        //     call get_hdf5_attribute( last_id, 'iter', iter_restart )
-        //     call get_hdf5_attribute( last_id, 'time', time_restart )
+    hid_t file_id = open_hdf5_file( output_file );
 
-        //     allocate( phi_restart(n_variables,n_cells+n_receives+n_boundaries) )
-        //     allocate( phi_total_restart(n_tot_variables,n_cells+n_receives+n_boundaries) )
-        //     allocate( phi_dt_restart(n_variables,n_cells+n_receives+n_boundaries) )
+        hid_t last_id = open_hdf5_group( file_id, "SOLUTION" );
 
-        //     if( get_is_parallel() ) then
-        //         call get_hdf5_dataset( last_id, 'phi', phi_restart(:,:n_cells), stride=partition_cells )
-        //         call get_hdf5_dataset( last_id, 'phi_total', phi_total_restart(:,:n_cells), stride=partition_cells )
-        //         call get_hdf5_dataset( last_id, 'phi_dt', phi_dt_restart(:,:n_cells), stride=partition_cells )
+            get_hdf5_attribute( last_id, "iter", HDF5Int, &iter_restart );
+            get_hdf5_attribute( last_id, "t", HDF5Double, &t_restart );
 
-        //         if( exists_hdf5_attribute( last_id, 'n_stages' ) ) then
-        //             call get_hdf5_attribute( last_id, 'n_stages', n_old_stages )
+            phi_total_restart   = allocate( sizeof( double ) * n_tot_variables * n_domain_cells );
+            phi_dt_restart      = allocate( sizeof( double ) * n_sol_variables * n_domain_cells );
 
-        //             allocate( phi_old_restart(n_variables,n_cells,n_old_stages) )
-        //             do i_stage = 1, n_old_stages
-        //                 call get_hdf5_dataset( last_id, 'phi_old:' // set_string( i_stage ), &
-        //                     phi_old_restart(:,:,i_stage), stride=partition_cells )
-        //             end do
-        //         end if
-        //     else
-        //         call get_hdf5_dataset( last_id, 'phi', phi_restart(:,:n_cells) )
-        //         call get_hdf5_dataset( last_id, 'phi_total', phi_total_restart(:,:n_cells) )
-        //         call get_hdf5_dataset( last_id, 'phi_dt', phi_dt_restart(:,:n_cells) )
+                if (get_is_parallel())
+                {
+                    {
+                        hsize_t dims[2] = {n_domain_cells, n_tot_variables};
+                        hsize_t offset[2] = {0, 0};
+                        hsize_t count[2] = {n_domain_cells, n_tot_variables};
 
-        //         if( exists_hdf5_attribute( last_id, 'n_stages' ) ) then
-        //             call get_hdf5_attribute( last_id, 'n_stages', n_old_stages )
+                        get_hdf5_dataset_select_n_m( last_id, "phi_total", HDF5Double, phi_total_restart,
+                            2, dims, NULL, offset, count, cells->stride, n_domain_cells );
+                    }
 
-        //             allocate( phi_old_restart(n_variables,n_cells,n_old_stages) )
-        //             do i_stage = 1, n_old_stages
-        //                 call get_hdf5_dataset( last_id, 'phi_old:' // set_string( i_stage ), phi_old_restart(:,:,i_stage) )
-        //             end do
-        //         end if
-        //     end if
+                    {
+                        hsize_t dims[2] = {n_domain_cells, n_sol_variables};
+                        hsize_t offset[2] = {0, 0};
+                        hsize_t count[2] = {n_domain_cells, n_sol_variables};
 
-        // call close_hdf5_group( last_id, 'SOLUTION' )
-        // call close_hdf5_file( file_id, output_file )
+                        get_hdf5_dataset_select_n_m( last_id, "phi_dt", HDF5Double, phi_dt_restart,
+                            2, dims, NULL, offset, count, cells->stride, n_domain_cells );
+                    }
 
-        // phi         = phi_restart
-        // phi_total   = phi_total_restart
-        // phi_dt      = phi_dt_restart
+                    //  if( n_stages .gt. 0 ) then
+                    //      call set_hdf5_attribute( last_id, 'n_stages', n_stages )
+                    //      do i_stage = 1, n_stages
+                    //          call set_hdf5_dataset( last_id, 'phi_old:' // set_string( i_stage ), phi_old(:,:,i_stage), &
+                    //              glob_rank=2, glob_dim=[n_variables,n_global_cells], stride=partition_cells )
+                    //      end do
+                    //  end if
+                }
+                else
+                {
+                    {
+                        hsize_t dims[2] = {n_domain_cells, n_tot_variables};
+                        get_hdf5_dataset_n_m( last_id, "phi_total", HDF5Double, phi_total_restart, 2, dims );
+                    }
+
+                    {
+                        hsize_t dims[2] = {n_domain_cells, n_sol_variables};
+                        get_hdf5_dataset_n_m( last_id, "phi_dt", HDF5Double, phi_dt_restart, 2, dims );
+                    }
+
+                    // if( n_stages .gt. 0 ) then
+                    //  call set_hdf5_attribute( last_id, 'n_stages', n_stages )
+                    //      do i_stage = 1, n_stages
+                    //          call set_hdf5_dataset( last_id, 'phi_old:' // set_string( i_stage ), phi_old(:,:,i_stage) )
+                    //      end do
+                    //  end if
+                }
+
+        close_hdf5_group( last_id );
+
+    close_hdf5_file( file_id );
+
+    copy_n( phi_total_restart, phi_total, n_tot_variables * n_domain_cells );
+    copy_n( phi_dt_restart, phi_dt, n_sol_variables * n_domain_cells );
 
         // if( n_old_stages .lt. n_stages ) &
         //     call add_error( __LINE__, __FILE__, &
@@ -113,8 +145,7 @@ void read_restart_data()
         //     phi_old(:,:,i_stage) = phi_old_restart(:,:,i_stage)
         // end do
 
-        // _DEALLOCATE( phi_restart )
-        // _DEALLOCATE( phi_total_restart )
-        // _DEALLOCATE( phi_dt_restart )
-        // _DEALLOCATE( phi_old_restart )
+    deallocate( phi_total_restart );
+    deallocate( phi_dt_restart );
+    deallocate( phi_old_restart );
 }

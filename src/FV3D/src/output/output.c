@@ -20,10 +20,9 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-int i_output_data   = -1;
-int do_output_data  = 0;
-
-string_t output_file = NULL;
+int i_output_data       = -1;
+int do_output_data      = 0;
+string_t output_file    = NULL;
 
 //##################################################################################################################################
 // LOCAL FUNCTIONS
@@ -99,7 +98,7 @@ void create_file_header()
     close_hdf5_file( file_id );
 }
 
-void write_output( int iter, double time )
+void write_output( int iter, double t )
 {
     Cells_t *cells      = global_mesh->cells;
     int n_domain_cells  = cells->n_domain_cells;
@@ -119,28 +118,28 @@ void write_output( int iter, double time )
             hid_t solution_id = create_hdf5_group( group_id, iter_string );
 
                 set_hdf5_attribute( solution_id, "iter", HDF5Int, &iter );
-                set_hdf5_attribute( solution_id, "time", HDF5Double, &time );
+                set_hdf5_attribute( solution_id, "t", HDF5Double, &t );
 
                 if (get_is_parallel())
                 {
                     {
                         hsize_t dims_glob[2] = {n_global_cells, n_tot_variables};
-                        hsize_t dims[2] = {cells->n_domain_cells, n_tot_variables};
+                        hsize_t dims[2] = {n_domain_cells, n_tot_variables};
                         hsize_t offset[2] = {0, 0};
-                        hsize_t count[2] = {cells->n_domain_cells, n_tot_variables};
+                        hsize_t count[2] = {n_domain_cells, n_tot_variables};
 
                         set_hdf5_dataset_select_n_m( solution_id, "phi_total", HDF5Double, phi_total,
-                            2, dims, dims_glob, offset, count, cells->stride, cells->n_domain_cells );
+                            2, dims, dims_glob, offset, count, cells->stride, n_domain_cells );
                     }
 
                     {
                         hsize_t dims_glob[2] = {n_global_cells, n_sol_variables};
-                        hsize_t dims[2] = {cells->n_domain_cells, n_sol_variables};
+                        hsize_t dims[2] = {n_domain_cells, n_sol_variables};
                         hsize_t offset[2] = {0, 0};
-                        hsize_t count[2] = {cells->n_domain_cells, n_sol_variables};
+                        hsize_t count[2] = {n_domain_cells, n_sol_variables};
 
                         set_hdf5_dataset_select_n_m( solution_id, "phi_dt", HDF5Double, phi_dt,
-                            2, dims, dims_glob, offset, count, cells->stride, cells->n_domain_cells );
+                            2, dims, dims_glob, offset, count, cells->stride, n_domain_cells );
                     }
 
                     //  if( n_stages .gt. 0 ) then

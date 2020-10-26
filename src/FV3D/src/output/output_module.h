@@ -20,6 +20,7 @@
 //----------------------------------------------------------------------------------------------------------------------------------
 extern int do_output_data;
 extern int i_output_data;
+extern string_t output_file;
 
 //##################################################################################################################################
 // FUNCTIONS
@@ -27,6 +28,6 @@ extern int i_output_data;
 void output_define();
 
 void create_file_header();
-void write_output( int iter, double time );
+void write_output( int iter, double t );
 
 #endif /* OUTPUT_MODULE_H */

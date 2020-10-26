@@ -22,15 +22,6 @@ extern int use_restart;
 
 extern int iter_restart;
 extern double t_restart;
-// ! integer                 :: iter_restart = 0         !< Current iteration number
-// ! real                    :: time_restart = 0.0       !< Current time
-
-// ! real,   allocatable     :: phi_restart(:,:)         !< Restart solution vector
-// ! real,   allocatable     :: phi_total_restart(:,:)   !< Restart total solution vector
-// ! real,   allocatable     :: phi_dt_restart(:,:)      !< Restart temporal derivative solution vector
-
-// ! integer                 :: n_old_stages = 0         !< Number of old stages found in file
-// ! real,   allocatable     :: phi_old_restart(:,:,:)   !< Restart solution array (old timesteps for implicit)
 
 //##################################################################################################################################
 // FUNCTIONS
