@@ -15,9 +15,9 @@ string_t boundary_type_strings[BoundaryTypeMax] =
     "FLOW",
     "INFLOW",
     "OUTFLOW",
-    "ADIABATIC_WALL",
-    "ISOTHERMAL_WALL",
-    "SLIP_WALL",
+    "WALL-ADIABATIC",
+    "WALL-ISOTHERMAL",
+    "WALL-SLIP",
     "SYMMETRY",
     "STATE",
     "FUNCTION"
