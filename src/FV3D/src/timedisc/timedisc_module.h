@@ -18,13 +18,14 @@
 //##################################################################################################################################
 // VARIABLES
 //----------------------------------------------------------------------------------------------------------------------------------
-typedef void (*void_timestep_fp_t)( double t, double dt );
+typedef void (*void_timestep_fp_t)( int iter, double t, double dt );
 extern void_timestep_fp_t time_step_function_pointer;
 
 typedef double (*double_calc_timestep_fp_t)();
 extern double_calc_timestep_fp_t calc_time_step_function_pointer;
 
 extern int is_viscous_dt;
+extern int is_transient;
 
 //##################################################################################################################################
 // FUNCTIONS

@@ -29,7 +29,7 @@ int is_viscous_dt = 0;
 
 string_t time_step_name = NULL;
 int max_iter            = 1000;
-int transient           = 1;
+int is_transient        = 1;
 double abort_residual   = 1e-10;
 double t_start          = 0.0;
 double t_end            = 0.2;
@@ -57,7 +57,7 @@ void timedisc_define()
 
     set_parameter( "TimeDisc/time_step", ParameterString, &tmp, "The timestep mehtod", &tmp_opt, tmp_opt_n );
     set_parameter( "TimeDisc/max_iter", ParameterDigit, &max_iter, "The maximum number of iterations", NULL, 0 );
-    set_parameter( "TimeDisc/transient", ParameterBool, &transient, "The flag wheter to be transient or steady-state", NULL, 0 );
+    set_parameter( "TimeDisc/transient", ParameterBool, &is_transient, "The flag wheter to be transient or steady-state", NULL, 0 );
     set_parameter( "TimeDisc/abort_residual", ParameterNumber, &abort_residual, "The abort residual", NULL, 0 );
     set_parameter( "TimeDisc/t_start", ParameterNumber, &t_start, "The start time", NULL, 0 );
     set_parameter( "TimeDisc/t_end", ParameterNumber, &t_end, "The end time", NULL, 0 );
@@ -70,12 +70,12 @@ void timedisc_initialize()
 {
     get_parameter( "TimeDisc/time_step", ParameterString, &time_step_name );
     get_parameter( "TimeDisc/max_iter", ParameterDigit, &max_iter );
-    get_parameter( "TimeDisc/transient", ParameterBool, &transient );
+    get_parameter( "TimeDisc/transient", ParameterBool, &is_transient );
     get_parameter( "TimeDisc/abort_residual", ParameterNumber, &abort_residual );
     get_parameter( "TimeDisc/t_start", ParameterNumber, &t_start );
     get_parameter( "TimeDisc/t_end", ParameterNumber, &t_end );
 
-    if (transient == 0) t_end = DOUBLE_MAX;
+    if (is_transient == 0) t_end = DOUBLE_MAX;
 
     if (is_equal( time_step_name, "Explicit" ))
     {
@@ -135,7 +135,7 @@ void timedisc()
         }
 
         // the timestep to be called
-        time_step_function_pointer( t, dt );
+        time_step_function_pointer( iter, t, dt );
         calc_global_residual( dt );
 
         // check for NAN and INF
@@ -147,7 +147,7 @@ void timedisc()
         iter = iter + 1;
 
         // steady-state simulation
-        if ((transient == 0) && (min_n( residual, all_variables->n_sol_variables ) < abort_residual))
+        if ((is_transient == 0) && (min_n( residual, all_variables->n_sol_variables ) < abort_residual))
         {
             t_end       = t;
             do_output   = 1;

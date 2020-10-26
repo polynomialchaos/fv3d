@@ -55,7 +55,7 @@ double *rk_g    = NULL;
 void explicit_initialize();
 void explicit_finalize();
 
-void time_step_lserkw2( double t, double dt );
+void time_step_lserkw2( int iter, double t, double dt );
 
 //##################################################################################################################################
 // FUNCTIONS
@@ -115,8 +115,12 @@ void explicit_finalize()
     rk_g = NULL;
 }
 
-void time_step_lserkw2( double t, double dt )
+void time_step_lserkw2( int iter, double t, double dt )
 {
+#if DEBUG
+    u_unused( iter );
+#endif /* DEBUG */
+
     Cells_t *cells      = global_mesh->cells;
     int n_domain_cells  = cells->n_domain_cells;
     int n_sol_variables = all_variables->n_sol_variables;
