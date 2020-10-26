@@ -154,9 +154,12 @@ void update_boundaries( double t )
 
     for ( int i = 0; i < n_boundaries; i++ )
     {
-        int bf  = boundaries->face[i];
-        int bc  = faces->cells[bf*FACE_CELLS];
-        int id  = boundaries->id[i];
+        int bf      = boundaries->face[i];
+        int bc      = faces->cells[bf*FACE_CELLS];
+        int id      = boundaries->id[i];
+        double *n   = &faces->n[bf*DIM];
+        double *t1  = &faces->t1[bf*DIM];
+        double *t2  = &faces->t2[bf*DIM];
 
         double *phi_total_i = &phi_total[(n_local_cells + i) * n_tot_variables];
         copy_n( &phi_total[bc * n_tot_variables], phi_total_i, n_tot_variables );
@@ -171,9 +174,9 @@ void update_boundaries( double t )
                 break;
             case BoundaryAdiabaticWall:
                 // rotate into local coordinate system
-                phi_total_i[ip_u]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->n[bf*DIM], DIM );
-                phi_total_i[ip_v]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->t1[bf*DIM], DIM );
-                phi_total_i[ip_w]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->t2[bf*DIM], DIM );
+                phi_total_i[ip_u]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], n, DIM );
+                phi_total_i[ip_v]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], t1, DIM );
+                phi_total_i[ip_w]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], t2, DIM );
 
                 //apply boundary specific behaviour
                 phi_total_i[ip_p]   = calc_riemann_p( phi_total_i );
@@ -181,12 +184,9 @@ void update_boundaries( double t )
                 phi_total_i[ic_rho] = calc_ig_rho( phi_total_i[ip_p], phi_total_i[ip_T], R_mix );
 
                 // rotate back to global coordinate system
-                tmp_u   = phi_total_i[ip_u] * faces->n[bf*DIM] +
-                    phi_total_i[ip_v] * faces->t1[bf*DIM] + phi_total_i[ip_w] * faces->t2[bf*DIM];
-                tmp_v   = phi_total_i[ip_u] * faces->n[bf*DIM+1] +
-                    phi_total_i[ip_v] * faces->t1[bf*DIM+1] + phi_total_i[ip_w] * faces->t2[bf*DIM+1];
-                tmp_w   = phi_total_i[ip_u] * faces->n[bf*DIM+2] +
-                    phi_total_i[ip_v] * faces->t1[bf*DIM+2] + phi_total_i[ip_w] * faces->t2[bf*DIM+2];
+                tmp_u   = phi_total_i[ip_u] * n[0] + phi_total_i[ip_v] * t1[0] + phi_total_i[ip_w] * t2[0];
+                tmp_v   = phi_total_i[ip_u] * n[1] + phi_total_i[ip_v] * t1[1] + phi_total_i[ip_w] * t2[1];
+                tmp_w   = phi_total_i[ip_u] * n[2] + phi_total_i[ip_v] * t1[2] + phi_total_i[ip_w] * t2[2];
 
                 phi_total_i[ip_u]   = tmp_u;
                 phi_total_i[ip_v]   = tmp_v;
@@ -194,9 +194,9 @@ void update_boundaries( double t )
                 break;
             case BoundaryIsothermalWall:
                 // rotate into local coordinate system
-                phi_total_i[ip_u]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->n[bf*DIM], DIM );
-                phi_total_i[ip_v]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->t1[bf*DIM], DIM );
-                phi_total_i[ip_w]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->t2[bf*DIM], DIM );
+                phi_total_i[ip_u]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], n, DIM );
+                phi_total_i[ip_v]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], t1, DIM );
+                phi_total_i[ip_w]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], t2, DIM );
 
                 //apply boundary specific behaviour
                 phi_total_i[ip_p]   = calc_riemann_p( phi_total_i );
@@ -205,12 +205,9 @@ void update_boundaries( double t )
                 phi_total_i[ic_rho] = calc_ig_rho( phi_total_i[ip_p], phi_total_i[ip_T], R_mix );
 
                 // rotate back to global coordinate system
-                tmp_u   = phi_total_i[ip_u] * faces->n[bf*DIM] +
-                    phi_total_i[ip_v] * faces->t1[bf*DIM] + phi_total_i[ip_w] * faces->t2[bf*DIM];
-                tmp_v   = phi_total_i[ip_u] * faces->n[bf*DIM+1] +
-                    phi_total_i[ip_v] * faces->t1[bf*DIM+1] + phi_total_i[ip_w] * faces->t2[bf*DIM+1];
-                tmp_w   = phi_total_i[ip_u] * faces->n[bf*DIM+2] +
-                    phi_total_i[ip_v] * faces->t1[bf*DIM+2] + phi_total_i[ip_w] * faces->t2[bf*DIM+2];
+                tmp_u   = phi_total_i[ip_u] * n[0] + phi_total_i[ip_v] * t1[0] + phi_total_i[ip_w] * t2[0];
+                tmp_v   = phi_total_i[ip_u] * n[1] + phi_total_i[ip_v] * t1[1] + phi_total_i[ip_w] * t2[1];
+                tmp_w   = phi_total_i[ip_u] * n[2] + phi_total_i[ip_v] * t1[2] + phi_total_i[ip_w] * t2[2];
 
                 phi_total_i[ip_u]   = tmp_u;
                 phi_total_i[ip_v]   = tmp_v;
@@ -219,9 +216,9 @@ void update_boundaries( double t )
             case BoundarySlipWall:
             case BoundarySymmetry:
                 // rotate into local coordinate system
-                phi_total_i[ip_u]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->n[bf*DIM], DIM );
-                phi_total_i[ip_v]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->t1[bf*DIM], DIM );
-                phi_total_i[ip_w]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], &faces->t2[bf*DIM], DIM );
+                phi_total_i[ip_u]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], n, DIM );
+                phi_total_i[ip_v]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], t1, DIM );
+                phi_total_i[ip_w]   = dot_n( &phi_total[bc*n_tot_variables+ip_u], t2, DIM );
 
                 //apply boundary specific behaviour
                 phi_total_i[ip_p]   = calc_riemann_p( phi_total_i );
@@ -229,12 +226,9 @@ void update_boundaries( double t )
                 phi_total_i[ip_T]   = calc_ig_T( phi_total_i[ip_p], phi_total_i[ic_rho], R_mix );
 
                 // rotate back to global coordinate system
-                tmp_u   = phi_total_i[ip_u] * faces->n[bf*DIM] +
-                    phi_total_i[ip_v] * faces->t1[bf*DIM] + phi_total_i[ip_w] * faces->t2[bf*DIM];
-                tmp_v   = phi_total_i[ip_u] * faces->n[bf*DIM+1] +
-                    phi_total_i[ip_v] * faces->t1[bf*DIM+1] + phi_total_i[ip_w] * faces->t2[bf*DIM+1];
-                tmp_w   = phi_total_i[ip_u] * faces->n[bf*DIM+2] +
-                    phi_total_i[ip_v] * faces->t1[bf*DIM+2] + phi_total_i[ip_w] * faces->t2[bf*DIM+2];
+                tmp_u   = phi_total_i[ip_u] * n[0] + phi_total_i[ip_v] * t1[0] + phi_total_i[ip_w] * t2[0];
+                tmp_v   = phi_total_i[ip_u] * n[1] + phi_total_i[ip_v] * t1[1] + phi_total_i[ip_w] * t2[1];
+                tmp_w   = phi_total_i[ip_u] * n[2] + phi_total_i[ip_v] * t1[2] + phi_total_i[ip_w] * t2[2];
 
                 phi_total_i[ip_u]   = tmp_u;
                 phi_total_i[ip_v]   = tmp_v;
@@ -270,12 +264,20 @@ void update_gradients_boundaries()
 
     for ( int i = 0; i < n_boundaries; i++ )
     {
-        int bf  = boundaries->face[i];
-        int id  = boundaries->id[i];
+        int bf      = boundaries->face[i];
+        int bc      = faces->cells[bf*FACE_CELLS];
+        int id      = boundaries->id[i];
+        double *n   = &faces->n[bf*DIM];
+        double *t1  = &faces->t1[bf*DIM];
+        double *t2  = &faces->t2[bf*DIM];
 
         double *grad_phi_total_x_i = &grad_phi_total_x[(n_local_cells + i) * n_tot_variables];
         double *grad_phi_total_y_i = &grad_phi_total_y[(n_local_cells + i) * n_tot_variables];
         double *grad_phi_total_z_i = &grad_phi_total_z[(n_local_cells + i) * n_tot_variables];
+
+        copy_n( &grad_phi_total_x[bc*n_tot_variables], grad_phi_total_x_i, n_tot_variables );
+        copy_n( &grad_phi_total_y[bc*n_tot_variables], grad_phi_total_y_i, n_tot_variables );
+        copy_n( &grad_phi_total_z[bc*n_tot_variables], grad_phi_total_z_i, n_tot_variables );
 
         switch (regions->type[id])
         {
@@ -291,29 +293,20 @@ void update_gradients_boundaries()
                 // rotate neighbour cell gradient into local coordinates
                 for ( int j = 0; j < n_tot_variables; j++ )
                 {
-                    tmp_x[j] = grad_phi_total_x_i[j] * faces->n[bf*DIM] +
-                        grad_phi_total_y_i[j] * faces->n[bf*DIM+1] + grad_phi_total_z_i[j] * faces->n[bf*DIM+2];
-                    tmp_y[j] = grad_phi_total_x_i[j] * faces->t1[bf*DIM] +
-                        grad_phi_total_y_i[j] * faces->t1[bf*DIM+1] + grad_phi_total_z_i[j] * faces->t1[bf*DIM+2];
-                    tmp_z[j] = grad_phi_total_x_i[j] * faces->t2[bf*DIM] +
-                        grad_phi_total_y_i[j] * faces->t2[bf*DIM+1] + grad_phi_total_z_i[j] * faces->t2[bf*DIM+2];
+                    tmp_x[j] = grad_phi_total_x_i[j] * n[0] + grad_phi_total_y_i[j] * n[1] + grad_phi_total_z_i[j] * n[2];
+                    tmp_y[j] = grad_phi_total_x_i[j] * t1[0] + grad_phi_total_y_i[j] * t1[1] + grad_phi_total_z_i[j] * t1[2];
+                    tmp_z[j] = grad_phi_total_x_i[j] * t2[0] + grad_phi_total_y_i[j] * t2[1] + grad_phi_total_z_i[j] * t2[2];
                 }
 
                 //apply boundary specific behaviour
-                for ( int j = 0; j < n_tot_variables; j++ )
-                {
-                    tmp_x[j] = 0.0;
-                }
+                set_value_n( 0.0, tmp_x, n_tot_variables );
 
                 // rotate neighbour cell gradient back from local coordinates
                 for ( int j = 0; j < n_tot_variables; j++ )
                 {
-                    grad_phi_total_x_i[j] = tmp_x[j] * faces->n[bf*DIM] +
-                        tmp_y[j] * faces->t1[bf*DIM] + tmp_z[j] * faces->t2[bf*DIM];
-                    grad_phi_total_y_i[j] = tmp_x[j] * faces->n[bf*DIM+1] +
-                        tmp_y[j] * faces->t1[bf*DIM+1] + tmp_z[j] * faces->t2[bf*DIM+1];
-                    grad_phi_total_z_i[j] = tmp_x[j] * faces->n[bf*DIM+2] +
-                        tmp_y[j] * faces->t1[bf*DIM+2] + tmp_z[j] * faces->t2[bf*DIM+2];
+                    grad_phi_total_x_i[j] = tmp_x[j] * n[0] + tmp_y[j] * t1[0] + tmp_z[j] * t2[0];
+                    grad_phi_total_y_i[j] = tmp_x[j] * n[1] + tmp_y[j] * t1[1] + tmp_z[j] * t2[1];
+                    grad_phi_total_z_i[j] = tmp_x[j] * n[2] + tmp_y[j] * t1[2] + tmp_z[j] * t2[2];
                 }
                 break;
             default:

@@ -83,8 +83,10 @@ double limiter_none( int i_cell, int i_var, double slope )
 
 double limiter_barth_jespersenn( int i_cell, int i_var, double slope )
 {
+    Cells_t *cells      = global_mesh->cells;
+    int max_cell_faces  = cells->max_cell_faces;
     int n_tot_variables = all_variables->n_tot_variables;
-    int *cf = &global_mesh->cells->faces[i_cell*global_mesh->cells->max_cell_faces];
+    int *cf             = &cells->faces[i_cell*max_cell_faces];
 
     double phi_min  = phi_total[i_cell*n_tot_variables+i_var];
     double phi_max  = phi_total[i_cell*n_tot_variables+i_var];

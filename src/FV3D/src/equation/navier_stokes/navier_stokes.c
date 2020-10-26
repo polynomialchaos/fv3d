@@ -171,14 +171,15 @@ double calc_time_step()
     for ( int i = 0; i < n_cells; i++ )
     {
         double *phi_total_i = &phi_total[i*n_tot_variables];
-        double s_rho        = 1 / phi_total_i[ic_rho];
+        double *dx          = &cells->dx[i*DIM];
+        double s_rho        = 1.0 / phi_total_i[ic_rho];
         double c            = sqrt( kappa * phi_total_i[ip_p] * s_rho );
 
-        double ds1  = (u_abs( phi_total_i[ip_u] ) + c) * cells->dx[i*DIM] +
-            (u_abs( phi_total_i[ip_v] ) + c) * cells->dx[i*DIM+1] + (u_abs( phi_total_i[ip_w] ) + c) * cells->dx[i*DIM+2];
+        double ds1  = (u_abs( phi_total_i[ip_u] ) + c) * dx[0] +
+            (u_abs( phi_total_i[ip_v] ) + c) * dx[1] + (u_abs( phi_total_i[ip_w] ) + c) * dx[2];
         lambda_conv = u_min( lambda_conv, cells->volume[i] / ds1 );
 
-        double ds2  = dot_n( &cells->dx[i*DIM], &cells->dx[i*DIM], DIM );
+        double ds2  = dot_n( dx, dx, DIM );
         lambda_visc = u_min( lambda_visc, s_rho * ds2 / cells->volume[i] );
     }
 

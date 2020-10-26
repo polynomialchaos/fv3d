@@ -154,7 +154,7 @@ void read_mesh_file( Mesh_t *mesh )
                 vertices = allocate_vertices( mesh, n_vertices );
 
                 dims[0] = vertices->n_vertices;
-                dims[1] = 3;
+                dims[1] = DIM;
                 get_hdf5_dataset_n_m( group_id, "x", HDF5Double, vertices->x, 2, dims );
             close_hdf5_group( group_id );
         }
@@ -176,61 +176,45 @@ void read_mesh_file( Mesh_t *mesh )
 
                 cells = allocate_cells( mesh, n_global_cells, max_cell_vertices, max_cell_faces );
 
-                hsize_t *stride = allocate( sizeof( hsize_t ) * cells->n_local_cells );
-                if (is_parallel)
-                {
-                    for ( int i = 0; i < partition->n_partition_cells; i++)
-                        stride[i] = partition->partition_cells[i];
-                    for ( int i = partition->n_partition_cells; i < cells->n_local_cells; i++)
-                        stride[i] = partition->partition_receives[i-partition->n_partition_cells];
-                }
-                else
-                {
-                    for ( int i = 0; i < cells->n_local_cells; i++)
-                        stride[i] = i;
-                }
-
                 dims[0] = cells->n_local_cells;
                 get_hdf5_dataset_select_n( group_id, "id", HDF5Int, cells->id,
-                    1, dims, NULL, stride, cells->n_local_cells );
+                    1, dims, NULL, cells->stride, cells->n_local_cells );
 
                 dims[0] = cells->n_local_cells;
                 get_hdf5_dataset_select_n( group_id, "type", HDF5Int, cells->type,
-                    1, dims, NULL, stride, cells->n_local_cells );
+                    1, dims, NULL, cells->stride, cells->n_local_cells );
 
                 dims[0] = cells->n_local_cells;
                 get_hdf5_dataset_select_n( group_id, "n_vertices", HDF5Int, cells->n_vertices,
-                    1, dims, NULL, stride, cells->n_local_cells );
+                    1, dims, NULL, cells->stride, cells->n_local_cells );
 
                 dims[0] = cells->n_local_cells; offset[0] = 0; count[0] = cells->n_local_cells;
                 dims[1] = cells->max_cell_vertices; offset[1] = 0; count[1] = cells->max_cell_vertices;
                 get_hdf5_dataset_select_n_m( group_id, "vertices", HDF5Int, cells->vertices,
-                    2, dims, NULL, offset, count, stride, cells->n_local_cells );
+                    2, dims, NULL, offset, count, cells->stride, cells->n_local_cells );
 
                 dims[0] = cells->n_local_cells;
                 get_hdf5_dataset_select_n( group_id, "n_faces", HDF5Int, cells->n_faces,
-                    1, dims, NULL, stride, cells->n_local_cells );
+                    1, dims, NULL, cells->stride, cells->n_local_cells );
 
                 dims[0] = cells->n_local_cells; offset[0] = 0; count[0] = cells->n_local_cells;
                 dims[1] = cells->max_cell_faces; offset[1] = 0; count[1] = cells->max_cell_faces;
                 get_hdf5_dataset_select_n_m( group_id, "faces", HDF5Int, cells->faces,
-                    2, dims, NULL, offset, count, stride, cells->n_local_cells );
+                    2, dims, NULL, offset, count, cells->stride, cells->n_local_cells );
 
                 dims[0] = cells->n_local_cells;
                 get_hdf5_dataset_select_n( group_id, "volume", HDF5Double, cells->volume,
-                    1, dims, NULL, stride, cells->n_local_cells );
+                    1, dims, NULL, cells->stride, cells->n_local_cells );
 
                 dims[0] = cells->n_local_cells; offset[0] = 0; count[0] = cells->n_local_cells;
-                dims[1] = 3; offset[1] = 0; count[1] = 3;
+                dims[1] = DIM; offset[1] = 0; count[1] = DIM;
                 get_hdf5_dataset_select_n_m( group_id, "x", HDF5Double, cells->x,
-                    2, dims, NULL, offset, count, stride, cells->n_local_cells );
+                    2, dims, NULL, offset, count, cells->stride, cells->n_local_cells );
 
                 dims[0] = cells->n_local_cells; offset[0] = 0; count[0] = cells->n_local_cells;
-                dims[1] = 3; offset[1] = 0; count[1] = 3;
+                dims[1] = DIM; offset[1] = 0; count[1] = DIM;
                 get_hdf5_dataset_select_n_m( group_id, "dx", HDF5Double, cells->dx,
-                    2, dims, NULL, offset, count, stride, cells->n_local_cells );
-
-                deallocate( stride );
+                    2, dims, NULL, offset, count, cells->stride, cells->n_local_cells );
             close_hdf5_group( group_id );
         }
 
@@ -249,59 +233,45 @@ void read_mesh_file( Mesh_t *mesh )
 
                 boundaries = allocate_boundaries( mesh, n_global_boundaries, max_boundary_vertices );
 
-                hsize_t *stride = allocate( sizeof( hsize_t ) * boundaries->n_boundaries );
-                if (is_parallel)
-                {
-                    for ( int i = 0; i < partition->n_partition_boundaries; i++)
-                        stride[i] = partition->partition_boundaries[i];
-                }
-                else
-                {
-                    for ( int i = 0; i < boundaries->n_boundaries; i++)
-                        stride[i] = i;
-                }
-
                 dims[0] = boundaries->n_boundaries;
                 get_hdf5_dataset_select_n( group_id, "id", HDF5Int, boundaries->id,
-                    1, dims, NULL, stride, boundaries->n_boundaries );
+                    1, dims, NULL, boundaries->stride, boundaries->n_boundaries );
 
                 dims[0] = boundaries->n_boundaries;
                 get_hdf5_dataset_select_n( group_id, "type", HDF5Int, boundaries->type,
-                    1, dims, NULL, stride, boundaries->n_boundaries );
+                    1, dims, NULL, boundaries->stride, boundaries->n_boundaries );
 
                 dims[0] = boundaries->n_boundaries;
                 get_hdf5_dataset_select_n( group_id, "n_vertices", HDF5Int, boundaries->n_vertices,
-                    1, dims, NULL, stride, boundaries->n_boundaries );
+                    1, dims, NULL, boundaries->stride, boundaries->n_boundaries );
 
                 dims[0] = boundaries->n_boundaries; offset[0] = 0; count[0] = boundaries->n_boundaries;
                 dims[1] = boundaries->max_boundary_vertices; offset[1] = 0; count[1] = boundaries->max_boundary_vertices;
                 get_hdf5_dataset_select_n_m( group_id, "vertices", HDF5Int, boundaries->vertices,
-                    2, dims, NULL, offset, count, stride, boundaries->n_boundaries );
+                    2, dims, NULL, offset, count, boundaries->stride, boundaries->n_boundaries );
 
                 dims[0] = boundaries->n_boundaries;
                 get_hdf5_dataset_select_n( group_id, "face", HDF5Int, boundaries->face,
-                    1, dims, NULL, stride, boundaries->n_boundaries );
+                    1, dims, NULL, boundaries->stride, boundaries->n_boundaries );
 
                 dims[0] = boundaries->n_boundaries;
                 get_hdf5_dataset_select_n( group_id, "distance", HDF5Double, boundaries->distance,
-                    1, dims, NULL, stride, boundaries->n_boundaries );
+                    1, dims, NULL, boundaries->stride, boundaries->n_boundaries );
 
                 dims[0] = boundaries->n_boundaries; offset[0] = 0; count[0] = boundaries->n_boundaries;
-                dims[1] = 3; offset[1] = 0; count[1] = 3;
+                dims[1] = DIM; offset[1] = 0; count[1] = DIM;
                 get_hdf5_dataset_select_n_m( group_id, "n", HDF5Double, boundaries->n,
-                    2, dims, NULL, offset, count, stride, boundaries->n_boundaries );
+                    2, dims, NULL, offset, count, boundaries->stride, boundaries->n_boundaries );
 
                 dims[0] = boundaries->n_boundaries; offset[0] = 0; count[0] = boundaries->n_boundaries;
-                dims[1] = 3; offset[1] = 0; count[1] = 3;
+                dims[1] = DIM; offset[1] = 0; count[1] = DIM;
                 get_hdf5_dataset_select_n_m( group_id, "t1", HDF5Double, boundaries->t1,
-                    2, dims, NULL, offset, count, stride, boundaries->n_boundaries );
+                    2, dims, NULL, offset, count, boundaries->stride, boundaries->n_boundaries );
 
                 dims[0] = boundaries->n_boundaries; offset[0] = 0; count[0] = boundaries->n_boundaries;
-                dims[1] = 3; offset[1] = 0; count[1] = 3;
+                dims[1] = DIM; offset[1] = 0; count[1] = DIM;
                 get_hdf5_dataset_select_n_m( group_id, "t2", HDF5Double, boundaries->t2,
-                    2, dims, NULL, offset, count, stride, boundaries->n_boundaries );
-
-                deallocate( stride );
+                    2, dims, NULL, offset, count, boundaries->stride, boundaries->n_boundaries );
             close_hdf5_group( group_id );
         }
 
@@ -320,69 +290,55 @@ void read_mesh_file( Mesh_t *mesh )
 
                 faces = allocate_faces( mesh, n_global_faces, max_face_vertices );
 
-                hsize_t *stride = allocate( sizeof( hsize_t ) * faces->n_faces );
-                if (is_parallel)
-                {
-                    for ( int i = 0; i < partition->n_partition_faces; i++)
-                        stride[i] = partition->partition_faces[i];
-                }
-                else
-                {
-                    for ( int i = 0; i < faces->n_faces; i++)
-                        stride[i] = i;
-                }
-
                 dims[0] = faces->n_faces;
                 get_hdf5_dataset_select_n( group_id, "type", HDF5Int, faces->type,
-                    1, dims, NULL, stride, faces->n_faces );
+                    1, dims, NULL, faces->stride, faces->n_faces );
 
                 dims[0] = faces->n_faces;
                 get_hdf5_dataset_select_n( group_id, "n_vertices", HDF5Int, faces->n_vertices,
-                    1, dims, NULL, stride, faces->n_faces );
+                    1, dims, NULL, faces->stride, faces->n_faces );
 
                 dims[0] = faces->n_faces; offset[0] = 0; count[0] = faces->n_faces;
                 dims[1] = faces->max_face_vertices; offset[1] = 0; count[1] = faces->max_face_vertices;
                 get_hdf5_dataset_select_n_m( group_id, "vertices", HDF5Int, faces->vertices,
-                    2, dims, NULL, offset, count, stride, faces->n_faces );
+                    2, dims, NULL, offset, count, faces->stride, faces->n_faces );
 
                 dims[0] = faces->n_faces; offset[0] = 0; count[0] = faces->n_faces;
-                dims[1] = 2; offset[1] = 0; count[1] = 2;
+                dims[1] = FACE_CELLS; offset[1] = 0; count[1] = FACE_CELLS;
                 get_hdf5_dataset_select_n_m( group_id, "cells", HDF5Int, faces->cells,
-                    2, dims, NULL, offset, count, stride, faces->n_faces );
+                    2, dims, NULL, offset, count, faces->stride, faces->n_faces );
 
                 dims[0] = faces->n_faces;
                 get_hdf5_dataset_select_n( group_id, "boundary", HDF5Int, faces->boundary,
-                    1, dims, NULL, stride, faces->n_faces );
+                    1, dims, NULL, faces->stride, faces->n_faces );
 
                 dims[0] = faces->n_faces;
                 get_hdf5_dataset_select_n( group_id, "area", HDF5Double, faces->area,
-                    1, dims, NULL, stride, faces->n_faces );
+                    1, dims, NULL, faces->stride, faces->n_faces );
 
                 dims[0] = faces->n_faces;
                 get_hdf5_dataset_select_n( group_id, "lambda", HDF5Double, faces->lambda,
-                    1, dims, NULL, stride, faces->n_faces );
+                    1, dims, NULL, faces->stride, faces->n_faces );
 
                 dims[0] = faces->n_faces; offset[0] = 0; count[0] = faces->n_faces;
-                dims[1] = 3; offset[1] = 0; count[1] = 3;
+                dims[1] = DIM; offset[1] = 0; count[1] = DIM;
                 get_hdf5_dataset_select_n_m( group_id, "x", HDF5Double, faces->x,
-                    2, dims, NULL, offset, count, stride, faces->n_faces );
+                    2, dims, NULL, offset, count, faces->stride, faces->n_faces );
 
                 dims[0] = faces->n_faces; offset[0] = 0; count[0] = faces->n_faces;
-                dims[1] = 3; offset[1] = 0; count[1] = 3;
+                dims[1] = DIM; offset[1] = 0; count[1] = DIM;
                 get_hdf5_dataset_select_n_m( group_id, "n", HDF5Double, faces->n,
-                    2, dims, NULL, offset, count, stride, faces->n_faces );
+                    2, dims, NULL, offset, count, faces->stride, faces->n_faces );
 
                 dims[0] = faces->n_faces; offset[0] = 0; count[0] = faces->n_faces;
-                dims[1] = 3; offset[1] = 0; count[1] = 3;
+                dims[1] = DIM; offset[1] = 0; count[1] = DIM;
                 get_hdf5_dataset_select_n_m( group_id, "t1", HDF5Double, faces->t1,
-                    2, dims, NULL, offset, count, stride, faces->n_faces );
+                    2, dims, NULL, offset, count, faces->stride, faces->n_faces );
 
                 dims[0] = faces->n_faces; offset[0] = 0; count[0] = faces->n_faces;
-                dims[1] = 3; offset[1] = 0; count[1] = 3;
+                dims[1] = DIM; offset[1] = 0; count[1] = DIM;
                 get_hdf5_dataset_select_n_m( group_id, "t2", HDF5Double, faces->t2,
-                    2, dims, NULL, offset, count, stride, faces->n_faces );
-
-                deallocate( stride );
+                    2, dims, NULL, offset, count, faces->stride, faces->n_faces );
             close_hdf5_group( group_id );
         }
 
@@ -550,23 +506,22 @@ void calc_mesh_metrics( Mesh_t *mesh )
 
     faces->dist_cell_1    = allocate( sizeof( double ) * faces->n_faces * DIM );
     faces->dist_cell_2    = allocate( sizeof( double ) * faces->n_faces * DIM );
-    faces->internal_faces = allocate( sizeof( double ) * faces->n_internal_faces );
-    faces->boundary_faces = allocate( sizeof( double ) * faces->n_boundary_faces );
+    faces->internal_faces = allocate( sizeof( int ) * faces->n_internal_faces );
+    faces->boundary_faces = allocate( sizeof( int ) * faces->n_boundary_faces );
 
-    int k = 0; int l = 0;
+    int k = 0;
+    int l = 0;
     for ( int i = 0; i < faces->n_faces; i++)
     {
         int *fc = &faces->cells[i*FACE_CELLS];
 
         for ( int j = 0; j < DIM; j++)
-            faces->dist_cell_1[i*DIM+j] = faces->x[i*DIM+j] -
-                cells->x[fc[0]*DIM+j];
+            faces->dist_cell_1[i*DIM+j] = faces->x[i*DIM+j] - cells->x[fc[0]*DIM+j];
 
         if (fc[1] >= 0)
         {
             for ( int j = 0; j < DIM; j++)
-                faces->dist_cell_2[i*DIM+j] = faces->x[i*DIM+j] -
-                    cells->x[fc[1]*DIM+j];
+                faces->dist_cell_2[i*DIM+j] = faces->x[i*DIM+j] - cells->x[fc[1]*DIM+j];
 
             faces->internal_faces[k] = i;
             k += 1;

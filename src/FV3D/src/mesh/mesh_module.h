@@ -67,6 +67,8 @@ typedef struct Cells
     double *x;
     double *volume;
     double *dx;
+
+    hsize_t *stride;
 } Cells_t;
 
 typedef struct Boundaries
@@ -84,6 +86,8 @@ typedef struct Boundaries
     double *n;
     double *t1;
     double *t2;
+
+    hsize_t *stride;
 } Boundaries_t;
 
 typedef struct Faces
@@ -103,6 +107,8 @@ typedef struct Faces
     double *n;
     double *t1;
     double *t2;
+
+    hsize_t *stride;
 
     double *dist_cell_1;
     double *dist_cell_2;

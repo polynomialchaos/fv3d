@@ -60,20 +60,38 @@ void create_file_header()
 {
     hid_t file_id = create_hdf5_file( output_file );
 
-        set_hdf5_attribute( file_id, "n_variables", HDF5Int, &all_variables->n_tot_variables );
+        set_hdf5_attribute( file_id, "n_tot_variables", HDF5Int, &all_variables->n_tot_variables );
+        set_hdf5_attribute( file_id, "n_sol_variables", HDF5Int, &all_variables->n_sol_variables );
 
-        size_t max_len = 0;
-        for ( int i = 0; i < all_variables->n_tot_variables; i++ )
-            max_len = u_max( max_len, strlen( all_variables->tot_variables[i]->name ) );
+        {
+            size_t max_len = 0;
+            for ( int i = 0; i < all_variables->n_tot_variables; i++ )
+                max_len = u_max( max_len, strlen( all_variables->tot_variables[i]->name ) );
 
-        string_t *tmp = allocate_hdf5_string_buffer( all_variables->n_tot_variables, max_len+1 );
-        for ( int i = 0; i < all_variables->n_tot_variables; i++ )
-            strcpy( tmp[i], all_variables->tot_variables[i]->name );
+            string_t *tmp = allocate_hdf5_string_buffer( all_variables->n_tot_variables, max_len+1 );
+            for ( int i = 0; i < all_variables->n_tot_variables; i++ )
+                strcpy( tmp[i], all_variables->tot_variables[i]->name );
 
-        hsize_t dims[2] = {all_variables->n_tot_variables, max_len+1};
-            set_hdf5_dataset_n( file_id, "variables", HDF5String, tmp[0], dims );
+            hsize_t dims[2] = {all_variables->n_tot_variables, max_len+1};
+                set_hdf5_dataset_n( file_id, "tot_variables", HDF5String, tmp[0], dims );
 
-        deallocate_hdf5_string_buffer( &tmp );
+            deallocate_hdf5_string_buffer( &tmp );
+        }
+
+        {
+            size_t max_len = 0;
+            for ( int i = 0; i < all_variables->n_sol_variables; i++ )
+                max_len = u_max( max_len, strlen( (&all_variables->sol_variables[i])->name ) );
+
+            string_t *tmp = allocate_hdf5_string_buffer( all_variables->n_sol_variables, max_len+1 );
+            for ( int i = 0; i < all_variables->n_sol_variables; i++ )
+                strcpy( tmp[i], (&all_variables->sol_variables[i])->name );
+
+            hsize_t dims[2] = {all_variables->n_sol_variables, max_len+1};
+                set_hdf5_dataset_n( file_id, "sol_variables", HDF5String, tmp[0], dims );
+
+            deallocate_hdf5_string_buffer( &tmp );
+        }
 
         hid_t group_id = create_hdf5_group( file_id, "SOLUTIONS" );
         close_hdf5_group( group_id );
@@ -83,9 +101,13 @@ void create_file_header()
 
 void write_output( int iter, double time )
 {
-    if (is_valid_hdf5_file( output_file ) == 0) create_file_header();
-    int n_domain_cells  = global_mesh->cells->n_domain_cells;
+    Cells_t *cells      = global_mesh->cells;
+    int n_domain_cells  = cells->n_domain_cells;
+    int n_global_cells  = cells->n_global_cells;
     int n_tot_variables = all_variables->n_tot_variables;
+    int n_sol_variables = all_variables->n_sol_variables;
+
+    if (is_valid_hdf5_file( output_file ) == 0) create_file_header();
 
     char iter_string[10];
     sprintf( iter_string, "%09d", iter );
@@ -101,12 +123,25 @@ void write_output( int iter, double time )
 
                 if (get_is_parallel())
                 {
-                    //  call set_hdf5_dataset( solution_id, 'phi', phi(:,:n_cells), &
-                    //      glob_rank=2, glob_dim=[n_variables,n_global_cells], stride=partition_cells )
-                    //  call set_hdf5_dataset( solution_id, 'phi_total', phi_total(:,:n_cells), &
-                    //      glob_rank=2, glob_dim=[n_tot_variables,n_global_cells], stride=partition_cells )
-                    //  call set_hdf5_dataset( solution_id, 'phi_dt', phi_dt(:,:n_cells), &
-                    //      glob_rank=2, glob_dim=[n_variables,n_global_cells], stride=partition_cells )
+                    {
+                        hsize_t dims_glob[2] = {n_global_cells, n_tot_variables};
+                        hsize_t dims[2] = {cells->n_domain_cells, n_tot_variables};
+                        hsize_t offset[2] = {0, 0};
+                        hsize_t count[2] = {cells->n_domain_cells, n_tot_variables};
+
+                        set_hdf5_dataset_select_n_m( solution_id, "phi_total", HDF5Double, phi_total,
+                            2, dims, dims_glob, offset, count, cells->stride, cells->n_domain_cells );
+                    }
+
+                    {
+                        hsize_t dims_glob[2] = {n_global_cells, n_sol_variables};
+                        hsize_t dims[2] = {cells->n_domain_cells, n_sol_variables};
+                        hsize_t offset[2] = {0, 0};
+                        hsize_t count[2] = {cells->n_domain_cells, n_sol_variables};
+
+                        set_hdf5_dataset_select_n_m( solution_id, "phi_dt", HDF5Double, phi_dt,
+                            2, dims, dims_glob, offset, count, cells->stride, cells->n_domain_cells );
+                    }
 
                     //  if( n_stages .gt. 0 ) then
                     //      call set_hdf5_attribute( solution_id, 'n_stages', n_stages )
@@ -118,12 +153,16 @@ void write_output( int iter, double time )
                 }
                 else
                 {
-                    hsize_t dims[2] = {n_domain_cells, n_tot_variables};
-                    set_hdf5_dataset_n_m( solution_id, "phi_total", HDF5Double, phi_total, 2, dims );
+                    {
+                        hsize_t dims[2] = {n_domain_cells, n_tot_variables};
+                        set_hdf5_dataset_n_m( solution_id, "phi_total", HDF5Double, phi_total, 2, dims );
+                    }
 
-                    // call set_hdf5_dataset( solution_id, 'phi', phi(:,:n_cells) )
-                    // call set_hdf5_dataset( solution_id, 'phi_total', phi_total(:,:n_cells) )
-                    // call set_hdf5_dataset( solution_id, 'phi_dt', phi_dt(:,:n_cells) )
+                    {
+                        hsize_t dims[2] = {n_domain_cells, n_sol_variables};
+                        set_hdf5_dataset_n_m( solution_id, "phi_dt", HDF5Double, phi_dt, 2, dims );
+                    }
+
                     // if( n_stages .gt. 0 ) then
                     //  call set_hdf5_attribute( solution_id, 'n_stages', n_stages )
                     //      do i_stage = 1, n_stages

@@ -100,66 +100,82 @@ void calc_flux()
         int i           = faces->internal_faces[ii];
         int *fc         = &faces->cells[i*FACE_CELLS];
         double *flux_i  = &flux[i*n_sol_variables];
+        double *n       = &faces->n[i*DIM];
+        double *t1      = &faces->t1[i*DIM];
+        double *t2      = &faces->t2[i*DIM];
 
         double *phi_total_left_i = &phi_total_left[i*n_tot_variables];
         double *phi_total_right_i = &phi_total_right[i*n_tot_variables];
 
-        copy_n( phi_total_left_i, phi_total_left_r, n_tot_variables );
-        phi_total_left_r[ic_rho_u]  = dot_n( &phi_total_left_i[ic_rho_u], &faces->n[i*DIM], DIM );
-        phi_total_left_r[ic_rho_v]  = dot_n( &phi_total_left_i[ic_rho_u], &faces->t1[i*DIM], DIM );
-        phi_total_left_r[ic_rho_w]  = dot_n( &phi_total_left_i[ic_rho_u], &faces->t2[i*DIM], DIM );
+        phi_total_left_r[ic_rho]    = phi_total_left_i[ic_rho];
+        phi_total_left_r[ic_rho_u]  = dot_n( &phi_total_left_i[ic_rho_u], n, DIM );
+        phi_total_left_r[ic_rho_v]  = dot_n( &phi_total_left_i[ic_rho_u], t1, DIM );
+        phi_total_left_r[ic_rho_w]  = dot_n( &phi_total_left_i[ic_rho_u], t2, DIM );
+        phi_total_left_r[ic_rho_e]  = phi_total_left_i[ic_rho_e];
+        con_to_prim( phi_total_left_r );
 
-        copy_n( phi_total_right_i, phi_total_right_r, n_tot_variables );
-        phi_total_right_r[ic_rho_u] = dot_n( &phi_total_right_i[ic_rho_u], &faces->n[i*DIM], DIM );
-        phi_total_right_r[ic_rho_v] = dot_n( &phi_total_right_i[ic_rho_u], &faces->t1[i*DIM], DIM );
-        phi_total_right_r[ic_rho_w] = dot_n( &phi_total_right_i[ic_rho_u], &faces->t2[i*DIM], DIM );
+        phi_total_right_r[ic_rho]   = phi_total_right_i[ic_rho];
+        phi_total_right_r[ic_rho_u] = dot_n( &phi_total_right_i[ic_rho_u], n, DIM );
+        phi_total_right_r[ic_rho_v] = dot_n( &phi_total_right_i[ic_rho_u], t1, DIM );
+        phi_total_right_r[ic_rho_w] = dot_n( &phi_total_right_i[ic_rho_u], t2, DIM );
+        phi_total_right_r[ic_rho_e] = phi_total_right_i[ic_rho_e];
+        con_to_prim( phi_total_right_r );
 
         // calculate convective flux
         calc_convective_flux_function_pointer( phi_total_left_r, phi_total_right_r, flux_c );
 
         // rotate convective flux back to global coordiantes and add to flux
         flux_i[0]   = flux_c[0];
-        flux_i[1]   = flux_c[0] * faces->n[i*DIM] + flux_c[1] * faces->t1[i*DIM] + flux_c[2] * faces->t2[i*DIM];
-        flux_i[2]   = flux_c[0] * faces->n[i*DIM+1] + flux_c[1] * faces->t1[i*DIM+1] + flux_c[2] * faces->t2[i*DIM+1];
-        flux_i[3]   = flux_c[0] * faces->n[i*DIM+2] + flux_c[1] * faces->t1[i*DIM+2] + flux_c[2] * faces->t2[i*DIM+2];
+        flux_i[1]   = flux_c[1] * n[0] + flux_c[2] * t1[0] + flux_c[3] * t2[0];
+        flux_i[2]   = flux_c[1] * n[1] + flux_c[2] * t1[1] + flux_c[3] * t2[1];
+        flux_i[3]   = flux_c[1] * n[2] + flux_c[2] * t1[2] + flux_c[3] * t2[2];
         flux_i[4]   = flux_c[4];
+
+        double *grad_phi_total_x_i_0 = &grad_phi_total_x[fc[0]*n_tot_variables];
+        double *grad_phi_total_y_i_0 = &grad_phi_total_y[fc[0]*n_tot_variables];
+        double *grad_phi_total_z_i_0 = &grad_phi_total_z[fc[0]*n_tot_variables];
+        double *grad_phi_total_x_i_1 = &grad_phi_total_x[fc[1]*n_tot_variables];
+        double *grad_phi_total_y_i_1 = &grad_phi_total_y[fc[1]*n_tot_variables];
+        double *grad_phi_total_z_i_1 = &grad_phi_total_z[fc[1]*n_tot_variables];
 
         // calculate diffusive flux
         viscous_flux(
-            phi_total_left_i, &grad_phi_total_x[fc[0]*n_tot_variables],
-            &grad_phi_total_y[fc[0]*n_tot_variables], &grad_phi_total_z[fc[0]*n_tot_variables],
-            phi_total_right_i, &grad_phi_total_x[fc[1]*n_tot_variables],
-            &grad_phi_total_y[fc[1]*n_tot_variables], &grad_phi_total_z[fc[1]*n_tot_variables],
+            phi_total_left_i, grad_phi_total_x_i_0, grad_phi_total_y_i_0, grad_phi_total_z_i_0,
+            phi_total_right_i, grad_phi_total_x_i_1, grad_phi_total_y_i_1, grad_phi_total_z_i_1,
             flux_d_x, flux_d_y, flux_d_z
         );
 
         // add diffusive flux to flux
         for ( int j = 0; j < n_sol_variables; j++ )
-        {
-            flux_i[j]   += flux_d_x[j] * faces->n[i*DIM] +
-                flux_d_y[j] * faces->n[i*DIM+1] + flux_d_z[j] * faces->n[i*DIM+2];
-        }
+            flux_i[j] += flux_d_x[j] * n[0] + flux_d_y[j] * n[1] + flux_d_z[j] * n[2];
     }
 
     for ( int ii = 0; ii < n_boundary_faces; ii++ )
     {
-        int i           = faces->internal_faces[ii];
+        int i           = faces->boundary_faces[ii];
         int *fc         = &faces->cells[i*FACE_CELLS];
         int id          = boundaries->id[faces->boundary[i]];
         double *flux_i  = &flux[i*n_sol_variables];
+        double *n       = &faces->n[i*DIM];
+        double *t1      = &faces->t1[i*DIM];
+        double *t2      = &faces->t2[i*DIM];
 
         double *phi_total_left_i = &phi_total_left[i*n_tot_variables];
         double *phi_total_right_i = &phi_total_right[i*n_tot_variables];
 
-        copy_n( phi_total_left_i, phi_total_left_r, n_tot_variables );
-        phi_total_left_r[ic_rho_u]  = dot_n( &phi_total_left_i[ic_rho_u], &faces->n[i*DIM], DIM );
-        phi_total_left_r[ic_rho_v]  = dot_n( &phi_total_left_i[ic_rho_u], &faces->t1[i*DIM], DIM );
-        phi_total_left_r[ic_rho_w]  = dot_n( &phi_total_left_i[ic_rho_u], &faces->t2[i*DIM], DIM );
+        phi_total_left_r[ic_rho]    = phi_total_left_i[ic_rho];
+        phi_total_left_r[ic_rho_u]  = dot_n( &phi_total_left_i[ic_rho_u], n, DIM );
+        phi_total_left_r[ic_rho_v]  = dot_n( &phi_total_left_i[ic_rho_u], t1, DIM );
+        phi_total_left_r[ic_rho_w]  = dot_n( &phi_total_left_i[ic_rho_u], t2, DIM );
+        phi_total_left_r[ic_rho_e]  = phi_total_left_i[ic_rho_e];
+        con_to_prim( phi_total_left_r );
 
-        copy_n( phi_total_right_i, phi_total_right_r, n_tot_variables );
-        phi_total_right_r[ic_rho_u] = dot_n( &phi_total_right_i[ic_rho_u], &faces->n[i*DIM], DIM );
-        phi_total_right_r[ic_rho_v] = dot_n( &phi_total_right_i[ic_rho_u], &faces->t1[i*DIM], DIM );
-        phi_total_right_r[ic_rho_w] = dot_n( &phi_total_right_i[ic_rho_u], &faces->t2[i*DIM], DIM );
+        phi_total_right_r[ic_rho]   = phi_total_right_i[ic_rho];
+        phi_total_right_r[ic_rho_u] = dot_n( &phi_total_right_i[ic_rho_u], n, DIM );
+        phi_total_right_r[ic_rho_v] = dot_n( &phi_total_right_i[ic_rho_u], t1, DIM );
+        phi_total_right_r[ic_rho_w] = dot_n( &phi_total_right_i[ic_rho_u], t2, DIM );
+        phi_total_right_r[ic_rho_e] = phi_total_right_i[ic_rho_e];
+        con_to_prim( phi_total_right_r );
 
         // calculate convective flux
         switch (regions->type[id])
@@ -171,46 +187,50 @@ void calc_flux()
 
         // rotate convective flux back to global coordiantes and add to flux
         flux_i[0]   = flux_c[0];
-        flux_i[1]   = flux_c[0] * faces->n[i*DIM] + flux_c[1] * faces->t1[i*DIM] + flux_c[2] * faces->t2[i*DIM];
-        flux_i[2]   = flux_c[0] * faces->n[i*DIM+1] + flux_c[1] * faces->t1[i*DIM+1] + flux_c[2] * faces->t2[i*DIM+1];
-        flux_i[3]   = flux_c[0] * faces->n[i*DIM+2] + flux_c[1] * faces->t1[i*DIM+2] + flux_c[2] * faces->t2[i*DIM+2];
+        flux_i[1]   = flux_c[1] * n[0] + flux_c[2] * t1[0] + flux_c[3] * t2[0];
+        flux_i[2]   = flux_c[1] * n[1] + flux_c[2] * t1[1] + flux_c[3] * t2[1];
+        flux_i[3]   = flux_c[1] * n[2] + flux_c[2] * t1[2] + flux_c[3] * t2[2];
         flux_i[4]   = flux_c[4];
+
+        double *grad_phi_total_x_i_0 = &grad_phi_total_x[fc[0]*n_tot_variables];
+        double *grad_phi_total_y_i_0 = &grad_phi_total_y[fc[0]*n_tot_variables];
+        double *grad_phi_total_z_i_0 = &grad_phi_total_z[fc[0]*n_tot_variables];
+        double *grad_phi_total_x_i_1 = &grad_phi_total_x[fc[1]*n_tot_variables];
+        double *grad_phi_total_y_i_1 = &grad_phi_total_y[fc[1]*n_tot_variables];
+        double *grad_phi_total_z_i_1 = &grad_phi_total_z[fc[1]*n_tot_variables];
 
         // calculate diffusive flux
         switch (regions->type[id])
         {
             default:
                 viscous_flux(
-                    phi_total_left_i, &grad_phi_total_x[fc[0]*n_tot_variables],
-                    &grad_phi_total_y[fc[0]*n_tot_variables], &grad_phi_total_z[fc[0]*n_tot_variables],
-                    phi_total_right_i, &grad_phi_total_x[fc[1]*n_tot_variables],
-                    &grad_phi_total_y[fc[1]*n_tot_variables], &grad_phi_total_z[fc[1]*n_tot_variables],
+                    phi_total_left_i, grad_phi_total_x_i_0, grad_phi_total_y_i_0, grad_phi_total_z_i_0,
+                    phi_total_right_i, grad_phi_total_x_i_1, grad_phi_total_y_i_1, grad_phi_total_z_i_1,
                     flux_d_x, flux_d_y, flux_d_z
                 );
                 break;
         }
 
         // add diffusive flux to flux
-        for ( int j = 0; j < all_variables->n_sol_variables; j++ )
-        {
-            flux_i[j]   += flux_d_x[j] * faces->n[i*DIM] +
-                flux_d_y[j] * faces->n[i*DIM+1] + flux_d_z[j] * faces->n[i*DIM+2];
-        }
+        for ( int j = 0; j < n_sol_variables; j++ )
+            flux_i[j] += flux_d_x[j] * n[0] + flux_d_y[j] * n[1] + flux_d_z[j] * n[2];
     }
 }
 
 void riemann_rusanonv( double *phi_l, double *phi_r, double *f )
 {
+    int n_sol_variables = all_variables->n_sol_variables;
+
     double c_l      = sqrt( kappa * phi_l[ip_p] / phi_l[ic_rho] );
     double c_r      = sqrt( kappa * phi_r[ip_p] / phi_r[ic_rho] );
     double eigval   = u_max( u_abs( phi_l[ip_u] ) + c_l, u_abs( phi_r[ip_u] ) + c_r );
 
-    double f_l[all_variables->n_sol_variables];
-    double f_r[all_variables->n_sol_variables];
+    double f_l[n_sol_variables];
+    double f_r[n_sol_variables];
     eval_euler_flux_1d( phi_l, f_l );
     eval_euler_flux_1d( phi_r, f_r );
 
-    for ( int j = 0; j < all_variables->n_sol_variables; j++ )
+    for ( int j = 0; j < n_sol_variables; j++ )
         f[j] = 0.5 * (f_l[j] + f_r[j]) - 0.5 * eigval * (phi_r[j] - phi_l[j]);
 }
 
@@ -306,8 +326,8 @@ void eval_euler_flux_1d( double *phi, double *f )
 void eval_viscous_flux_1d( double *phi, double *grad_phi_x, double *grad_phi_y, double *grad_phi_z,
         double *f, double *g, double *h )
 {
-    const double s_23 = 2 / 3;
-    const double s_43 = 4 / 3;
+    const double s_23 = 2.0 / 3.0;
+    const double s_43 = 4.0 / 3.0;
 
     double tau_xx   = mu_mix * ( s_43 * grad_phi_x[1] -
         s_23 * grad_phi_y[2] - s_23 * grad_phi_z[3]);           // 4/3 * mu * u_x - 2/3 * mu * v_y - 2/3 * mu * w_z

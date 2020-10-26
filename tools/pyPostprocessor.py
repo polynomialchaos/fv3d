@@ -72,8 +72,8 @@ def main():
     # read the solution file
     for inifile in args.inifiles:
         with h5py.File( inifile, 'r' ) as fp_h:
-            all_variables   = [str( x.decode() ) for x in fp_h['variables']]
-            variables       = [str( x.decode() ) for x in fp_h['variables']]
+            all_variables   = [str( x.decode() ) for x in fp_h['tot_variables']]
+            variables       = [str( x.decode() ) for x in fp_h['tot_variables']]
             vec_variables   = []
             if 'rho_u' in variables:
                 vec_variables.append( ('rho_uvw', ('rho_u', 'rho_v', 'rho_w')) )

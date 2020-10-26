@@ -34,12 +34,15 @@ double rk_b_rk33[n_rk_stages_rk33]      = {0., 1./3., 3./4.};
 double rk_g_rk33[n_rk_stages_rk33]      = {1./3., 15./16., 8./15.};
 
 const int n_rk_stages_rk45              = 5;
-double rk_a_rk45[n_rk_stages_rk45]      = {0., -567301805773.0/1357537059087.0, -2404267990393.0/2016746695238.0,
-    -3550918686646.0/2091501179385.0, -1275806237668.0/842570457699.0};
-double rk_b_rk45[n_rk_stages_rk45]      = {0., 1432997174477.0/9575080441755.0, 2526269341429.0/6820363962896.0,
-    2006345519317.0/3224310063776.0, 2802321613138.0/2924317926251.0};
-double rk_g_rk45[n_rk_stages_rk45]      = {1432997174477.0/9575080441755.0, 5161836677717.0/13612068292357.0,
-    1720146321549.0/2090206949498.0, 3134564353537.0/4481467310338.0, 2277821191437.0/14882151754819.0};
+double rk_a_rk45[n_rk_stages_rk45]      = {0., -567301805773.0/1357537059087.0,
+    -2404267990393.0/2016746695238.0, -3550918686646.0/2091501179385.0,
+    -1275806237668.0/842570457699.0};
+double rk_b_rk45[n_rk_stages_rk45]      = {0., 1432997174477.0/9575080441755.0,
+    2526269341429.0/6820363962896.0, 2006345519317.0/3224310063776.0,
+    2802321613138.0/2924317926251.0};
+double rk_g_rk45[n_rk_stages_rk45]      = {1432997174477.0/9575080441755.0,
+    5161836677717.0/13612068292357.0, 1720146321549.0/2090206949498.0,
+    3134564353537.0/4481467310338.0, 2277821191437.0/14882151754819.0};
 
 int n_rk_stages = 0;
 double *rk_a    = NULL;
@@ -124,7 +127,10 @@ void time_step_lserkw2( double t, double dt )
     double t_stage = t; // + dt * rk_b[i_stage] = 0
     fv_time_derivative( t_stage );
 
-    copy_n( phi_dt, phi_dt_tmp, n_sol_variables * n_domain_cells ); // + phi_dt_tmp * rk_a[i_stage] = 0
+    for ( int i = 0; i < n_domain_cells; i++ )
+        for ( int j = 0; j < n_sol_variables; j++ )
+            phi_dt_tmp[i*n_sol_variables+j] = phi_dt[i*n_sol_variables+j]; // + phi_dt_tmp * rk_a[i_stage] = 0
+
     for ( int i = 0; i < n_domain_cells; i++ )
         for ( int j = 0; j < n_sol_variables; j++ )
             phi_total[i*n_tot_variables+j] += phi_dt_tmp[i*n_sol_variables+j] * dt * rk_g[0];
@@ -137,7 +143,7 @@ void time_step_lserkw2( double t, double dt )
 
         for ( int i = 0; i < n_domain_cells; i++ )
             for ( int j = 0; j < n_sol_variables; j++ )
-                phi_dt_tmp[i*n_sol_variables+j] = phi_dt[i*n_sol_variables+j] * phi_dt_tmp[i*n_sol_variables+j] * rk_a[i_stage];
+                phi_dt_tmp[i*n_sol_variables+j] = phi_dt[i*n_sol_variables+j] + phi_dt_tmp[i*n_sol_variables+j] * rk_a[i_stage];
 
         for ( int i = 0; i < n_domain_cells; i++ )
             for ( int j = 0; j < n_sol_variables; j++ )
