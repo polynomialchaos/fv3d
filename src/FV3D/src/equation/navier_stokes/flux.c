@@ -84,7 +84,6 @@ void calc_flux()
     Faces_t *faces              = global_mesh->faces;
     Boundaries_t *boundaries    = global_mesh->boundaries;
     Regions_t *regions          = global_mesh->regions;
-
     int n_internal_faces        = faces->n_internal_faces;
     int n_boundary_faces        = faces->n_boundary_faces;
     int n_tot_variables         = all_variables->n_tot_variables;

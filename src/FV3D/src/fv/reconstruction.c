@@ -94,7 +94,7 @@ void reconstruction_finalize()
 void reconstruction_first_order()
 {
     Faces_t *faces      = global_mesh->faces;
-    int n_faces         = global_mesh->faces->n_faces;
+    int n_faces         = faces->n_faces;
     int n_tot_variables = all_variables->n_tot_variables;
 
     calc_gradients();
@@ -114,18 +114,18 @@ void reconstruction_first_order()
 void reconstruction_linear()
 {
     Faces_t *faces          = global_mesh->faces;
-    int n_internal_faces    = global_mesh->faces->n_internal_faces;
-    int n_boundary_faces    = global_mesh->faces->n_boundary_faces;
+    int n_internal_faces    = faces->n_internal_faces;
+    int n_boundary_faces    = faces->n_boundary_faces;
     int n_tot_variables     = all_variables->n_tot_variables;
 
     calc_gradients();
 
     for ( int ii = 0; ii < n_internal_faces; ii++ )
     {
-        int i   = global_mesh->faces->internal_faces[ii];
+        int i   = faces->internal_faces[ii];
         int *fc = &faces->cells[i*FACE_CELLS];
 
-        double *r                  = &global_mesh->faces->dist_cell_1[i*DIM];
+        double *r                  = &faces->dist_cell_1[i*DIM];
         double *grad_phi_total_x_i = &grad_phi_total_x[n_tot_variables*fc[0]];
         double *grad_phi_total_y_i = &grad_phi_total_y[n_tot_variables*fc[0]];
         double *grad_phi_total_z_i = &grad_phi_total_z[n_tot_variables*fc[0]];
@@ -138,7 +138,7 @@ void reconstruction_linear()
             phi_total_left[i*n_tot_variables+j] = phi_total[fc[0]*n_tot_variables+j] + lim * slope;
         }
 
-        r                   = &global_mesh->faces->dist_cell_2[i*DIM];
+        r                   = &faces->dist_cell_2[i*DIM];
         grad_phi_total_x_i  = &grad_phi_total_x[n_tot_variables*fc[1]];
         grad_phi_total_y_i  = &grad_phi_total_y[n_tot_variables*fc[1]];
         grad_phi_total_z_i  = &grad_phi_total_z[n_tot_variables*fc[1]];
@@ -154,10 +154,10 @@ void reconstruction_linear()
 
     for ( int ii = 0; ii < n_boundary_faces; ii++ )
     {
-        int i = global_mesh->faces->boundary_faces[ii];
+        int i   = faces->boundary_faces[ii];
         int *fc = &faces->cells[i*FACE_CELLS];
 
-        double *r                  = &global_mesh->faces->dist_cell_1[i*DIM];
+        double *r                  = &faces->dist_cell_1[i*DIM];
         double *grad_phi_total_x_i = &grad_phi_total_x[n_tot_variables*fc[0]];
         double *grad_phi_total_y_i = &grad_phi_total_y[n_tot_variables*fc[0]];
         double *grad_phi_total_z_i = &grad_phi_total_z[n_tot_variables*fc[0]];
@@ -179,11 +179,13 @@ void reconstruction_linear()
 
 void calc_gradients()
 {
-    Faces_t *faces      = global_mesh->faces;
-    int n_local_cells   = global_mesh->cells->n_local_cells;
-    int n_boundaries    = global_mesh->boundaries->n_boundaries;
-    int n_faces         = global_mesh->faces->n_faces;
-    int n_tot_variables = all_variables->n_tot_variables;
+    Cells_t *cells              = global_mesh->cells;
+    Boundaries_t *boundaries    = global_mesh->boundaries;
+    Faces_t *faces              = global_mesh->faces;
+    int n_local_cells           = cells->n_local_cells;
+    int n_boundaries            = boundaries->n_boundaries;
+    int n_faces                 = faces->n_faces;
+    int n_tot_variables         = all_variables->n_tot_variables;
 
     if (get_is_parallel()) update_parallel( phi_total );
 
@@ -193,13 +195,13 @@ void calc_gradients()
 
     for ( int i = 0; i < n_faces; i++ )
     {
-        int *fc     = &global_mesh->faces->cells[i*FACE_CELLS];
-        double *n   = &global_mesh->faces->n[i*DIM];
-        double area = global_mesh->faces->area[i];
+        int *fc     = &faces->cells[i*FACE_CELLS];
+        double *n   = &faces->n[i*DIM];
+        double area = faces->area[i];
 
         for ( int j = 0; j < n_tot_variables; j++ )
         {
-            double phi_mean = phi_total[fc[0]*n_tot_variables+j] + global_mesh->faces->lambda[i] *
+            double phi_mean = phi_total[fc[0]*n_tot_variables+j] + faces->lambda[i] *
                 (phi_total[fc[1]*n_tot_variables+j] - phi_total[fc[0]*n_tot_variables+j]);
 
             grad_phi_total_x[fc[0]*n_tot_variables+j]   += phi_mean * n[0] * area;
@@ -218,7 +220,7 @@ void calc_gradients()
 
     for ( int i = 0; i < n_local_cells; i++ )
     {
-        double s_volume = 1.0 / global_mesh->cells->volume[i];
+        double s_volume = 1.0 / cells->volume[i];
 
         for ( int j = 0; j < n_tot_variables; j++ )
         {
@@ -233,12 +235,13 @@ void calc_gradients()
 
 void update_parallel( double *phi_local )
 {
+    Partition_t *partition          = global_mesh->partition;
     int rank                        = get_rank();
-    int n_partitions                = global_mesh->partition->n_partitions;
-    int n_partitions_sends          = global_mesh->partition->n_partition_sends;
-    int *n_partitions_sends_to      = global_mesh->partition->n_partition_sends_to;
-    int n_partition_receives        = global_mesh->partition->n_partition_receives;
-    int *n_partition_receives_from  = global_mesh->partition->n_partition_receives_from;
+    int n_partitions                = partition->n_partitions;
+    int n_partitions_sends          = partition->n_partition_sends;
+    int *n_partitions_sends_to      = partition->n_partition_sends_to;
+    int n_partition_receives        = partition->n_partition_receives;
+    int *n_partition_receives_from  = partition->n_partition_receives_from;
     int n_tot_variables             = all_variables->n_tot_variables;
 
     for ( int s_rank = 0; s_rank < n_partitions; s_rank++ )
@@ -249,7 +252,7 @@ void update_parallel( double *phi_local )
             for ( int r_rank = 0; r_rank < n_partitions; r_rank++ )
             {
                 if (n_partitions_sends_to[r_rank] == 0) continue;
-                int *partition_sends_to = &global_mesh->partition->partition_sends_to[r_rank*n_partitions_sends];
+                int *partition_sends_to = &partition->partition_sends_to[r_rank*n_partitions_sends];
 
                 for ( int i = 0; i < n_partitions_sends_to[r_rank]; i++ )
                 {
@@ -267,7 +270,7 @@ void update_parallel( double *phi_local )
         else
         {
             if (n_partition_receives_from[s_rank] == 0) continue;
-            int *partition_receives_from = &global_mesh->partition->partition_receives_from[s_rank*n_partition_receives];
+            int *partition_receives_from = &partition->partition_receives_from[s_rank*n_partition_receives];
 
             mpi_receive( receive_buffer, n_partition_receives_from[s_rank] * n_tot_variables, MPIDouble, s_rank );
 

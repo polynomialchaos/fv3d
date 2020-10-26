@@ -129,7 +129,8 @@ void navier_stokes_finalize()
 
 void update( double t )
 {
-    int n_domain_cells  = global_mesh->cells->n_domain_cells;
+    Cells_t *cells      = global_mesh->cells;
+    int n_domain_cells  = cells->n_domain_cells;
     int n_tot_variables = all_variables->n_tot_variables;
 
     for ( int i = 0; i < n_domain_cells; i++ )

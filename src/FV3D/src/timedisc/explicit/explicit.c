@@ -117,7 +117,8 @@ void explicit_finalize()
 
 void time_step_lserkw2( double t, double dt )
 {
-    int n_domain_cells  = global_mesh->cells->n_domain_cells;
+    Cells_t *cells      = global_mesh->cells;
+    int n_domain_cells  = cells->n_domain_cells;
     int n_sol_variables = all_variables->n_sol_variables;
     int n_tot_variables = all_variables->n_tot_variables;
 

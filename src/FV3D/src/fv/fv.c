@@ -54,11 +54,14 @@ void fv_define()
 
 void fv_initialize()
 {
-    int n_local_cells   = global_mesh->cells->n_local_cells;
-    int n_boundaries    = global_mesh->boundaries->n_boundaries;
-    int n_faces         = global_mesh->faces->n_faces;
-    int n_tot_variables = all_variables->n_tot_variables;
-    int n_sol_variables = all_variables->n_sol_variables;
+    Cells_t *cells              = global_mesh->cells;
+    Boundaries_t *boundaries    = global_mesh->boundaries;
+    Faces_t *faces              = global_mesh->faces;
+    int n_local_cells           = cells->n_local_cells;
+    int n_boundaries            = boundaries->n_boundaries;
+    int n_faces                 = faces->n_faces;
+    int n_tot_variables         = all_variables->n_tot_variables;
+    int n_sol_variables         = all_variables->n_sol_variables;
 
     phi_total           = allocate( sizeof( double ) * n_tot_variables * (n_local_cells + n_boundaries) );
     grad_phi_total_x    = allocate( sizeof( double ) * n_tot_variables * (n_local_cells + n_boundaries) );
@@ -94,12 +97,14 @@ void fv_finalize()
 
 void fv_time_derivative( double t )
 {
-    Faces_t *faces          = global_mesh->faces;
-    int n_local_cells       = global_mesh->cells->n_local_cells;
-    int n_domain_cells      = global_mesh->cells->n_domain_cells;
-    int n_boundaries        = global_mesh->boundaries->n_boundaries;
-    int n_faces             = global_mesh->faces->n_faces;
-    int n_sol_variables     = all_variables->n_sol_variables;
+    Cells_t *cells              = global_mesh->cells;
+    Boundaries_t *boundaries    = global_mesh->boundaries;
+    Faces_t *faces              = global_mesh->faces;
+    int n_local_cells           = cells->n_local_cells;
+    int n_domain_cells          = cells->n_domain_cells;
+    int n_boundaries            = boundaries->n_boundaries;
+    int n_faces                 = faces->n_faces;
+    int n_sol_variables         = all_variables->n_sol_variables;
 
     update_function_pointer( t );
     reconstruction_function_pointer();
@@ -111,8 +116,8 @@ void fv_time_derivative( double t )
 
     for ( int i = 0; i < n_faces; i++ )
     {
-        int *fc = &faces->cells[i*FACE_CELLS];
-        double area = global_mesh->faces->area[i];
+        int *fc     = &faces->cells[i*FACE_CELLS];
+        double area = faces->area[i];
 
         for ( int j = 0; j < n_sol_variables; j++ )
         {
@@ -123,7 +128,7 @@ void fv_time_derivative( double t )
 
     for ( int i = 0; i < n_domain_cells; i++ )
     {
-        double volume = global_mesh->cells->volume[i];
+        double volume = cells->volume[i];
 
         for ( int j = 0; j < n_sol_variables; j++ )
         {

@@ -143,7 +143,6 @@ void update_boundaries( double t )
     Boundaries_t *boundaries    = global_mesh->boundaries;
     Faces_t *faces              = global_mesh->faces;
     Regions_t *regions          = global_mesh->regions;
-
     int n_local_cells           = cells->n_local_cells;
     int n_boundaries            = boundaries->n_boundaries;
     int n_tot_variables         = all_variables->n_tot_variables;
@@ -253,7 +252,6 @@ void update_gradients_boundaries()
     Boundaries_t *boundaries    = global_mesh->boundaries;
     Faces_t *faces              = global_mesh->faces;
     Regions_t *regions          = global_mesh->regions;
-
     int n_local_cells           = cells->n_local_cells;
     int n_boundaries            = boundaries->n_boundaries;
     int n_tot_variables         = all_variables->n_tot_variables;
