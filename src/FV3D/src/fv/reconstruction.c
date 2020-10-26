@@ -246,7 +246,6 @@ void update_parallel( double *phi_local )
 
     for ( int s_rank = 0; s_rank < n_partitions; s_rank++ )
     {
-
         if (s_rank == rank)
         {
             for ( int r_rank = 0; r_rank < n_partitions; r_rank++ )
