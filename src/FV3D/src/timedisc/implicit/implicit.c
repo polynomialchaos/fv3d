@@ -4,7 +4,7 @@
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
 #include <math.h>
-#include "implicit_private.h"
+#include "implicit_module.h"
 #include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
 #include "timedisc/timedisc_module.h"
@@ -366,7 +366,7 @@ int matrix_vector_numerical( double *x, double *b, int n_var, int n_cells )
             {
                 int idx = i*n_var*n_var+i_var*n_var+j;
                 jac[idx] += phi_dt[i*n_var+j];
-                jac[idx] *= bdf_b_loc / (eps_fd + 1e-16);
+                jac[idx] *= bdf_b_loc / (eps_fd + SMALL);
             }
 
             int idx = i*n_var*n_var+i_var*n_var+i_var;

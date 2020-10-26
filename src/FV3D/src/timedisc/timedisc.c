@@ -4,8 +4,8 @@
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
 #include "timedisc_module.h"
-#include "explicit/explicit_private.h"
-#include "implicit/implicit_private.h"
+#include "explicit/explicit_module.h"
+#include "implicit/implicit_module.h"
 #include "equation/equation_module.h"
 #include "restart/restart_module.h"
 #include "analyze/analyze_module.h"
