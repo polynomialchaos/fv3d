@@ -10,6 +10,7 @@
 #include "restart/restart_module.h"
 #include "analyze/analyze_module.h"
 #include "output/output_module.h"
+#include "fv/fv_module.h"
 
 //##################################################################################################################################
 // DEFINES
@@ -116,6 +117,7 @@ void timedisc()
     double dt;
 
     print_residual_header();
+    if (iter == 0) fv_time_derivative( t );
     if ((do_output_data == 1) && (use_restart == 0)) write_output( iter, t );
 
     while (1)

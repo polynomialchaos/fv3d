@@ -230,7 +230,6 @@ void time_step_newton( int iter, double t, double dt )
     // set local timestep
     dt_loc      = dt;
     tpdt_loc    = t + dt_loc;
-    fv_time_derivative( tpdt_loc );
 
     // store the old state before calculating the FVTimeDerivative
     for ( int i = n_bdf_stages_loc - 1; i > 0; i-- )
@@ -260,9 +259,9 @@ void time_step_newton( int iter, double t, double dt )
                 f_Y_n[idx] -= bdf_a_loc[i_stage] / dt_loc * phi_old[i_stage][idx];
             }
 
-    const double err_f_Y_0 = sqrt( dot_n( f_Y_n, f_Y_n, n_sol_variables * n_domain_cells ) );
+    const double err_f_Y_0 = len_n( f_Y_n, n_sol_variables * n_domain_cells );
 
-    for ( n_iter_inner = 0; n_iter_inner < 5; n_iter_inner++ )
+    for ( n_iter_inner = 1; n_iter_inner <= max_iter_inner; n_iter_inner++ )
     {
         // Jac * dY = fY_n => dY ... Jacobian is determined via finite difference. fY_n = phi - dt * RHS
         n_iter_lsoe = max_iter_lsoe;
@@ -305,11 +304,9 @@ void time_step_newton( int iter, double t, double dt )
                     f_Y_n[idx] -= bdf_a_loc[i_stage] / dt_loc * phi_old[i_stage][idx];
                 }
 
-        double err_f_Y = sqrt( dot_n( f_Y_n, f_Y_n, n_sol_variables * n_domain_cells ) );
+        double err_f_Y = len_n( f_Y_n, n_sol_variables * n_domain_cells );
         if (err_f_Y < err_f_Y_0) break;
         if (is_transient == 0) break;
-
-        printf_r( "%d %d %e %e \n", n_iter_inner, n_iter_lsoe, err_f_Y, residual_lsoe );
     }
 
     if (n_iter_inner >= max_iter_inner)
@@ -342,10 +339,11 @@ int matrix_vector_numerical( double *x, double *b, int n_var, int n_cells )
 
         for ( int i = 0; i < n_cells; i++ )
         {
+            int idx_i = i * n_var * n_var + i_var * n_var;
+
             for ( int j = 0; j < n_var; j++ )
             {
-                int idx = i*n_var*n_var+i_var*n_var+j;
-                jac[idx] = -phi_dt[i*n_var+j];
+                jac[idx_i+j] = -phi_dt[i*n_var+j];
             }
         }
 
@@ -362,31 +360,31 @@ int matrix_vector_numerical( double *x, double *b, int n_var, int n_cells )
 
         for ( int i = 0; i < n_cells; i++ )
         {
+            int idx_i = i * n_var * n_var + i_var * n_var;
+
             for ( int j = 0; j < n_var; j++ )
             {
-                int idx = i*n_var*n_var+i_var*n_var+j;
-                jac[idx] += phi_dt[i*n_var+j];
-                jac[idx] *= bdf_b_loc / (eps_fd + SMALL);
+                jac[idx_i+j] += phi_dt[i*n_var+j];
+                jac[idx_i+j] *= bdf_b_loc / (eps_fd + SMALL);
             }
 
-            int idx = i*n_var*n_var+i_var*n_var+i_var;
-            jac[idx] += 1.0 / dt_loc;
+            jac[idx_i+i_var] += 1.0 / dt_loc;
         }
     }
 
     for ( int i = 0; i < n_cells; i++ )
     {
+        int idx_i   = i * n_var * n_var;
         double *b_i = &b[i*n_var];
         double *x_i = &x[i*n_var];
 
-        for ( int i_var = 0; i_var < n_var; i_var++ )
+        for ( int j = 0; j < n_var; j++ )
         {
-            b_i[i_var] = 0.0;
+            b_i[j] = 0.0;
 
-            for ( int j = 0; j < n_var; j++ )
+            for ( int i_var = 0; i_var < n_var; i_var++ )
             {
-                int idx = i*n_var*n_var+i_var*n_var+j;
-                b_i[i_var] += jac[idx] * x[j];
+                b_i[j] += jac[idx_i+i_var*n_var+j] * x_i[i_var];
             }
         }
     }
