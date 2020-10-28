@@ -380,9 +380,12 @@ int matrix_vector_numerical( double *x, double *b, int n_var, int n_cells )
 
         for ( int j = 0; j < n_var; j++ )
         {
-            b_i[j] = 0.0;
+            b_i[j] = jac[idx_i+j] * x_i[0];
+        }
 
-            for ( int i_var = 0; i_var < n_var; i_var++ )
+        for ( int i_var = 1; i_var < n_var; i_var++ )
+        {
+            for ( int j = 0; j < n_var; j++ )
             {
                 b_i[j] += jac[idx_i+i_var*n_var+j] * x_i[i_var];
             }
