@@ -21,6 +21,7 @@
 extern int implicit_active;
 extern int n_iter_inner;
 extern int n_iter_lsoe;
+extern int n_bdf_stages;
 extern double **phi_old;
 
 //##################################################################################################################################
