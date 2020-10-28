@@ -146,6 +146,10 @@ void update_gradients()
 
 void calc_exact_func( int id, double t, double *x, double *phi )
 {
+#ifdef DEBUG
+    u_unused( t );
+    u_unused( x );
+#endif /* DEBUG */
     Regions_t *regions  = global_mesh->regions;
     int n_tot_variables = all_variables->n_tot_variables;
 

@@ -23,24 +23,27 @@ int explicit_active = 0;
 
 string_t explicit_scheme_name = NULL;
 
-const int n_rk_stages_euler             = 1;
-double rk_a_euler[n_rk_stages_euler]    = {0.0};
-double rk_b_euler[n_rk_stages_euler]    = {0.0};
-double rk_g_euler[n_rk_stages_euler]    = {1.0};
+enum {
+    NRKStagesEuler  = 1,
+    NRKStagesRK33   = 3,
+    NRKStagesRK45   = 5
+};
 
-const int n_rk_stages_rk33              = 3;
-double rk_a_rk33[n_rk_stages_rk33]      = {0., -5./9., -153./128.};
-double rk_b_rk33[n_rk_stages_rk33]      = {0., 1./3., 3./4.};
-double rk_g_rk33[n_rk_stages_rk33]      = {1./3., 15./16., 8./15.};
+double rk_a_euler[NRKStagesEuler]   = {0.0};
+double rk_b_euler[NRKStagesEuler]   = {0.0};
+double rk_g_euler[NRKStagesEuler]   = {1.0};
 
-const int n_rk_stages_rk45              = 5;
-double rk_a_rk45[n_rk_stages_rk45]      = {0., -567301805773.0/1357537059087.0,
+double rk_a_rk33[NRKStagesRK33] = {0., -5./9., -153./128.};
+double rk_b_rk33[NRKStagesRK33] = {0., 1./3., 3./4.};
+double rk_g_rk33[NRKStagesRK33] = {1./3., 15./16., 8./15.};
+
+double rk_a_rk45[NRKStagesRK45] = {0., -567301805773.0/1357537059087.0,
     -2404267990393.0/2016746695238.0, -3550918686646.0/2091501179385.0,
     -1275806237668.0/842570457699.0};
-double rk_b_rk45[n_rk_stages_rk45]      = {0., 1432997174477.0/9575080441755.0,
+double rk_b_rk45[NRKStagesRK45] = {0., 1432997174477.0/9575080441755.0,
     2526269341429.0/6820363962896.0, 2006345519317.0/3224310063776.0,
     2802321613138.0/2924317926251.0};
-double rk_g_rk45[n_rk_stages_rk45]      = {1432997174477.0/9575080441755.0,
+double rk_g_rk45[NRKStagesRK45] = {1432997174477.0/9575080441755.0,
     5161836677717.0/13612068292357.0, 1720146321549.0/2090206949498.0,
     3134564353537.0/4481467310338.0, 2277821191437.0/14882151754819.0};
 
@@ -82,21 +85,21 @@ void explicit_initialize()
 
     if (is_equal( explicit_scheme_name, "Euler" ))
     {
-        n_rk_stages = n_rk_stages_euler;
+        n_rk_stages = NRKStagesEuler;
         rk_a        = rk_a_euler;
         rk_b        = rk_b_euler;
         rk_g        = rk_g_euler;
     }
     else if (is_equal( explicit_scheme_name, "RK3-3" ))
     {
-        n_rk_stages = n_rk_stages_rk33;
+        n_rk_stages = NRKStagesRK33;
         rk_a        = rk_a_rk33;
         rk_b        = rk_b_rk33;
         rk_g        = rk_g_rk33;
     }
     else if (is_equal( explicit_scheme_name, "RK4-5" ))
     {
-        n_rk_stages = n_rk_stages_rk45;
+        n_rk_stages = NRKStagesRK45;
         rk_a        = rk_a_rk45;
         rk_b        = rk_b_rk45;
         rk_g        = rk_g_rk45;

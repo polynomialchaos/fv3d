@@ -176,7 +176,7 @@ Cells_t *allocate_cells( Mesh_t *mesh, int n_cells, int max_cell_vertices, int m
             cells->stride[i] = partition_cells[i];
 
         for ( int i = 0; i < n_partition_receives; i++)
-            cells->stride[n_partition_cells+i] = partition->partition_receives[i];
+            cells->stride[n_partition_cells+i] = partition_receives[i];
     }
     else
     {

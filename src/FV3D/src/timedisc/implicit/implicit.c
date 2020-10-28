@@ -42,13 +42,16 @@ int n_work_size                     = 0;
 double dt_loc                       = 0.0;
 double tpdt_loc                     = 0.0;
 
-const int n_bdf_stages_euler            = 1;
-double bdf_a_euler[n_bdf_stages_euler]  = {0.0};
-double bdf_b_euler                      = 1.0;
+enum {
+    NBDFStagesEuler = 1,
+    NBDFStagesBDF2  = 2
+};
 
-const int n_bdf_stages_bdf2             = 2;
-double bdf_a_bdf2[n_bdf_stages_bdf2]    = {-1./3.,1/3.};
-double bdf_b_bdf2                       = 2./3.;
+double bdf_a_euler[NBDFStagesEuler] = {0.0};
+double bdf_b_euler                  = 1.0;
+
+double bdf_a_bdf2[NBDFStagesBDF2]   = {-1./3.,1/3.};
+double bdf_b_bdf2                   = 2./3.;
 
 int n_bdf_stages    = 0;
 double *bdf_a       = NULL;
@@ -137,13 +140,13 @@ void implicit_initialize()
 
     if (is_equal( implicit_scheme_name, "Euler" ))
     {
-        n_bdf_stages    = n_bdf_stages_euler;
+        n_bdf_stages    = NBDFStagesEuler;
         bdf_a           = bdf_a_euler;
         bdf_b           = bdf_b_euler;
     }
     else if (is_equal( implicit_scheme_name, "BDF-2" ))
     {
-        n_bdf_stages    = n_bdf_stages_bdf2;
+        n_bdf_stages    = NBDFStagesBDF2;
         bdf_a           = bdf_a_bdf2;
         bdf_b           = bdf_b_bdf2;
     }
@@ -223,7 +226,7 @@ void time_step_newton( int iter, double t, double dt )
     int n_tot_variables = all_variables->n_tot_variables;
 
     // discretization parameters
-    n_bdf_stages_loc    = (iter < n_bdf_stages) ? n_bdf_stages_euler : n_bdf_stages;
+    n_bdf_stages_loc    = (iter < n_bdf_stages) ? NBDFStagesEuler : n_bdf_stages;
     bdf_a_loc           = (iter < n_bdf_stages) ? bdf_a_euler : bdf_a;
     bdf_b_loc           = (iter < n_bdf_stages) ? bdf_b_euler : bdf_b;
 
