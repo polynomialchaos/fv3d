@@ -37,7 +37,7 @@ void analyze_define()
 
 void analyze_initialize()
 {
-    residual = allocate( sizeof( residual ) * all_variables->n_sol_variables );
+    residual = allocate( sizeof( double ) * all_variables->n_sol_variables );
     set_value_n( 0.0, residual, all_variables->n_sol_variables );
 }
 
