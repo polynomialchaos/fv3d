@@ -2,7 +2,7 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#include "main_private.h"
+#include "fv3d_private.h"
 #include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
 #include "fv/fv_module.h"

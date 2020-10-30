@@ -3,7 +3,7 @@
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
 #include <string.h>
-#include "main_private.h"
+#include "fv3d_private.h"
 #include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
 #include "output_module.h"

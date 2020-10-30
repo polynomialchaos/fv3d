@@ -2,8 +2,8 @@
 // FV3D - Finite volume solver
 // (c) 2020 | Florian Eigentler
 //##################################################################################################################################
-#ifndef MAIN_MODULE_H
-#define MAIN_MODULE_H
+#ifndef FV3D_PRIVATE_H
+#define FV3D_PRIVATE_H
 
 #include "fv3d_module.h"
 
@@ -24,4 +24,4 @@ extern string_t title;
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
 
-#endif /* MAIN_MODULE_H */
+#endif /* FV3D_PRIVATE_H */
