@@ -149,9 +149,9 @@ void write_output( int iter, double t )
 
                         for ( int i_stage = 0; i_stage < n_bdf_stages; i_stage++ )
                         {
-                            char iter_string[10];
-                            sprintf( iter_string, "%d", i_stage );
-                            string_t tmp = allocate_strcat( "phi_old:", iter_string );
+                            char stage_string[256];
+                            sprintf( stage_string, "%d", i_stage );
+                            string_t tmp = allocate_strcat( "phi_old:", stage_string );
 
                             hsize_t dims_glob[2] = {n_global_cells, n_sol_variables};
                             hsize_t dims[2] = {n_domain_cells, n_sol_variables};
@@ -183,9 +183,9 @@ void write_output( int iter, double t )
 
                         for ( int i_stage = 0; i_stage < n_bdf_stages; i_stage++ )
                         {
-                            char iter_string[10];
-                            sprintf( iter_string, "%d", i_stage );
-                            string_t tmp = allocate_strcat( "phi_old:", iter_string );
+                            char stage_string[256];
+                            sprintf( stage_string, "%d", i_stage );
+                            string_t tmp = allocate_strcat( "phi_old:", stage_string );
 
                             hsize_t dims[2] = {n_domain_cells, n_sol_variables};
 
