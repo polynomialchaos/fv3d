@@ -275,49 +275,61 @@ void time_step_newton( int iter, double t, double dt )
     {
         calc_jacobian_numerical( n_sol_variables, n_domain_cells );
 
-        // Jac * dY = fY_n => dY ... Jacobian is determined via finite difference. fY_n = phi - dt * RHS
-        n_iter_lsoe = max_iter_lsoe;
-        double residual_lsoe = tolerance_lsoe * err_f_Y_old;
-        if (is_bicgstab)
+        if (err_f_Y_old >= err_f_Y_0)
         {
-            BiCGStab_n_m( n_sol_variables, n_domain_cells, f_Y_n, dY_n,
-                work, matrix_vector, &n_iter_lsoe, &residual_lsoe );
-        }
-        else
-        {
-            GMRes_n_m( n_sol_variables, n_domain_cells, f_Y_n, dY_n,
-                work, matrix_vector, &n_iter_lsoe, &residual_lsoe, max_krylov_dims, max_krylov_restarts );
-        }
-
-        // Y^(n+1) = Y^(n) + (Y^(n+1)-Y^(n))
-        for ( int i = 0; i < n_domain_cells; i++ )
-            for ( int j = 0; j < n_sol_variables; j++ )
-                {
-                    int idx = i*n_sol_variables+j;
-                    Y_n[idx] += dY_n[idx];
-                    phi_total[i*n_tot_variables+j] = Y_n[idx];
-                }
-
-        fv_time_derivative( tpdt_loc );
-        copy_n( phi_dt, dY_dt_n, n_sol_variables * n_domain_cells );
-
-        for ( int i = 0; i < n_domain_cells; i++ )
-            for ( int j = 0; j < n_sol_variables; j++ )
+            // Jac * dY = fY_n => dY ... Jacobian is determined via finite difference. fY_n = phi - dt * RHS
+            n_iter_lsoe = max_iter_lsoe;
+            double residual_lsoe = tolerance_lsoe * err_f_Y_old;
+            if (is_bicgstab)
             {
-                int idx = i*n_sol_variables+j;
-                f_Y_n[idx] = -(Y_n[idx] - phi_old[0][idx]) / dt_loc + bdf_b_loc * dY_dt_n[idx];
+                BiCGStab_n_m( n_sol_variables, n_domain_cells, f_Y_n, dY_n,
+                    work, matrix_vector, &n_iter_lsoe, &residual_lsoe );
+            }
+            else
+            {
+                GMRes_n_m( n_sol_variables, n_domain_cells, f_Y_n, dY_n,
+                    work, matrix_vector, &n_iter_lsoe, &residual_lsoe, max_krylov_dims, max_krylov_restarts );
             }
 
-        for ( int i_stage = 0; i_stage < n_bdf_stages_loc; i_stage++ )
+            // Y^(n+1) = Y^(n) + (Y^(n+1)-Y^(n))
+            for ( int i = 0; i < n_domain_cells; i++ )
+                for ( int j = 0; j < n_sol_variables; j++ )
+                    {
+                        int idx = i*n_sol_variables+j;
+                        Y_n[idx] += dY_n[idx];
+                        phi_total[i*n_tot_variables+j] = Y_n[idx];
+                    }
+
+            fv_time_derivative( tpdt_loc );
+            copy_n( phi_dt, dY_dt_n, n_sol_variables * n_domain_cells );
+
             for ( int i = 0; i < n_domain_cells; i++ )
                 for ( int j = 0; j < n_sol_variables; j++ )
                 {
                     int idx = i*n_sol_variables+j;
-                    f_Y_n[idx] -= bdf_a_loc[i_stage] / dt_loc * phi_old[i_stage][idx];
+                    f_Y_n[idx] = -(Y_n[idx] - phi_old[0][idx]) / dt_loc + bdf_b_loc * dY_dt_n[idx];
                 }
 
-        err_f_Y_old = len_n( f_Y_n, n_sol_variables * n_domain_cells );
-        if (err_f_Y_old < err_f_Y_0) break;
+            for ( int i_stage = 0; i_stage < n_bdf_stages_loc; i_stage++ )
+                for ( int i = 0; i < n_domain_cells; i++ )
+                    for ( int j = 0; j < n_sol_variables; j++ )
+                    {
+                        int idx = i*n_sol_variables+j;
+                        f_Y_n[idx] -= bdf_a_loc[i_stage] / dt_loc * phi_old[i_stage][idx];
+                    }
+
+            err_f_Y_old = len_n( f_Y_n, n_sol_variables * n_domain_cells );
+        }
+        else
+        {
+            fv_time_derivative( tpdt_loc );
+        }
+
+        int is_error_less = (err_f_Y_old < err_f_Y_0);
+        int is_error_less_g;
+        mpi_all_reduce( &is_error_less, &is_error_less_g, MPIInt, MPILogAnd );
+
+        if (is_error_less_g == 1) break;
         if (is_transient == 0) break;
     }
 
