@@ -61,11 +61,13 @@ int n_bdf_stages_loc    = 0;
 double *bdf_a_loc       = NULL;
 double bdf_b_loc        = 1.0;
 
+double *work    = NULL;
+
 double *Y_n     = NULL;
 double *f_Y_n   = NULL;
 double *dY_n    = NULL;
 double *dY_dt_n = NULL;
-double *work    = NULL;
+double *jac     = NULL;
 
 //##################################################################################################################################
 // LOCAL FUNCTIONS
@@ -73,6 +75,7 @@ double *work    = NULL;
 void implicit_initialize();
 void implicit_finalize();
 
+void calc_jacobian_numerical( int n_var, int n_cells );
 int matrix_vector_numerical( double *x, double *b, int n, int m );
 void time_step_newton( int iter, double t, double dt );
 
@@ -198,6 +201,7 @@ void implicit_initialize()
     f_Y_n   = allocate( sizeof( double ) * n_sol_variables * n_domain_cells );
     dY_n    = allocate( sizeof( double ) * n_sol_variables * n_domain_cells );
     dY_dt_n = allocate( sizeof( double ) * n_sol_variables * n_domain_cells );
+    jac     = allocate( sizeof( double ) * n_sol_variables * n_sol_variables * n_domain_cells );
 }
 
 void implicit_finalize()
@@ -211,11 +215,13 @@ void implicit_finalize()
         deallocate( phi_old[i] );
     deallocate( phi_old );
 
+    deallocate( work );
+
     deallocate( Y_n );
     deallocate( f_Y_n );
     deallocate( dY_n );
     deallocate( dY_dt_n );
-    deallocate( work );
+    deallocate( jac );
 }
 
 void time_step_newton( int iter, double t, double dt )
@@ -263,12 +269,15 @@ void time_step_newton( int iter, double t, double dt )
             }
 
     const double err_f_Y_0 = len_n( f_Y_n, n_sol_variables * n_domain_cells );
+    double err_f_Y_old = err_f_Y_0;
 
     for ( n_iter_inner = 1; n_iter_inner <= max_iter_inner; n_iter_inner++ )
     {
+        calc_jacobian_numerical( n_sol_variables, n_domain_cells );
+
         // Jac * dY = fY_n => dY ... Jacobian is determined via finite difference. fY_n = phi - dt * RHS
         n_iter_lsoe = max_iter_lsoe;
-        double residual_lsoe = tolerance_lsoe;
+        double residual_lsoe = tolerance_lsoe * err_f_Y_old;
         if (is_bicgstab)
         {
             BiCGStab_n_m( n_sol_variables, n_domain_cells, f_Y_n, dY_n,
@@ -307,8 +316,8 @@ void time_step_newton( int iter, double t, double dt )
                     f_Y_n[idx] -= bdf_a_loc[i_stage] / dt_loc * phi_old[i_stage][idx];
                 }
 
-        double err_f_Y = len_n( f_Y_n, n_sol_variables * n_domain_cells );
-        if (err_f_Y < err_f_Y_0) break;
+        err_f_Y_old = len_n( f_Y_n, n_sol_variables * n_domain_cells );
+        if (err_f_Y_old < err_f_Y_0) break;
         if (is_transient == 0) break;
     }
 
@@ -316,10 +325,9 @@ void time_step_newton( int iter, double t, double dt )
         check_error( 0 );
 }
 
-int matrix_vector_numerical( double *x, double *b, int n_var, int n_cells )
+void calc_jacobian_numerical( int n_var, int n_cells )
 {
     int n_tot_variables = all_variables->n_tot_variables;
-    double jac[n_var*n_var*n_cells];
 
     for ( int i_var = 0; i_var < n_var; i_var++ )
     {
@@ -374,7 +382,10 @@ int matrix_vector_numerical( double *x, double *b, int n_var, int n_cells )
             jac[idx_i+i_var] += 1.0 / dt_loc;
         }
     }
+}
 
+int matrix_vector_numerical( double *x, double *b, int n_var, int n_cells )
+{
     for ( int i = 0; i < n_cells; i++ )
     {
         int idx_i   = i * n_var * n_var;

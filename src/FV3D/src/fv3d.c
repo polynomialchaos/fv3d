@@ -43,8 +43,8 @@ int main( int argc, string_t *argv )
     fv_define();
     analyze_define();
     output_define();
-    restart_define();
     timedisc_define();
+    restart_define();
 
     // call the global initialize routine
     global_initialize( argc, argv, 1, 1 );
