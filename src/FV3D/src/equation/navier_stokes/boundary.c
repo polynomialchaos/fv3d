@@ -130,11 +130,17 @@ void boundary_initialize()
 
 void boundary_finalize()
 {
-    Regions_t *regions = global_mesh->regions;
+    if (global_mesh)
+    {
+        Regions_t *regions = global_mesh->regions;
 
-    deallocate( regions->type );
-    deallocate( regions->function_id );
-    deallocate( regions->phi_total );
+        if (regions)
+        {
+            deallocate( regions->type );
+            deallocate( regions->function_id );
+            deallocate( regions->phi_total );
+        }
+    }
 }
 
 void update_boundaries( double t )
