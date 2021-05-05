@@ -47,7 +47,7 @@ int main( int argc, string_t *argv )
     restart_define();
 
     // call the global initialize routine
-    global_initialize( argc, argv, 1, 1 );
+    global_initialize( argc, argv, true, true );
 
     // calculation
     printf_r( "\n" );
