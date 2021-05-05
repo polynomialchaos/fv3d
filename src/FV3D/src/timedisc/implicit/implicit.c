@@ -36,11 +36,11 @@ int max_iter_lsoe               = 100;
 int max_krylov_dims             = 15;
 int max_krylov_restarts         = 2;
 
-int_matvec_n_m_fp_t matrix_vector   = NULL;
-int is_bicgstab                     = 1;
-int n_work_size                     = 0;
-double dt_loc                       = 0.0;
-double tpdt_loc                     = 0.0;
+int_fp_matvec_t matrix_vector   = NULL;
+int is_bicgstab                 = 1;
+int n_work_size                 = 0;
+double dt_loc                   = 0.0;
+double tpdt_loc                 = 0.0;
 
 enum {
     NBDFStagesEuler = 1,
