@@ -5,13 +5,13 @@
 #ifndef FV3D_MODULE_H
 #define FV3D_MODULE_H
 
-#include "c_module.h"
-#include "utilities_module.h"
-#include "parameter_module.h"
-#include "math_module.h"
-#include "mpi_module.h"
-#include "global_module.h"
-#include "hdf5_module.h"
+#include "libc/c_module.h"
+#include "libc/utilities_module.h"
+#include "libc/parameter_module.h"
+#include "libc/math_module.h"
+#include "libc/mpi_module.h"
+#include "libc/global_module.h"
+#include "libc/hdf5_module.h"
 
 //##################################################################################################################################
 // DEFINES
