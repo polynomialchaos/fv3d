@@ -5,7 +5,7 @@
 #ifndef FV3D_PRIVATE_H
 #define FV3D_PRIVATE_H
 
-#include "fv3d_module.h"
+#include "fv3d/fv3d_module.h"
 
 //##################################################################################################################################
 // DEFINES

@@ -5,7 +5,7 @@
 #ifndef EXPLICIT_MODULE_H
 #define EXPLICIT_MODULE_H
 
-#include "fv3d_module.h"
+#include "fv3d/fv3d_module.h"
 
 //##################################################################################################################################
 // DEFINES

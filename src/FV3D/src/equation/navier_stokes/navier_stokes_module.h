@@ -5,7 +5,7 @@
 #ifndef NAVIER_STOKES_MODULE_H
 #define NAVIER_STOKES_MODULE_H
 
-#include "fv3d_module.h"
+#include "fv3d/fv3d_module.h"
 
 //##################################################################################################################################
 // DEFINES

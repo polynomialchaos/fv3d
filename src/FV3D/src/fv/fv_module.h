@@ -5,7 +5,7 @@
 #ifndef FV_MODULE_H
 #define FV_MODULE_H
 
-#include "fv3d_module.h"
+#include "fv3d/fv3d_module.h"
 
 //##################################################################################################################################
 // DEFINES
