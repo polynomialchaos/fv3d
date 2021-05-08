@@ -243,7 +243,7 @@ void time_step_newton(int iter, double t, double dt)
     tpdt_loc = t + dt_loc;
 
     // store the old state before calculating the FVTimeDerivative
-    for (int i = n_bdf_stages_loc - 1; i > 0; i--)
+    for (int i = n_bdf_stages_loc - 1; i > 0; --i)
         copy_n(phi_old[i - 1], phi_old[i], n_sol_variables * n_domain_cells);
 
     for (int i = 0; i < n_domain_cells; ++i)
