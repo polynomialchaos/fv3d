@@ -92,7 +92,7 @@ double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
     double phi_min = phi_total[i_cell * n_tot_variables + i_var];
     double phi_max = phi_total[i_cell * n_tot_variables + i_var];
 
-    for (int i = 0; i < cells->n_faces[i_cell]; i++)
+    for (int i = 0; i < cells->n_faces[i_cell]; ++i)
     {
         int *fc = &faces->cells[cf[i] * FACE_CELLS];
 
@@ -110,7 +110,7 @@ double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
 
     double tmp = 1.0;
 
-    for (int i = 0; i < cells->n_faces[i_cell]; i++)
+    for (int i = 0; i < cells->n_faces[i_cell]; ++i)
     {
         double y = 1.0;
         if (slope > 0)

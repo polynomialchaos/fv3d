@@ -94,7 +94,7 @@ void calc_flux()
     double flux_c[n_sol_variables];
     double flux_d_x[n_sol_variables], flux_d_y[n_sol_variables], flux_d_z[n_sol_variables];
 
-    for (int ii = 0; ii < n_internal_faces; ii++)
+    for (int ii = 0; ii < n_internal_faces; ++ii)
     {
         int i = faces->internal_faces[ii];
         int *fc = &faces->cells[i * FACE_CELLS];
@@ -144,11 +144,11 @@ void calc_flux()
             flux_d_x, flux_d_y, flux_d_z);
 
         // add diffusive flux to flux
-        for (int j = 0; j < n_sol_variables; j++)
+        for (int j = 0; j < n_sol_variables; ++j)
             flux_i[j] += flux_d_x[j] * n[0] + flux_d_y[j] * n[1] + flux_d_z[j] * n[2];
     }
 
-    for (int ii = 0; ii < n_boundary_faces; ii++)
+    for (int ii = 0; ii < n_boundary_faces; ++ii)
     {
         int i = faces->boundary_faces[ii];
         int *fc = &faces->cells[i * FACE_CELLS];
@@ -209,7 +209,7 @@ void calc_flux()
         }
 
         // add diffusive flux to flux
-        for (int j = 0; j < n_sol_variables; j++)
+        for (int j = 0; j < n_sol_variables; ++j)
             flux_i[j] += flux_d_x[j] * n[0] + flux_d_y[j] * n[1] + flux_d_z[j] * n[2];
     }
 }
@@ -227,7 +227,7 @@ void riemann_rusanonv(double *phi_l, double *phi_r, double *f)
     eval_euler_flux_1d(phi_l, f_l);
     eval_euler_flux_1d(phi_r, f_r);
 
-    for (int j = 0; j < n_sol_variables; j++)
+    for (int j = 0; j < n_sol_variables; ++j)
         f[j] = 0.5 * (f_l[j] + f_r[j]) - 0.5 * eigval * (phi_r[j] - phi_l[j]);
 }
 
@@ -303,7 +303,7 @@ void viscous_flux(double *phi_l, double *grad_phi_x_l, double *grad_phi_y_l, dou
     eval_viscous_flux_1d(phi_l, grad_phi_x_l, grad_phi_y_l, grad_phi_z_l, f_l, g_l, h_l);
     eval_viscous_flux_1d(phi_r, grad_phi_x_r, grad_phi_y_r, grad_phi_z_r, f_r, g_r, h_r);
 
-    for (int j = 0; j < n_sol_variables; j++)
+    for (int j = 0; j < n_sol_variables; ++j)
     {
         f[j] = 0.5 * (f_l[j] + f_r[j]);
         g[j] = 0.5 * (g_l[j] + g_r[j]);

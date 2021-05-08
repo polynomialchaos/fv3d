@@ -134,7 +134,7 @@ void update(double t)
     int n_domain_cells = cells->n_domain_cells;
     int n_tot_variables = all_variables->n_tot_variables;
 
-    for (int i = 0; i < n_domain_cells; i++)
+    for (int i = 0; i < n_domain_cells; ++i)
         con_to_prim(&phi_total[i * n_tot_variables]);
 
     update_boundaries(t);
@@ -174,7 +174,7 @@ double calc_time_step()
     double lambda_conv = DOUBLE_MAX;
     double lambda_visc = DOUBLE_MAX;
 
-    for (int i = 0; i < n_cells; i++)
+    for (int i = 0; i < n_cells; ++i)
     {
         double *phi_total_i = &phi_total[i * n_tot_variables];
         double *dx = &cells->dx[i * DIM];

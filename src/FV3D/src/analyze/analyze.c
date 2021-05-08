@@ -55,17 +55,17 @@ void calc_global_residual(double dt)
     double tmp[n_sol_variables];
     set_value_n(0.0, tmp, n_sol_variables);
 
-    for (int i = 0; i < n_domain_cells; i++)
+    for (int i = 0; i < n_domain_cells; ++i)
     {
         double volume = cells->volume[i];
 
-        for (int j = 0; j < n_sol_variables; j++)
+        for (int j = 0; j < n_sol_variables; ++j)
         {
             tmp[j] += u_abs(phi_dt[i * n_sol_variables + j]) * volume;
         }
     }
 
-    for (int i = 0; i < n_sol_variables; i++)
+    for (int i = 0; i < n_sol_variables; ++i)
         tmp[i] *= dt / global_mesh->global_volume;
 
     mpi_all_reduce_n(tmp, residual, n_sol_variables, MPIDouble, MPISum);

@@ -174,15 +174,15 @@ Cells_t *allocate_cells(Mesh_t *mesh, int n_cells, int max_cell_vertices, int ma
         int n_partition_cells = partition->n_partition_cells;
         int n_partition_receives = partition->n_partition_receives;
 
-        for (int i = 0; i < n_partition_cells; i++)
+        for (int i = 0; i < n_partition_cells; ++i)
             cells->stride[i] = partition_cells[i];
 
-        for (int i = 0; i < n_partition_receives; i++)
+        for (int i = 0; i < n_partition_receives; ++i)
             cells->stride[n_partition_cells + i] = partition_receives[i];
     }
     else
     {
-        for (int i = 0; i < n_cells; i++)
+        for (int i = 0; i < n_cells; ++i)
             cells->stride[i] = i;
     }
 
@@ -223,12 +223,12 @@ Boundaries_t *allocate_boundaries(Mesh_t *mesh, int n_boundaries, int max_bounda
         int *partition_boundaries = partition->partition_boundaries;
         int n_partition_boundaries = partition->n_partition_boundaries;
 
-        for (int i = 0; i < n_partition_boundaries; i++)
+        for (int i = 0; i < n_partition_boundaries; ++i)
             boundaries->stride[i] = partition_boundaries[i];
     }
     else
     {
-        for (int i = 0; i < n_boundaries; i++)
+        for (int i = 0; i < n_boundaries; ++i)
             boundaries->stride[i] = i;
     }
 
@@ -278,12 +278,12 @@ Faces_t *allocate_faces(Mesh_t *mesh, int n_faces, int max_face_vertices)
         int *partition_faces = partition->partition_faces;
         int n_partition_faces = partition->n_partition_faces;
 
-        for (int i = 0; i < n_partition_faces; i++)
+        for (int i = 0; i < n_partition_faces; ++i)
             faces->stride[i] = partition_faces[i];
     }
     else
     {
-        for (int i = 0; i < n_faces; i++)
+        for (int i = 0; i < n_faces; ++i)
             faces->stride[i] = i;
     }
 
@@ -480,6 +480,6 @@ void print_regions(Regions_t *regions)
     printf_r("n_regions   = %d\n", regions->n_regions);
     printf_r("flow_region = %d\n", regions->flow_region);
 
-    for (int i = 0; i < regions->n_regions; i++)
+    for (int i = 0; i < regions->n_regions; ++i)
         printf_r("%d: %s\n", i, regions->name[i]);
 }

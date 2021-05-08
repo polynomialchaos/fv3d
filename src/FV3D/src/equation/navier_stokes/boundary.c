@@ -57,7 +57,7 @@ void boundary_initialize()
     regions->function_id = allocate(sizeof(int) * n_regions);
     regions->phi_total = allocate(sizeof(double) * n_tot_variables * n_regions);
 
-    for (int i = 0; i < n_regions; i++)
+    for (int i = 0; i < n_regions; ++i)
     {
         string_t path = allocate_strcat("Equation/Navier-Stokes/Boundary/", regions->name[i]);
         check_error((parameter_exists(path) == 1));
@@ -156,7 +156,7 @@ void update_boundaries(double t)
     double tmp_v;
     double tmp_w;
 
-    for (int i = 0; i < n_boundaries; i++)
+    for (int i = 0; i < n_boundaries; ++i)
     {
         int bf = boundaries->face[i];
         int bc = faces->cells[bf * FACE_CELLS];
@@ -265,7 +265,7 @@ void update_gradients_boundaries()
     double tmp_y[n_tot_variables];
     double tmp_z[n_tot_variables];
 
-    for (int i = 0; i < n_boundaries; i++)
+    for (int i = 0; i < n_boundaries; ++i)
     {
         int bf = boundaries->face[i];
         int bc = faces->cells[bf * FACE_CELLS];
@@ -294,7 +294,7 @@ void update_gradients_boundaries()
         case BoundarySlipWall:
         case BoundarySymmetry:
             // rotate neighbour cell gradient into local coordinates
-            for (int j = 0; j < n_tot_variables; j++)
+            for (int j = 0; j < n_tot_variables; ++j)
             {
                 tmp_x[j] = grad_phi_total_x_i[j] * n[0] + grad_phi_total_y_i[j] * n[1] + grad_phi_total_z_i[j] * n[2];
                 tmp_y[j] = grad_phi_total_x_i[j] * t1[0] + grad_phi_total_y_i[j] * t1[1] + grad_phi_total_z_i[j] * t1[2];
@@ -305,7 +305,7 @@ void update_gradients_boundaries()
             set_value_n(0.0, tmp_x, n_tot_variables);
 
             // rotate neighbour cell gradient back from local coordinates
-            for (int j = 0; j < n_tot_variables; j++)
+            for (int j = 0; j < n_tot_variables; ++j)
             {
                 grad_phi_total_x_i[j] = tmp_x[j] * n[0] + tmp_y[j] * t1[0] + tmp_z[j] * t2[0];
                 grad_phi_total_y_i[j] = tmp_x[j] * n[1] + tmp_y[j] * t1[1] + tmp_z[j] * t2[1];

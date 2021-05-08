@@ -116,10 +116,10 @@ void set_tot_variables(Variables_t *variables)
     variables->n_tot_variables = variables->n_sol_variables + variables->n_dep_variables;
     variables->tot_variables = reallocate(variables->tot_variables, sizeof(Variable_t *) * variables->n_tot_variables);
 
-    for (int i = 0; i < variables->n_sol_variables; i++)
+    for (int i = 0; i < variables->n_sol_variables; ++i)
         variables->tot_variables[i] = &variables->sol_variables[i];
 
-    for (int i = 0; i < variables->n_dep_variables; i++)
+    for (int i = 0; i < variables->n_dep_variables; ++i)
         variables->tot_variables[variables->n_sol_variables + i] = &variables->dep_variables[i];
 }
 
@@ -128,15 +128,15 @@ void print_variables(Variables_t *variables)
     printf_r("VARIABLES\n");
 
     printf_r("n_sol_variables = %d\n", variables->n_sol_variables);
-    for (int i = 0; i < variables->n_sol_variables; i++)
+    for (int i = 0; i < variables->n_sol_variables; ++i)
         printf_r("%d: %s\n", i, (&variables->sol_variables[i])->name);
 
     printf_r("n_dep_variables  = %d\n", variables->n_dep_variables);
-    for (int i = 0; i < variables->n_dep_variables; i++)
+    for (int i = 0; i < variables->n_dep_variables; ++i)
         printf_r("%d: %s\n", i, (&variables->dep_variables[i])->name);
 
     printf_r("n_tot_variables = %d\n", variables->n_tot_variables);
-    for (int i = 0; i < variables->n_tot_variables; i++)
+    for (int i = 0; i < variables->n_tot_variables; ++i)
         printf_r("%d: %s\n", i, variables->tot_variables[i]->name);
 }
 
@@ -145,12 +145,12 @@ void deallocate_variables(Variables_t **variables)
     if (*variables == NULL)
         return;
 
-    for (int i = 0; i < (*variables)->n_sol_variables; i++)
+    for (int i = 0; i < (*variables)->n_sol_variables; ++i)
         deallocate((&(*variables)->sol_variables[i])->name);
 
     deallocate((*variables)->sol_variables);
 
-    for (int i = 0; i < (*variables)->n_dep_variables; i++)
+    for (int i = 0; i < (*variables)->n_dep_variables; ++i)
         deallocate((&(*variables)->dep_variables[i])->name);
 
     deallocate((*variables)->dep_variables);

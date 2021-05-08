@@ -99,11 +99,11 @@ void reconstruction_first_order()
 
     calc_gradients();
 
-    for (int i = 0; i < n_faces; i++)
+    for (int i = 0; i < n_faces; ++i)
     {
         int *fc = &faces->cells[i * FACE_CELLS];
 
-        for (int j = 0; j < n_tot_variables; j++)
+        for (int j = 0; j < n_tot_variables; ++j)
         {
             phi_total_left[i * n_tot_variables + j] = phi_total[fc[0] * n_tot_variables + j];
             phi_total_right[i * n_tot_variables + j] = phi_total[fc[1] * n_tot_variables + j];
@@ -120,7 +120,7 @@ void reconstruction_linear()
 
     calc_gradients();
 
-    for (int ii = 0; ii < n_internal_faces; ii++)
+    for (int ii = 0; ii < n_internal_faces; ++ii)
     {
         int i = faces->internal_faces[ii];
         int *fc = &faces->cells[i * FACE_CELLS];
@@ -130,7 +130,7 @@ void reconstruction_linear()
         double *grad_phi_total_y_i = &grad_phi_total_y[fc[0] * n_tot_variables];
         double *grad_phi_total_z_i = &grad_phi_total_z[fc[0] * n_tot_variables];
 
-        for (int j = 0; j < n_tot_variables; j++)
+        for (int j = 0; j < n_tot_variables; ++j)
         {
             double slope = r[0] * grad_phi_total_x_i[j] + r[1] * grad_phi_total_y_i[j] + r[2] * grad_phi_total_z_i[j];
             double lim = limiter_function_pointer(fc[0], j, slope);
@@ -143,7 +143,7 @@ void reconstruction_linear()
         grad_phi_total_y_i = &grad_phi_total_y[fc[1] * n_tot_variables];
         grad_phi_total_z_i = &grad_phi_total_z[fc[1] * n_tot_variables];
 
-        for (int j = 0; j < n_tot_variables; j++)
+        for (int j = 0; j < n_tot_variables; ++j)
         {
             double slope = r[0] * grad_phi_total_x_i[j] + r[1] * grad_phi_total_y_i[j] + r[2] * grad_phi_total_z_i[j];
             double lim = limiter_function_pointer(fc[1], j, slope);
@@ -152,7 +152,7 @@ void reconstruction_linear()
         }
     }
 
-    for (int ii = 0; ii < n_boundary_faces; ii++)
+    for (int ii = 0; ii < n_boundary_faces; ++ii)
     {
         int i = faces->boundary_faces[ii];
         int *fc = &faces->cells[i * FACE_CELLS];
@@ -162,7 +162,7 @@ void reconstruction_linear()
         double *grad_phi_total_y_i = &grad_phi_total_y[fc[0] * n_tot_variables];
         double *grad_phi_total_z_i = &grad_phi_total_z[fc[0] * n_tot_variables];
 
-        for (int j = 0; j < n_tot_variables; j++)
+        for (int j = 0; j < n_tot_variables; ++j)
         {
             double slope = r[0] * grad_phi_total_x_i[j] + r[1] * grad_phi_total_y_i[j] + r[2] * grad_phi_total_z_i[j];
             double lim = limiter_function_pointer(fc[0], j, slope);
@@ -170,7 +170,7 @@ void reconstruction_linear()
             phi_total_left[i * n_tot_variables + j] = phi_total[fc[0] * n_tot_variables + j] + lim * slope;
         }
 
-        for (int j = 0; j < n_tot_variables; j++)
+        for (int j = 0; j < n_tot_variables; ++j)
         {
             phi_total_right[i * n_tot_variables + j] = phi_total[fc[1] * n_tot_variables + j];
         }
@@ -194,13 +194,13 @@ void calc_gradients()
     set_value_n(0.0, grad_phi_total_y, n_tot_variables * (n_local_cells + n_boundaries));
     set_value_n(0.0, grad_phi_total_z, n_tot_variables * (n_local_cells + n_boundaries));
 
-    for (int i = 0; i < n_faces; i++)
+    for (int i = 0; i < n_faces; ++i)
     {
         int *fc = &faces->cells[i * FACE_CELLS];
         double *n = &faces->n[i * DIM];
         double area = faces->area[i];
 
-        for (int j = 0; j < n_tot_variables; j++)
+        for (int j = 0; j < n_tot_variables; ++j)
         {
             double phi_mean = phi_total[fc[0] * n_tot_variables + j] + faces->lambda[i] *
                                                                            (phi_total[fc[1] * n_tot_variables + j] - phi_total[fc[0] * n_tot_variables + j]);
@@ -222,11 +222,11 @@ void calc_gradients()
     if (get_is_parallel())
         update_parallel(grad_phi_total_z);
 
-    for (int i = 0; i < n_local_cells; i++)
+    for (int i = 0; i < n_local_cells; ++i)
     {
         double s_volume = 1.0 / cells->volume[i];
 
-        for (int j = 0; j < n_tot_variables; j++)
+        for (int j = 0; j < n_tot_variables; ++j)
         {
             grad_phi_total_x[i * n_tot_variables + j] *= s_volume;
             grad_phi_total_y[i * n_tot_variables + j] *= s_volume;
@@ -248,21 +248,21 @@ void update_parallel(double *phi_local)
     int *n_partition_receives_from = partition->n_partition_receives_from;
     int n_tot_variables = all_variables->n_tot_variables;
 
-    for (int s_rank = 0; s_rank < n_partitions; s_rank++)
+    for (int s_rank = 0; s_rank < n_partitions; ++s_rank)
     {
         if (s_rank == rank)
         {
-            for (int r_rank = 0; r_rank < n_partitions; r_rank++)
+            for (int r_rank = 0; r_rank < n_partitions; ++r_rank)
             {
                 if (n_partitions_sends_to[r_rank] == 0)
                     continue;
                 int *partition_sends_to = &partition->partition_sends_to[r_rank * n_partitions_sends];
 
-                for (int i = 0; i < n_partitions_sends_to[r_rank]; i++)
+                for (int i = 0; i < n_partitions_sends_to[r_rank]; ++i)
                 {
                     double *phi_local_i = &phi_local[partition_sends_to[i] * n_tot_variables];
 
-                    for (int j = 0; j < n_tot_variables; j++)
+                    for (int j = 0; j < n_tot_variables; ++j)
                     {
                         send_buffer[i * n_tot_variables + j] = phi_local_i[j];
                     }
@@ -279,11 +279,11 @@ void update_parallel(double *phi_local)
 
             mpi_receive(receive_buffer, n_partition_receives_from[s_rank] * n_tot_variables, MPIDouble, s_rank);
 
-            for (int i = 0; i < n_partition_receives_from[s_rank]; i++)
+            for (int i = 0; i < n_partition_receives_from[s_rank]; ++i)
             {
                 double *phi_local_i = &phi_local[partition_receives_from[i] * n_tot_variables];
 
-                for (int j = 0; j < n_tot_variables; j++)
+                for (int j = 0; j < n_tot_variables; ++j)
                 {
                     phi_local_i[j] = receive_buffer[i * n_tot_variables + j];
                 }

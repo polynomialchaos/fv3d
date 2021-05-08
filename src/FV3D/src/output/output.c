@@ -65,11 +65,11 @@ void create_file_header()
 
     {
         size_t max_len = 0;
-        for (int i = 0; i < all_variables->n_tot_variables; i++)
+        for (int i = 0; i < all_variables->n_tot_variables; ++i)
             max_len = u_max(max_len, strlen(all_variables->tot_variables[i]->name));
 
         string_t *tmp = allocate_hdf5_string_buffer(all_variables->n_tot_variables, max_len + 1);
-        for (int i = 0; i < all_variables->n_tot_variables; i++)
+        for (int i = 0; i < all_variables->n_tot_variables; ++i)
             strcpy(tmp[i], all_variables->tot_variables[i]->name);
 
         hsize_t dims[2] = {all_variables->n_tot_variables, max_len + 1};
@@ -80,11 +80,11 @@ void create_file_header()
 
     {
         size_t max_len = 0;
-        for (int i = 0; i < all_variables->n_sol_variables; i++)
+        for (int i = 0; i < all_variables->n_sol_variables; ++i)
             max_len = u_max(max_len, strlen((&all_variables->sol_variables[i])->name));
 
         string_t *tmp = allocate_hdf5_string_buffer(all_variables->n_sol_variables, max_len + 1);
-        for (int i = 0; i < all_variables->n_sol_variables; i++)
+        for (int i = 0; i < all_variables->n_sol_variables; ++i)
             strcpy(tmp[i], (&all_variables->sol_variables[i])->name);
 
         hsize_t dims[2] = {all_variables->n_sol_variables, max_len + 1};
@@ -148,7 +148,7 @@ void write_output(int iter, double t)
         {
             set_hdf5_attribute(solution_id, "n_stages", HDF5Int, &n_bdf_stages);
 
-            for (int i_stage = 0; i_stage < n_bdf_stages; i_stage++)
+            for (int i_stage = 0; i_stage < n_bdf_stages; ++i_stage)
             {
                 char stage_string[256];
                 sprintf(stage_string, "%d", i_stage);
@@ -182,7 +182,7 @@ void write_output(int iter, double t)
         {
             set_hdf5_attribute(solution_id, "n_stages", HDF5Int, &n_bdf_stages);
 
-            for (int i_stage = 0; i_stage < n_bdf_stages; i_stage++)
+            for (int i_stage = 0; i_stage < n_bdf_stages; ++i_stage)
             {
                 char stage_string[256];
                 sprintf(stage_string, "%d", i_stage);

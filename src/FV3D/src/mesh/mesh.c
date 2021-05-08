@@ -458,43 +458,43 @@ void remap_local_mesh(Mesh_t *mesh)
     set_value_int_n(-1, global_boundaries, boundaries->n_global_boundaries);
     set_value_int_n(-1, global_faces, faces->n_global_faces);
 
-    for (int i = 0; i < cells->n_domain_cells; i++)
+    for (int i = 0; i < cells->n_domain_cells; ++i)
         global_cells[partition->partition_cells[i]] = i;
 
-    for (int i = 0; i < partition->n_partition_sends; i++)
+    for (int i = 0; i < partition->n_partition_sends; ++i)
         check_error((global_cells[partition->partition_sends[i]] != -1));
 
-    for (int i = 0; i < partition->n_partition_receives; i++)
+    for (int i = 0; i < partition->n_partition_receives; ++i)
         global_cells[partition->partition_receives[i]] = cells->n_domain_cells + i;
 
-    for (int i = 0; i < partition->n_partition_sends; i++)
+    for (int i = 0; i < partition->n_partition_sends; ++i)
         partition->partition_sends[i] = global_cells[partition->partition_sends[i]];
 
-    for (int i = 0; i < partition->n_partition_receives; i++)
+    for (int i = 0; i < partition->n_partition_receives; ++i)
         partition->partition_receives[i] = global_cells[partition->partition_receives[i]];
 
-    for (int i = 0; i < boundaries->n_boundaries; i++)
+    for (int i = 0; i < boundaries->n_boundaries; ++i)
         global_boundaries[partition->partition_boundaries[i]] = i;
 
-    for (int i = 0; i < faces->n_faces; i++)
+    for (int i = 0; i < faces->n_faces; ++i)
         global_faces[partition->partition_faces[i]] = i;
 
-    for (int i = 0; i < cells->n_local_cells; i++)
+    for (int i = 0; i < cells->n_local_cells; ++i)
     {
         int *cell_faces = &cells->faces[i * cells->max_cell_faces];
 
-        for (int j = 0; j < cells->n_faces[i]; j++)
+        for (int j = 0; j < cells->n_faces[i]; ++j)
             cell_faces[j] = global_faces[cell_faces[j]];
     }
 
-    for (int i = 0; i < boundaries->n_boundaries; i++)
+    for (int i = 0; i < boundaries->n_boundaries; ++i)
     {
         int *boundary_face = &boundaries->face[i];
 
         boundary_face[0] = global_faces[boundary_face[0]];
     }
 
-    for (int i = 0; i < faces->n_faces; i++)
+    for (int i = 0; i < faces->n_faces; ++i)
     {
         int *fc = &faces->cells[i * FACE_CELLS];
         int *face_boundary = &faces->boundary[i];
@@ -516,7 +516,7 @@ void remap_local_mesh(Mesh_t *mesh)
             int *cell_faces = &cells->faces[fc[0] * cells->max_cell_faces];
 
             cells->n_faces[fc[0]] = 0;
-            for (int j = 0; j < n; j++)
+            for (int j = 0; j < n; ++j)
             {
                 if (cell_faces[j] < 0)
                     continue;
@@ -531,7 +531,7 @@ void remap_local_mesh(Mesh_t *mesh)
             int *cell_faces = &cells->faces[fc[1] * cells->max_cell_faces];
 
             cells->n_faces[fc[1]] = 0;
-            for (int j = 0; j < n; j++)
+            for (int j = 0; j < n; ++j)
             {
                 if (cell_faces[j] < 0)
                     continue;
@@ -541,13 +541,13 @@ void remap_local_mesh(Mesh_t *mesh)
         }
     }
 
-    for (int i = 0; i < partition->n_partitions; i++)
+    for (int i = 0; i < partition->n_partitions; ++i)
     {
         if (i == get_rank())
             continue;
 
         int *partition_sends_to = &partition->partition_sends_to[i * partition->n_partition_sends];
-        for (int j = 0; j < partition->n_partition_sends; j++)
+        for (int j = 0; j < partition->n_partition_sends; ++j)
         {
             if (partition->partition_sends_pid[j] != i)
                 continue;
@@ -557,7 +557,7 @@ void remap_local_mesh(Mesh_t *mesh)
         }
 
         int *partition_receives_from = &partition->partition_receives_from[i * partition->n_partition_receives];
-        for (int j = 0; j < partition->n_partition_receives; j++)
+        for (int j = 0; j < partition->n_partition_receives; ++j)
         {
             if (partition->partition_receives_pid[j] != i)
                 continue;
@@ -582,7 +582,7 @@ void calc_mesh_metrics(Mesh_t *mesh)
     mpi_all_reduce(&mesh->local_volume, &mesh->global_volume, MPIDouble, MPISum);
 
     faces->n_internal_faces = 0;
-    for (int i = 0; i < faces->n_faces; i++)
+    for (int i = 0; i < faces->n_faces; ++i)
         if (faces->boundary[i] < 0)
             faces->n_internal_faces += 1;
 
@@ -595,16 +595,16 @@ void calc_mesh_metrics(Mesh_t *mesh)
 
     int k = 0;
     int l = 0;
-    for (int i = 0; i < faces->n_faces; i++)
+    for (int i = 0; i < faces->n_faces; ++i)
     {
         int *fc = &faces->cells[i * FACE_CELLS];
 
-        for (int j = 0; j < DIM; j++)
+        for (int j = 0; j < DIM; ++j)
             faces->dist_cell_1[i * DIM + j] = faces->x[i * DIM + j] - cells->x[fc[0] * DIM + j];
 
         if (fc[1] >= 0)
         {
-            for (int j = 0; j < DIM; j++)
+            for (int j = 0; j < DIM; ++j)
                 faces->dist_cell_2[i * DIM + j] = faces->x[i * DIM + j] - cells->x[fc[1] * DIM + j];
 
             faces->internal_faces[k] = i;
@@ -612,7 +612,7 @@ void calc_mesh_metrics(Mesh_t *mesh)
         }
         else
         {
-            for (int j = 0; j < DIM; j++)
+            for (int j = 0; j < DIM; ++j)
                 faces->dist_cell_2[i * DIM + j] = 0.0;
 
             fc[1] = cells->n_local_cells + faces->boundary[i];
@@ -625,7 +625,7 @@ void calc_mesh_metrics(Mesh_t *mesh)
     check_error((k == faces->n_internal_faces));
     check_error((l == faces->n_boundary_faces));
 
-    for (int i = 0; i < regions->n_regions; i++)
+    for (int i = 0; i < regions->n_regions; ++i)
     {
         if (regions->is_boundary[i] == 0)
         {

@@ -114,23 +114,23 @@ void fv_time_derivative(double t)
     // the temporal derivative
     set_value_n(0.0, phi_dt, n_sol_variables * (n_local_cells + n_boundaries));
 
-    for (int i = 0; i < n_faces; i++)
+    for (int i = 0; i < n_faces; ++i)
     {
         int *fc = &faces->cells[i * FACE_CELLS];
         double area = faces->area[i];
 
-        for (int j = 0; j < n_sol_variables; j++)
+        for (int j = 0; j < n_sol_variables; ++j)
         {
             phi_dt[fc[0] * n_sol_variables + j] += flux[i * n_sol_variables + j] * area;
             phi_dt[fc[1] * n_sol_variables + j] -= flux[i * n_sol_variables + j] * area;
         }
     }
 
-    for (int i = 0; i < n_domain_cells; i++)
+    for (int i = 0; i < n_domain_cells; ++i)
     {
         double volume = cells->volume[i];
 
-        for (int j = 0; j < n_sol_variables; j++)
+        for (int j = 0; j < n_sol_variables; ++j)
         {
             phi_dt[i * n_sol_variables + j] = -phi_dt[i * n_sol_variables + j] / volume;
         }
@@ -143,7 +143,7 @@ void set_solution()
     int n_domain_cells = cells->n_domain_cells;
     int n_tot_variables = all_variables->n_tot_variables;
 
-    for (int i = 0; i < n_domain_cells; i++)
+    for (int i = 0; i < n_domain_cells; ++i)
         calc_exact_function_pointer(0, 0.0, &cells->x[i * DIM], &phi_total[i * n_tot_variables]);
 
     update_function_pointer(0.0);
