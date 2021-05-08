@@ -28,6 +28,6 @@ extern string_t output_file;
 void output_define();
 
 void create_file_header();
-void write_output( int iter, double t );
+void write_output(int iter, double t);
 
 #endif /* OUTPUT_MODULE_H */

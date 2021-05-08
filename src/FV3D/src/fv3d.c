@@ -34,7 +34,7 @@ void main_finalize();
 //##################################################################################################################################
 // FUNCTIONS
 //----------------------------------------------------------------------------------------------------------------------------------
-int main( int argc, string_t *argv )
+int main(int argc, string_t *argv)
 {
     // define the program structure
     main_define();
@@ -47,34 +47,34 @@ int main( int argc, string_t *argv )
     restart_define();
 
     // call the global initialize routine
-    global_initialize( argc, argv, true, true );
+    global_initialize(argc, argv, true, true);
 
     // calculation
-    printf_r( "\n" );
-    printf_r_block( '=', "Calculation" );
+    printf_r("\n");
+    printf_r_block('=', "Calculation");
     timedisc();
-    printf_r_emtpy_block( '=' );
+    printf_r_emtpy_block('=');
 
     // end the program
-    check_abort( 1 );
+    check_abort(1);
     return 1;
 }
 
 void main_define()
 {
-    register_initialize_routine( main_initialize );
-    register_finalize_routine( main_finalize );
+    register_initialize_routine(main_initialize);
+    register_finalize_routine(main_finalize);
 
     string_t tmp = "untitled";
-    set_parameter( "General/title", ParameterString, &tmp, "The project title", NULL, 0 );
+    set_parameter("General/title", ParameterString, &tmp, "The project title", NULL, 0);
 }
 
 void main_initialize()
 {
-    get_parameter( "General/title", ParameterString, &title );
+    get_parameter("General/title", ParameterString, &title);
 }
 
 void main_finalize()
 {
-    deallocate( title );
+    deallocate(title);
 }

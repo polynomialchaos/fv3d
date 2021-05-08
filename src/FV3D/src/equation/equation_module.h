@@ -41,7 +41,7 @@ extern Variables_t *all_variables;
 //----------------------------------------------------------------------------------------------------------------------------------
 void equation_define();
 
-int add_sol_variable( Variables_t *variables, string_t name );
-int add_dep_variable( Variables_t *variables, string_t name );
+int add_sol_variable(Variables_t *variables, string_t name);
+int add_dep_variable(Variables_t *variables, string_t name);
 
 #endif /* EQUATION_MODULE_H */

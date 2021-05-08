@@ -158,15 +158,15 @@ extern Mesh_t *global_mesh;
 void mesh_define();
 
 Mesh_t *allocate_mesh();
-void print_mesh_info( Mesh_t *mesh );
-void deallocate_mesh( Mesh_t **mesh );
+void print_mesh_info(Mesh_t *mesh);
+void deallocate_mesh(Mesh_t **mesh);
 
-Partition_t *allocate_partition( Mesh_t *mesh, int n_partitions, int n_partition_cells, int n_partition_boundaries,
-    int n_partition_faces, int n_partition_sends, int n_partition_receives );
-Vertices_t *allocate_vertices( Mesh_t *mesh, int n_vertices );
-Cells_t *allocate_cells( Mesh_t *mesh, int n_cells, int max_cell_vertices, int max_cell_faces );
-Boundaries_t *allocate_boundaries( Mesh_t *mesh, int n_boundaries, int max_boundary_vertices );
-Faces_t *allocate_faces( Mesh_t *mesh, int n_faces, int max_face_vertices );
-Regions_t *allocate_regions( Mesh_t *mesh, int n_regions, int max_name_length );
+Partition_t *allocate_partition(Mesh_t *mesh, int n_partitions, int n_partition_cells, int n_partition_boundaries,
+                                int n_partition_faces, int n_partition_sends, int n_partition_receives);
+Vertices_t *allocate_vertices(Mesh_t *mesh, int n_vertices);
+Cells_t *allocate_cells(Mesh_t *mesh, int n_cells, int max_cell_vertices, int max_cell_faces);
+Boundaries_t *allocate_boundaries(Mesh_t *mesh, int n_boundaries, int max_boundary_vertices);
+Faces_t *allocate_faces(Mesh_t *mesh, int n_faces, int max_face_vertices);
+Regions_t *allocate_regions(Mesh_t *mesh, int n_regions, int max_name_length);
 
 #endif /* MESH_MODULE_H */

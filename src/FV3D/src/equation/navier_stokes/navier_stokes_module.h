@@ -50,10 +50,17 @@ extern int ip_w;
 extern int ip_p;
 extern int ip_T;
 
-enum BoundaryType {
-    BoundaryFlow, BoundaryInflow, BoundaryOutflow,
-    BoundaryAdiabaticWall, BoundaryIsothermalWall, BoundarySlipWall,
-    BoundarySymmetry, BoundaryState, BoundaryFunction,
+enum BoundaryType
+{
+    BoundaryFlow,
+    BoundaryInflow,
+    BoundaryOutflow,
+    BoundaryAdiabaticWall,
+    BoundaryIsothermalWall,
+    BoundarySlipWall,
+    BoundarySymmetry,
+    BoundaryState,
+    BoundaryFunction,
     BoundaryTypeMax
 };
 
@@ -64,17 +71,17 @@ void navier_stokes_define();
 void boundary_define();
 void flux_define();
 
-void update_boundaries( double t );
+void update_boundaries(double t);
 void update_gradients_boundaries();
 
-void prim_to_con( double *phi );
-void copy_prim_to_con( double *phi_i, double *phi_j );
-void con_to_prim( double *phi );
-void copy_con_to_prim( double *phi_i, double *phi_j );
-double calc_ig_p( double rho, double T, double R_mix );
-double calc_ig_rho( double p, double T, double R_mix );
-double calc_ig_T( double p, double rho, double R_mix );
-double calc_riemann_p( double *phi );
+void prim_to_con(double *phi);
+void copy_prim_to_con(double *phi_i, double *phi_j);
+void con_to_prim(double *phi);
+void copy_con_to_prim(double *phi_i, double *phi_j);
+double calc_ig_p(double rho, double T, double R_mix);
+double calc_ig_rho(double p, double T, double R_mix);
+double calc_ig_T(double p, double rho, double R_mix);
+double calc_riemann_p(double *phi);
 
 void calc_flux();
 

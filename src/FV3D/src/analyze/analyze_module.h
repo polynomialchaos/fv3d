@@ -25,6 +25,6 @@ extern double *residual;
 //----------------------------------------------------------------------------------------------------------------------------------
 void analyze_define();
 
-void calc_global_residual( double dt );
+void calc_global_residual(double dt);
 
 #endif /* ANALYZE_MODULE_H */
