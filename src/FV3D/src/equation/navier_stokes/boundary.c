@@ -36,7 +36,7 @@ string_t boundary_type_strings[BoundaryTypeMax] =
 void boundary_initialize();
 void boundary_finalize();
 
-void parse_primitive_state(const_string_t prefix, double *phi);
+void parse_primitive_state(c_string_t prefix, double *phi);
 
 //##################################################################################################################################
 // FUNCTIONS
@@ -319,7 +319,7 @@ void update_gradients_boundaries()
     }
 }
 
-void parse_primitive_state(const_string_t prefix, double *phi)
+void parse_primitive_state(c_string_t prefix, double *phi)
 {
     // string_t tmp_rho    = allocate_strcat( prefix, "/rho" );
     string_t tmp_u = allocate_strcat(prefix, "/u");

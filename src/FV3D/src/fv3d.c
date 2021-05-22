@@ -53,7 +53,7 @@ int main(int argc, string_t *argv)
     printf_r("\n");
     printf_r_block('=', "Calculation");
     timedisc();
-    printf_r_emtpy_block('=');
+    printf_r_empty_block('=');
 
     // end the program
     check_abort(1);
