@@ -1,12 +1,6 @@
 # Compiled source #
 ###################
-*.o
-*.out
-*.a
-*.so
-*.mod
-*.pyc
-*.pdf
+*.h5
 
 # Logs #
 ######################
@@ -28,8 +22,9 @@ bin/
 lib/
 build/
 share/
+install/
 *.egg-info/
-!/tools/pyPreprocessor/bin
+!/tools/pyMeshFV3D/pymeshfv3d/bin
 
 # Packages #
 ############
