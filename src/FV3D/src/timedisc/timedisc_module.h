@@ -20,7 +20,21 @@ extern double_calc_timestep_fp_t calc_time_step_function_pointer;
 extern int is_viscous_dt;
 extern int is_transient;
 
-void timedisc_define();
 void timedisc();
+
+/*******************************************************************************
+ * @brief Define timedisc
+ ******************************************************************************/
+void timedisc_define();
+
+/*******************************************************************************
+ * @brief Finalize timedisc
+ ******************************************************************************/
+void timedisc_finalize();
+
+/*******************************************************************************
+ * @brief Initialize timedisc
+ ******************************************************************************/
+void timedisc_initialize();
 
 #endif /* TIMEDISC_MODULE_H */
