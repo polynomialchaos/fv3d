@@ -11,8 +11,6 @@
 
 #include "fv3d/fv3d_module.h"
 
-
-
 extern int use_restart;
 
 extern int iter_restart;

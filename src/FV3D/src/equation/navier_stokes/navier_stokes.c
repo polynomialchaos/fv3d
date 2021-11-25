@@ -13,8 +13,6 @@
 #include "fv/fv_module.h"
 #include "timedisc/timedisc_module.h"
 
-
-
 int navier_stokes_active = 0;
 
 void navier_stokes_initialize();

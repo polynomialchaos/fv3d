@@ -11,9 +11,6 @@
 
 #include "fv3d/fv3d_module.h"
 
-
-
 extern string_t title;
-
 
 #endif /* FV3D_PRIVATE_H */

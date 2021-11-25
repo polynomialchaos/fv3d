@@ -11,8 +11,6 @@
 
 #include "fv3d/fv3d_module.h"
 
-
-
 typedef void (*void_timestep_fp_t)(int iter, double t, double dt);
 extern void_timestep_fp_t time_step_function_pointer;
 

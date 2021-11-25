@@ -14,8 +14,6 @@
 #include "timedisc/timedisc_module.h"
 #include "fv/fv_module.h"
 
-
-
 int implicit_active = 0;
 int n_iter_inner = 0;
 int n_iter_lsoe = 0;

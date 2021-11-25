@@ -13,8 +13,6 @@
 #include "fv/fv_module.h"
 #include "timedisc/implicit/implicit_module.h"
 
-
-
 int use_restart = 0;
 
 int iter_restart = 0;

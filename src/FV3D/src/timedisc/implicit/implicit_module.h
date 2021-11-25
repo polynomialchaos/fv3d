@@ -11,8 +11,6 @@
 
 #include "fv3d/fv3d_module.h"
 
-
-
 extern int implicit_active;
 extern int n_iter_inner;
 extern int n_iter_lsoe;

@@ -9,9 +9,6 @@
 #include <string.h>
 #include "mesh_module.h"
 
-
-
-
 void deallocate_partition(Partition_t **partition);
 void print_partition(Partition_t *partition);
 void deallocate_vertices(Vertices_t **vertices);

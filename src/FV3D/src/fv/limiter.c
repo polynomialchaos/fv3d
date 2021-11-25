@@ -10,8 +10,6 @@
 #include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
 
-
-
 double_limiter_fp_t limiter_function_pointer = NULL;
 
 string_t limiter_name = NULL;

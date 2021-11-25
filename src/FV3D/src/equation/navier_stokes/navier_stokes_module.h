@@ -11,8 +11,6 @@
 
 #include "fv3d/fv3d_module.h"
 
-
-
 extern int navier_stokes_active;
 
 extern const double RM;

@@ -14,7 +14,6 @@
 #define FACE_CELLS 2
 #define DIM 3
 
-
 typedef struct Partition
 {
     int n_partitions;

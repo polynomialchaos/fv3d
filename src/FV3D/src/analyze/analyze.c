@@ -11,8 +11,6 @@
 #include "mesh/mesh_module.h"
 #include "fv/fv_module.h"
 
-
-
 double *residual = NULL;
 
 void analyze_initialize();

@@ -11,10 +11,6 @@
 #include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
 
-
-
-
-
 void prim_to_con(double *phi)
 {
     phi[ic_rho_u] = phi[ip_u] * phi[ic_rho]; // rho * u
@@ -37,7 +33,7 @@ void con_to_prim(double *phi)
     phi[ip_w] = phi[ic_rho_w] / phi[ic_rho]; // w
     phi[ip_p] = kappa_m1 * (phi[ic_rho_e] -
                             0.5 * dot_n(&phi[ic_rho_u], &phi[ip_u], DIM)); // p
-    phi[ip_p] = MAX(1.00E-10, phi[ip_p]);                                // pressure must not be negative
+    phi[ip_p] = MAX(1.00E-10, phi[ip_p]);                                  // pressure must not be negative
     phi[ip_T] = calc_ig_T(phi[ip_p], phi[ic_rho], R_mix);                  // T
 }
 

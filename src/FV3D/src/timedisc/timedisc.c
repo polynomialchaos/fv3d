@@ -16,8 +16,6 @@
 #include "output/output_module.h"
 #include "fv/fv_module.h"
 
-
-
 void_timestep_fp_t time_step_function_pointer = NULL;
 double_calc_timestep_fp_t calc_time_step_function_pointer = NULL;
 

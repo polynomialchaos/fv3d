@@ -23,8 +23,6 @@ string_t boundary_type_strings[BoundaryTypeMax] =
         "STATE",
         "FUNCTION"};
 
-
-
 void boundary_initialize();
 void boundary_finalize();
 

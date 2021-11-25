@@ -9,8 +9,6 @@
 #include "equation_module.h"
 #include "navier_stokes/navier_stokes_module.h"
 
-
-
 string_t equation_name = NULL;
 
 Variables_t *all_variables = NULL;

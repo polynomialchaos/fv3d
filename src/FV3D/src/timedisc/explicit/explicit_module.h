@@ -11,8 +11,6 @@
 
 #include "fv3d/fv3d_module.h"
 
-
-
 extern int explicit_active;
 
 void explicit_define();

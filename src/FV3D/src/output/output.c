@@ -14,8 +14,6 @@
 #include "fv/fv_module.h"
 #include "timedisc/implicit/implicit_module.h"
 
-
-
 int i_output_data = -1;
 int do_output_data = 0;
 string_t output_file = NULL;

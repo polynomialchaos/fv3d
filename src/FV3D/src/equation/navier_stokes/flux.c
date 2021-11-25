@@ -12,8 +12,6 @@
 #include "equation/equation_module.h"
 #include "fv/fv_module.h"
 
-
-
 string_t flux_scheme_name = NULL;
 
 typedef void (*void_calc_conv_flux_fp_t)(double *phi_l, double *phi_r, double *f);

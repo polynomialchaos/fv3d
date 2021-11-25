@@ -10,8 +10,6 @@
 #include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
 
-
-
 void_reconstruction_fp_t reconstruction_function_pointer = NULL;
 void_update_gradients_fp_t update_gradients_function_pointer = NULL;
 

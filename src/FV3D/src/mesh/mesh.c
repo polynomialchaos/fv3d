@@ -9,8 +9,6 @@
 #include <string.h>
 #include "mesh_module.h"
 
-
-
 Mesh_t *global_mesh = NULL;
 
 string_t mesh_file = NULL;

@@ -11,8 +11,6 @@
 
 #include "fv3d/fv3d_module.h"
 
-
-
 extern int do_output_data;
 extern int i_output_data;
 extern string_t output_file;

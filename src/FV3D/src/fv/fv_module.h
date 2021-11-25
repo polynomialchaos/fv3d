@@ -11,8 +11,6 @@
 
 #include "fv3d/fv3d_module.h"
 
-
-
 typedef void (*void_reconstruction_fp_t)();
 extern void_reconstruction_fp_t reconstruction_function_pointer;
 

@@ -15,8 +15,6 @@
 #include "restart/restart_module.h"
 #include "timedisc/timedisc_module.h"
 
-
-
 string_t title = NULL;
 
 void main_define();

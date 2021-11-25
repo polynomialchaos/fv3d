@@ -10,8 +10,6 @@
 #include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
 
-
-
 void_update_fp_t update_function_pointer = NULL;
 void_calc_flux_fp_t calc_flux_function_pointer = NULL;
 void_calc_exact_fp_t calc_exact_function_pointer = NULL;

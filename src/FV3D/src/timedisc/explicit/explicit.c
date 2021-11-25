@@ -12,8 +12,6 @@
 #include "fv/fv_module.h"
 #include "timedisc/timedisc_module.h"
 
-
-
 int explicit_active = 0;
 
 string_t explicit_scheme_name = NULL;
