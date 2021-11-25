@@ -107,10 +107,10 @@ void calc_flux()
         phi_total_right_r[ic_rho_e] = phi_total_right_i[ic_rho_e];
         con_to_prim(phi_total_right_r);
 
-        // calculate convective flux
+        /* calculate convective flux */
         calc_convective_flux_function_pointer(phi_total_left_r, phi_total_right_r, flux_c);
 
-        // rotate convective flux back to global coordiantes and add to flux
+        /* rotate convective flux back to global coordiantes and add to flux */
         flux_i[0] = flux_c[0];
         flux_i[1] = flux_c[1] * n[0] + flux_c[2] * t1[0] + flux_c[3] * t2[0];
         flux_i[2] = flux_c[1] * n[1] + flux_c[2] * t1[1] + flux_c[3] * t2[1];
@@ -124,13 +124,13 @@ void calc_flux()
         double *grad_phi_total_y_i_1 = &grad_phi_total_y[fc[1] * n_tot_variables];
         double *grad_phi_total_z_i_1 = &grad_phi_total_z[fc[1] * n_tot_variables];
 
-        // calculate diffusive flux
+        /* calculate diffusive flux */
         viscous_flux(
             phi_total_left_i, grad_phi_total_x_i_0, grad_phi_total_y_i_0, grad_phi_total_z_i_0,
             phi_total_right_i, grad_phi_total_x_i_1, grad_phi_total_y_i_1, grad_phi_total_z_i_1,
             flux_d_x, flux_d_y, flux_d_z);
 
-        // add diffusive flux to flux
+        /* add diffusive flux to flux */
         for (int j = 0; j < n_sol_variables; ++j)
             flux_i[j] += flux_d_x[j] * n[0] + flux_d_y[j] * n[1] + flux_d_z[j] * n[2];
     }
@@ -162,7 +162,7 @@ void calc_flux()
         phi_total_right_r[ic_rho_e] = phi_total_right_i[ic_rho_e];
         con_to_prim(phi_total_right_r);
 
-        // calculate convective flux
+        /* calculate convective flux */
         switch (regions->type[id])
         {
         default:
@@ -170,7 +170,7 @@ void calc_flux()
             break;
         }
 
-        // rotate convective flux back to global coordiantes and add to flux
+        /* rotate convective flux back to global coordiantes and add to flux */
         flux_i[0] = flux_c[0];
         flux_i[1] = flux_c[1] * n[0] + flux_c[2] * t1[0] + flux_c[3] * t2[0];
         flux_i[2] = flux_c[1] * n[1] + flux_c[2] * t1[1] + flux_c[3] * t2[1];
@@ -184,7 +184,7 @@ void calc_flux()
         double *grad_phi_total_y_i_1 = &grad_phi_total_y[fc[1] * n_tot_variables];
         double *grad_phi_total_z_i_1 = &grad_phi_total_z[fc[1] * n_tot_variables];
 
-        // calculate diffusive flux
+        /* calculate diffusive flux */
         switch (regions->type[id])
         {
         default:
@@ -195,7 +195,7 @@ void calc_flux()
             break;
         }
 
-        // add diffusive flux to flux
+        /* add diffusive flux to flux */
         for (int j = 0; j < n_sol_variables; ++j)
             flux_i[j] += flux_d_x[j] * n[0] + flux_d_y[j] * n[1] + flux_d_z[j] * n[2];
     }
@@ -231,7 +231,7 @@ void riemann_ausm(double *phi_l, double *phi_r, double *f)
 
     double M_m, M_p, P_m, P_p;
 
-    // Positive M and p in the LEFT cell
+    /* Positive M and p in the LEFT cell */
     if (M_l <= -1.0)
     {
         M_p = 0.0;
@@ -240,7 +240,7 @@ void riemann_ausm(double *phi_l, double *phi_r, double *f)
     else if (M_l < 1.0)
     {
         M_p = 0.25 * (M_l + 1.0) * (M_l + 1.0);
-        P_p = 0.25 * phi_l[ip_p] * (1.0 + M_l) * (1.0 + M_l) * (2.0 - M_l); // or use P_p = half*(1.0+M_l)*phi_l[ip_v];
+        P_p = 0.25 * phi_l[ip_p] * (1.0 + M_l) * (1.0 + M_l) * (2.0 - M_l); /* or use P_p = half*(1.0+M_l)*phi_l[ip_v]; */
     }
     else
     {
@@ -248,7 +248,7 @@ void riemann_ausm(double *phi_l, double *phi_r, double *f)
         P_p = phi_l[ip_p];
     }
 
-    // Negative M and p in the RIGHT cell
+    /* Negative M and p in the RIGHT cell */
     if (M_r <= -1.0)
     {
         M_m = M_r;
@@ -257,7 +257,7 @@ void riemann_ausm(double *phi_l, double *phi_r, double *f)
     else if (M_r < 1.0)
     {
         M_m = -0.25 * (M_r - 1.0) * (M_r - 1.0);
-        P_m = 0.25 * phi_r[ip_p] * (1.0 - M_r) * (1.0 - M_r) * (2.0 + M_r); // or use P_m = half*(1.0-M_r)*phi_r[ip_v];
+        P_m = 0.25 * phi_r[ip_p] * (1.0 - M_r) * (1.0 - M_r) * (2.0 + M_r); /* or use P_m = half*(1.0-M_r)*phi_r[ip_v]; */
     }
     else
     {
@@ -265,14 +265,14 @@ void riemann_ausm(double *phi_l, double *phi_r, double *f)
         P_m = 0.0;
     }
 
-    // Positive Part of Flux evaluated in the left cell.
+    /* Positive Part of Flux evaluated in the left cell. */
     f[0] = MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho];
     f[1] = MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * phi_l[ip_u] + P_p;
     f[2] = MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * phi_l[ip_v];
     f[3] = MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * phi_l[ip_w];
     f[4] = MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * H_l;
 
-    // Negative Part of Flux evaluated in the right cell.
+    /* Negative Part of Flux evaluated in the right cell. */
     f[0] += MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho];
     f[1] += MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * phi_r[ip_u] + P_m;
     f[2] += MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * phi_r[ip_v];
@@ -300,11 +300,11 @@ void viscous_flux(double *phi_l, double *grad_phi_x_l, double *grad_phi_y_l, dou
 
 void eval_euler_flux_1d(double *phi, double *f)
 {
-    f[0] = phi[ic_rho_u];                           // rho * u
-    f[1] = phi[ic_rho_u] * phi[ip_u] + phi[ip_p];   // rho * u * u + p
-    f[2] = phi[ic_rho_u] * phi[ip_v];               // rho * u * v
-    f[3] = phi[ic_rho_u] * phi[ip_w];               // rho * u * w
-    f[4] = (phi[ic_rho_e] + phi[ip_p]) * phi[ip_u]; // (rho * e + p) * u
+    f[0] = phi[ic_rho_u];                           /* rho * u */
+    f[1] = phi[ic_rho_u] * phi[ip_u] + phi[ip_p];   /* rho * u * u + p */
+    f[2] = phi[ic_rho_u] * phi[ip_v];               /* rho * u * v */
+    f[3] = phi[ic_rho_u] * phi[ip_w];               /* rho * u * w */
+    f[4] = (phi[ic_rho_e] + phi[ip_p]) * phi[ip_u]; /* (rho * e + p) * u */
 }
 
 void eval_viscous_flux_1d(double *phi, double *grad_phi_x, double *grad_phi_y, double *grad_phi_z,
@@ -314,34 +314,34 @@ void eval_viscous_flux_1d(double *phi, double *grad_phi_x, double *grad_phi_y, d
     const double s_43 = 4.0 / 3.0;
 
     double tau_xx = mu_mix * (s_43 * grad_phi_x[1] -
-                              s_23 * grad_phi_y[2] - s_23 * grad_phi_z[3]); // 4/3 * mu * u_x - 2/3 * mu * v_y - 2/3 * mu * w_z
+                              s_23 * grad_phi_y[2] - s_23 * grad_phi_z[3]); /* 4/3 * mu * u_x - 2/3 * mu * v_y - 2/3 * mu * w_z */
     double tau_yy = mu_mix * (-s_23 * grad_phi_x[1] +
-                              s_43 * grad_phi_y[2] - s_23 * grad_phi_z[3]); // -2/3 * mu * u_x + 4/3 * mu * v_y - 2/3 * mu * w_z
+                              s_43 * grad_phi_y[2] - s_23 * grad_phi_z[3]); /* -2/3 * mu * u_x + 4/3 * mu * v_y - 2/3 * mu * w_z */
     double tau_zz = mu_mix * (-s_23 * grad_phi_x[1] -
-                              s_23 * grad_phi_y[2] + s_43 * grad_phi_z[3]); // -2/3 * mu * u_x - 2/3 * mu * v_y + 4/3 * mu * w_z
+                              s_23 * grad_phi_y[2] + s_43 * grad_phi_z[3]); /* -2/3 * mu * u_x - 2/3 * mu * v_y + 4/3 * mu * w_z */
 
-    double tau_xy = mu_mix * (grad_phi_y[1] + grad_phi_x[2]); // mu * (u_y + v_x)
-    double tau_xz = mu_mix * (grad_phi_z[1] + grad_phi_x[3]); // mu * (u_z + w_x)
-    double tau_yz = mu_mix * (grad_phi_z[2] + grad_phi_y[3]); // mu * (y_z + w_y)
+    double tau_xy = mu_mix * (grad_phi_y[1] + grad_phi_x[2]); /* mu * (u_y + v_x) */
+    double tau_xz = mu_mix * (grad_phi_z[1] + grad_phi_x[3]); /* mu * (u_z + w_x) */
+    double tau_yz = mu_mix * (grad_phi_z[2] + grad_phi_y[3]); /* mu * (y_z + w_y) */
 
     f[0] = 0.0;
-    f[1] = -tau_xx; // -4/3 * mu * u_x + 2/3 * mu * (v_y + w_z)
-    f[2] = -tau_xy; // -mu * (u_y + v_x)
-    f[3] = -tau_xz; // -mu * (u_z + w_x)
+    f[1] = -tau_xx; /* -4/3 * mu * u_x + 2/3 * mu * (v_y + w_z) */
+    f[2] = -tau_xy; /* -mu * (u_y + v_x) */
+    f[3] = -tau_xz; /* -mu * (u_z + w_x) */
     f[4] = -tau_xx * phi[ip_u] - tau_xy * phi[ip_v] -
-           tau_xz * phi[ip_w] - lambda * grad_phi_x[ip_T]; // -(tau_xx * phi + tau_xy * v + tau_xz * w - q_x) q_x=-lambda * T_x
+           tau_xz * phi[ip_w] - lambda * grad_phi_x[ip_T]; /* -(tau_xx * phi + tau_xy * v + tau_xz * w - q_x) q_x=-lambda * T_x */
 
     g[0] = 0.0;
-    g[1] = -tau_xy; // -mu * (u_y + v_x)
-    g[2] = -tau_yy; // -4/3 * mu * v_y + 2/3 * mu * (u_x + w_z)
-    g[3] = -tau_yz; // -mu * (y_z + w_y)
+    g[1] = -tau_xy; /* -mu * (u_y + v_x) */
+    g[2] = -tau_yy; /* -4/3 * mu * v_y + 2/3 * mu * (u_x + w_z) */
+    g[3] = -tau_yz; /* -mu * (y_z + w_y) */
     g[4] = -tau_xy * phi[ip_u] - tau_yy * phi[ip_v] -
-           tau_yz * phi[ip_w] - lambda * grad_phi_y[ip_T]; // -(tau_yx * phi + tau_yy * v + tau_yz * w - q_y) q_y=-lambda * T_y
+           tau_yz * phi[ip_w] - lambda * grad_phi_y[ip_T]; /* -(tau_yx * phi + tau_yy * v + tau_yz * w - q_y) q_y=-lambda * T_y */
 
     h[0] = 0.0;
-    h[1] = -tau_xz; // -mu * (u_z + w_x)
-    h[2] = -tau_yz; // -mu * (y_z + w_y)
-    h[3] = -tau_zz; // -4/3 * mu * w_z + 2/3 * mu * (u_x + v_y)
+    h[1] = -tau_xz; /* -mu * (u_z + w_x) */
+    h[2] = -tau_yz; /* -mu * (y_z + w_y) */
+    h[3] = -tau_zz; /* -4/3 * mu * w_z + 2/3 * mu * (u_x + v_y) */
     h[4] = -tau_xz * phi[ip_u] - tau_yz * phi[ip_v] -
-           tau_zz * phi[ip_w] - lambda * grad_phi_z[ip_T]; // -(tau_zx * phi + tau_zy * v + tau_zz * w - q_z) q_z=-lambda * T_z
+           tau_zz * phi[ip_w] - lambda * grad_phi_z[ip_T]; /* -(tau_zx * phi + tau_zy * v + tau_zz * w - q_z) q_z=-lambda * T_z */
 }

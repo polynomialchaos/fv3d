@@ -98,7 +98,7 @@ void fv_time_derivative(double t)
 
     calc_flux_function_pointer();
 
-    // the temporal derivative
+    /* the temporal derivative */
     set_value_n(0.0, n_sol_variables * (n_local_cells + n_boundaries), phi_dt);
 
     for (int i = 0; i < n_faces; ++i)

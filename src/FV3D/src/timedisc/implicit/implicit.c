@@ -220,16 +220,16 @@ void time_step_newton(int iter, double t, double dt)
     int n_sol_variables = all_variables->n_sol_variables;
     int n_tot_variables = all_variables->n_tot_variables;
 
-    // discretization parameters
+    /* discretization parameters */
     n_bdf_stages_loc = (iter < n_bdf_stages) ? NBDFStagesEuler : n_bdf_stages;
     bdf_a_loc = (iter < n_bdf_stages) ? bdf_a_euler : bdf_a;
     bdf_b_loc = (iter < n_bdf_stages) ? bdf_b_euler : bdf_b;
 
-    // set local timestep
+    /* set local timestep */
     dt_loc = dt;
     tpdt_loc = t + dt_loc;
 
-    // store the old state before calculating the FVTimeDerivative
+    /* store the old state before calculating the FVTimeDerivative */
     for (int i = n_bdf_stages_loc - 1; i > 0; --i)
         copy_n(phi_old[i - 1], n_sol_variables * n_domain_cells, phi_old[i]);
 
@@ -237,11 +237,11 @@ void time_step_newton(int iter, double t, double dt)
         for (int j = 0; j < n_sol_variables; ++j)
             phi_old[0][i * n_sol_variables + j] = phi_total[i * n_tot_variables + j];
 
-    // fill inital values for newton iteration
+    /* fill inital values for newton iteration */
     copy_n(phi_old[0], n_sol_variables * n_domain_cells, Y_n);
     copy_n(phi_dt, n_sol_variables * n_domain_cells, dY_dt_n);
 
-    // calculate the inital error for newton abort criterion
+    /* calculate the inital error for newton abort criterion */
     for (int i = 0; i < n_domain_cells; ++i)
         for (int j = 0; j < n_sol_variables; ++j)
         {
@@ -266,7 +266,7 @@ void time_step_newton(int iter, double t, double dt)
 
         if (err_f_Y_old >= err_f_Y_0)
         {
-            // Jac * dY = fY_n => dY ... Jacobian is determined via finite difference. fY_n = phi - dt * RHS
+            /* Jac * dY = fY_n => dY ... Jacobian is determined via finite difference. fY_n = phi - dt * RHS */
             n_iter_lsoe = max_iter_lsoe;
             double residual_lsoe = tolerance_lsoe * err_f_Y_old;
             if (is_bicgstab)
@@ -280,7 +280,7 @@ void time_step_newton(int iter, double t, double dt)
                                 work, matrix_vector, &n_iter_lsoe, &residual_lsoe, max_krylov_dims, max_krylov_restarts);
             }
 
-            // Y^(n+1) = Y^(n) + (Y^(n+1)-Y^(n))
+            /* Y^(n+1) = Y^(n) + (Y^(n+1)-Y^(n)) */
             for (int i = 0; i < n_domain_cells; ++i)
                 for (int j = 0; j < n_sol_variables; ++j)
                 {
@@ -340,7 +340,7 @@ void calc_jacobian_numerical(int n_var, int n_cells)
 
         eps_fd = sqrt(eps_fd) * 1e-4;
 
-        // positive + eps
+        /* positive + eps */
         for (int i = 0; i < n_cells; ++i)
         {
             for (int j = 0; j < n_var; ++j)
@@ -361,7 +361,7 @@ void calc_jacobian_numerical(int n_var, int n_cells)
             }
         }
 
-        // negative + eps
+        /* negative + eps */
         for (int i = 0; i < n_cells; ++i)
         {
             for (int j = 0; j < n_var; ++j)

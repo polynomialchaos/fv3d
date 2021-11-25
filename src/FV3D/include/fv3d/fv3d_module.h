@@ -11,6 +11,6 @@
 
 #include "basec/basec_module.h"
 
-#define SMALL 1e-16
+#define SMALL 1e-16 /** Numerical small value */
 
 #endif /* FV3D_MODULE_H */

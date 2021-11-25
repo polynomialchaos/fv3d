@@ -13,11 +13,11 @@
 
 void prim_to_con(double *phi)
 {
-    phi[ic_rho_u] = phi[ip_u] * phi[ic_rho]; // rho * u
-    phi[ic_rho_v] = phi[ip_v] * phi[ic_rho]; // rho * v
-    phi[ic_rho_w] = phi[ip_w] * phi[ic_rho]; // rho * w
+    phi[ic_rho_u] = phi[ip_u] * phi[ic_rho]; /* rho * u */
+    phi[ic_rho_v] = phi[ip_v] * phi[ic_rho]; /* rho * v */
+    phi[ic_rho_w] = phi[ip_w] * phi[ic_rho]; /* rho * w */
     phi[ic_rho_e] = s_kappa_m1 * phi[ip_p] +
-                    0.5 * dot_n(&phi[ip_u], &phi[ic_rho_u], DIM); // rho * e
+                    0.5 * dot_n(&phi[ip_u], &phi[ic_rho_u], DIM); /* rho * e */
 }
 
 void copy_prim_to_con(double *phi_i, double *phi_j)
@@ -28,13 +28,13 @@ void copy_prim_to_con(double *phi_i, double *phi_j)
 
 void con_to_prim(double *phi)
 {
-    phi[ip_u] = phi[ic_rho_u] / phi[ic_rho]; // u
-    phi[ip_v] = phi[ic_rho_v] / phi[ic_rho]; // v
-    phi[ip_w] = phi[ic_rho_w] / phi[ic_rho]; // w
+    phi[ip_u] = phi[ic_rho_u] / phi[ic_rho]; /* u */
+    phi[ip_v] = phi[ic_rho_v] / phi[ic_rho]; /* v */
+    phi[ip_w] = phi[ic_rho_w] / phi[ic_rho]; /* w */
     phi[ip_p] = kappa_m1 * (phi[ic_rho_e] -
-                            0.5 * dot_n(&phi[ic_rho_u], &phi[ip_u], DIM)); // p
-    phi[ip_p] = MAX(1.00E-10, phi[ip_p]);                                  // pressure must not be negative
-    phi[ip_T] = calc_ig_T(phi[ip_p], phi[ic_rho], R_mix);                  // T
+                            0.5 * dot_n(&phi[ic_rho_u], &phi[ip_u], DIM)); /* p */
+    phi[ip_p] = MAX(1.00E-10, phi[ip_p]);                                  /* pressure must not be negative */
+    phi[ip_T] = calc_ig_T(phi[ip_p], phi[ic_rho], R_mix);                  /* T */
 }
 
 void copy_con_to_prim(double *phi_i, double *phi_j)

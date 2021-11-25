@@ -164,17 +164,17 @@ void update_boundaries(double t)
         case BoundaryOutflow:
             break;
         case BoundaryAdiabaticWall:
-            // rotate into local coordinate system
+            /* rotate into local coordinate system */
             phi_total_i[ip_u] = dot_n(&phi_total[bc * n_tot_variables + ip_u], n, DIM);
             phi_total_i[ip_v] = dot_n(&phi_total[bc * n_tot_variables + ip_u], t1, DIM);
             phi_total_i[ip_w] = dot_n(&phi_total[bc * n_tot_variables + ip_u], t2, DIM);
 
-            //apply boundary specific behaviour
+            /* apply boundary specific behaviour */
             phi_total_i[ip_p] = calc_riemann_p(phi_total_i);
             set_value_n(0.0, DIM, &phi_total_i[ip_u]);
             phi_total_i[ic_rho] = calc_ig_rho(phi_total_i[ip_p], phi_total_i[ip_T], R_mix);
 
-            // rotate back to global coordinate system
+            /* rotate back to global coordinate system */
             tmp_u = phi_total_i[ip_u] * n[0] + phi_total_i[ip_v] * t1[0] + phi_total_i[ip_w] * t2[0];
             tmp_v = phi_total_i[ip_u] * n[1] + phi_total_i[ip_v] * t1[1] + phi_total_i[ip_w] * t2[1];
             tmp_w = phi_total_i[ip_u] * n[2] + phi_total_i[ip_v] * t1[2] + phi_total_i[ip_w] * t2[2];
@@ -184,18 +184,18 @@ void update_boundaries(double t)
             phi_total_i[ip_w] = tmp_w;
             break;
         case BoundaryIsothermalWall:
-            // rotate into local coordinate system
+            /* rotate into local coordinate system */
             phi_total_i[ip_u] = dot_n(&phi_total[bc * n_tot_variables + ip_u], n, DIM);
             phi_total_i[ip_v] = dot_n(&phi_total[bc * n_tot_variables + ip_u], t1, DIM);
             phi_total_i[ip_w] = dot_n(&phi_total[bc * n_tot_variables + ip_u], t2, DIM);
 
-            //apply boundary specific behaviour
+            /* apply boundary specific behaviour */
             phi_total_i[ip_p] = calc_riemann_p(phi_total_i);
             set_value_n(0.0, DIM, &phi_total_i[ip_u]);
             phi_total_i[ip_T] = regions->phi_total[id * n_tot_variables + ip_T];
             phi_total_i[ic_rho] = calc_ig_rho(phi_total_i[ip_p], phi_total_i[ip_T], R_mix);
 
-            // rotate back to global coordinate system
+            /* rotate back to global coordinate system */
             tmp_u = phi_total_i[ip_u] * n[0] + phi_total_i[ip_v] * t1[0] + phi_total_i[ip_w] * t2[0];
             tmp_v = phi_total_i[ip_u] * n[1] + phi_total_i[ip_v] * t1[1] + phi_total_i[ip_w] * t2[1];
             tmp_w = phi_total_i[ip_u] * n[2] + phi_total_i[ip_v] * t1[2] + phi_total_i[ip_w] * t2[2];
@@ -206,17 +206,17 @@ void update_boundaries(double t)
             break;
         case BoundarySlipWall:
         case BoundarySymmetry:
-            // rotate into local coordinate system
+            /* rotate into local coordinate system */
             phi_total_i[ip_u] = dot_n(&phi_total[bc * n_tot_variables + ip_u], n, DIM);
             phi_total_i[ip_v] = dot_n(&phi_total[bc * n_tot_variables + ip_u], t1, DIM);
             phi_total_i[ip_w] = dot_n(&phi_total[bc * n_tot_variables + ip_u], t2, DIM);
 
-            //apply boundary specific behaviour
+            /* apply boundary specific behaviour */
             phi_total_i[ip_p] = calc_riemann_p(phi_total_i);
             phi_total_i[ip_u] = 0.0;
             phi_total_i[ip_T] = calc_ig_T(phi_total_i[ip_p], phi_total_i[ic_rho], R_mix);
 
-            // rotate back to global coordinate system
+            /* rotate back to global coordinate system */
             tmp_u = phi_total_i[ip_u] * n[0] + phi_total_i[ip_v] * t1[0] + phi_total_i[ip_w] * t2[0];
             tmp_v = phi_total_i[ip_u] * n[1] + phi_total_i[ip_v] * t1[1] + phi_total_i[ip_w] * t2[1];
             tmp_w = phi_total_i[ip_u] * n[2] + phi_total_i[ip_v] * t1[2] + phi_total_i[ip_w] * t2[2];
@@ -280,7 +280,7 @@ void update_gradients_boundaries()
             break;
         case BoundarySlipWall:
         case BoundarySymmetry:
-            // rotate neighbour cell gradient into local coordinates
+            /* rotate neighbour cell gradient into local coordinates */
             for (int j = 0; j < n_tot_variables; ++j)
             {
                 tmp_x[j] = grad_phi_total_x_i[j] * n[0] + grad_phi_total_y_i[j] * n[1] + grad_phi_total_z_i[j] * n[2];
@@ -288,10 +288,10 @@ void update_gradients_boundaries()
                 tmp_z[j] = grad_phi_total_x_i[j] * t2[0] + grad_phi_total_y_i[j] * t2[1] + grad_phi_total_z_i[j] * t2[2];
             }
 
-            //apply boundary specific behaviour
+            /* apply boundary specific behaviour */
             set_value_n(0.0, n_tot_variables, tmp_x);
 
-            // rotate neighbour cell gradient back from local coordinates
+            /* rotate neighbour cell gradient back from local coordinates */
             for (int j = 0; j < n_tot_variables; ++j)
             {
                 grad_phi_total_x_i[j] = tmp_x[j] * n[0] + tmp_y[j] * t1[0] + tmp_z[j] * t2[0];
@@ -308,14 +308,14 @@ void update_gradients_boundaries()
 
 void parse_primitive_state(cstring_t prefix, double *phi)
 {
-    // string_t tmp_rho    = allocate_strcat( prefix, "/rho" );
+    /* string_t tmp_rho    = allocate_strcat( prefix, "/rho" ); */
     string_t tmp_u = allocate_strcat(prefix, "/u");
     string_t tmp_v = allocate_strcat(prefix, "/v");
     string_t tmp_w = allocate_strcat(prefix, "/w");
     string_t tmp_p = allocate_strcat(prefix, "/p");
     string_t tmp_T = allocate_strcat(prefix, "/T");
 
-    // int has_rho = PARAMETER_EXISTS( tmp_rho );
+    /* int has_rho = PARAMETER_EXISTS( tmp_rho ); */
     int has_u = PARAMETER_EXISTS(tmp_u);
     int has_v = PARAMETER_EXISTS(tmp_v);
     int has_w = PARAMETER_EXISTS(tmp_w);
@@ -324,7 +324,7 @@ void parse_primitive_state(cstring_t prefix, double *phi)
 
     set_value_n(0.0, all_variables->n_tot_variables, phi);
 
-    // check the provided data and fill the arrays
+    /* check the provided data and fill the arrays */
     if (has_u && has_v && has_w && has_p && has_T)
     {
         GET_PARAMETER(tmp_u, NumberParameter, &phi[ip_u]);
@@ -339,7 +339,7 @@ void parse_primitive_state(cstring_t prefix, double *phi)
         CHECK_EXPRESSION(0);
     }
 
-    // DEALLOCATE( tmp_rho );
+    /* DEALLOCATE( tmp_rho ); */
     DEALLOCATE(tmp_u);
     DEALLOCATE(tmp_v);
     DEALLOCATE(tmp_w);

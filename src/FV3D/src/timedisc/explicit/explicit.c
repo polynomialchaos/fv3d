@@ -120,19 +120,19 @@ void time_step_lserkw2(int iter, double t, double dt)
 
     double phi_dt_tmp[n_sol_variables * n_domain_cells];
 
-    // first stage
-    double t_stage = t; // + dt * rk_b[i_stage] = 0
+    /* first stage */
+    double t_stage = t; /* + dt * rk_b[i_stage] = 0 */
     fv_time_derivative(t_stage);
 
     for (int i = 0; i < n_domain_cells; ++i)
         for (int j = 0; j < n_sol_variables; ++j)
-            phi_dt_tmp[i * n_sol_variables + j] = phi_dt[i * n_sol_variables + j]; // + phi_dt_tmp * rk_a[i_stage] = 0
+            phi_dt_tmp[i * n_sol_variables + j] = phi_dt[i * n_sol_variables + j]; /* + phi_dt_tmp * rk_a[i_stage] = 0 */
 
     for (int i = 0; i < n_domain_cells; ++i)
         for (int j = 0; j < n_sol_variables; ++j)
             phi_total[i * n_tot_variables + j] += phi_dt_tmp[i * n_sol_variables + j] * dt * rk_g[0];
 
-    // ! 2nd to n_rk_stages
+    /* 2nd to n_rk_stages */
     for (int i_stage = 1; i_stage < n_rk_stages; ++i_stage)
     {
         t_stage = t + dt * rk_b[i_stage];

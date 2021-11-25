@@ -63,7 +63,7 @@ void read_mesh_file(Mesh_t *mesh)
     GET_HDF5_ATTRIBUTE(file_id, "dimension", HDF5Int, &mesh->dimension);
     GET_HDF5_ATTRIBUTE(file_id, "is_partitioned", HDF5Int, &mesh->is_partitioned);
 
-    // the partition
+    /* the partition */
     if (is_parallel())
     {
         CHECK_EXPRESSION(mesh->is_partitioned == 1);
@@ -151,7 +151,7 @@ void read_mesh_file(Mesh_t *mesh)
         close_hdf5_group(group_id);
     }
 
-    // the vertices
+    /* the vertices */
     {
         hsize_t dims[2];
 
@@ -168,7 +168,7 @@ void read_mesh_file(Mesh_t *mesh)
         close_hdf5_group(group_id);
     }
 
-    // the cells
+    /* the cells */
     {
         hsize_t dims[2];
         hsize_t offset[2];
@@ -248,7 +248,7 @@ void read_mesh_file(Mesh_t *mesh)
         close_hdf5_group(group_id);
     }
 
-    // the boundaries
+    /* the boundaries */
     {
         hsize_t dims[2];
         hsize_t offset[2];
@@ -326,7 +326,7 @@ void read_mesh_file(Mesh_t *mesh)
         close_hdf5_group(group_id);
     }
 
-    // the faces
+    /* the faces */
     {
         hsize_t dims[2];
         hsize_t offset[2];
@@ -422,7 +422,7 @@ void read_mesh_file(Mesh_t *mesh)
         close_hdf5_group(group_id);
     }
 
-    // the regions
+    /* the regions */
     {
         hsize_t dims[2];
 

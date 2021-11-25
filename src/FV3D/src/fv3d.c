@@ -17,14 +17,16 @@
 
 string_t title = NULL;
 
-void main_define();
-void main_initialize();
-void main_finalize();
-
+/*******************************************************************************
+ * @brief Main function
+ * @param argc
+ * @param argv
+ * @return int
+ ******************************************************************************/
 int main(int argc, string_t *argv)
 {
-    // define the program structure
-    main_define();
+    /* define the program structure */
+    fv3d_define();
     mesh_define();
     equation_define();
     fv_define();
@@ -33,10 +35,10 @@ int main(int argc, string_t *argv)
     timedisc_define();
     restart_define();
 
-    // call the global initialize routine
+    /* call the global initialize routine */
     global_initialize(argc, argv, BTRU, BTRU, BTRU, BTRU);
 
-    // calculation
+    /* calculation */
     PRINTF("\n");
     printf_r_sep_title('=', "Calculation");
 
@@ -44,26 +46,35 @@ int main(int argc, string_t *argv)
 
     printf_r_sep('=');
 
-    // end the program
+    /* end the program */
     check_abort(1);
     return 1;
 }
 
-void main_define()
+/*******************************************************************************
+ * @brief Define fv3d
+ ******************************************************************************/
+void fv3d_define()
 {
-    REGISTER_INITIALIZE_ROUTINE(main_initialize);
-    REGISTER_FINALIZE_ROUTINE(main_finalize);
+    REGISTER_INITIALIZE_ROUTINE(fv3d_initialize);
+    REGISTER_FINALIZE_ROUTINE(fv3d_finalize);
 
     string_t tmp = "untitled";
     SET_PARAMETER("General/title", StringParameter, &tmp, "The project title", NULL, 0);
 }
 
-void main_initialize()
-{
-    GET_PARAMETER("General/title", StringParameter, &title);
-}
-
-void main_finalize()
+/*******************************************************************************
+ * @brief Finalize fv3d
+ ******************************************************************************/
+void fv3d_finalize()
 {
     DEALLOCATE(title);
+}
+
+/*******************************************************************************
+ * @brief Initialize fv3d
+ ******************************************************************************/
+void fv3d_initialize()
+{
+    GET_PARAMETER("General/title", StringParameter, &title);
 }
