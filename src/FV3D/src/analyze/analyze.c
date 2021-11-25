@@ -7,43 +7,30 @@
 #include "mesh/mesh_module.h"
 #include "fv/fv_module.h"
 
-//##################################################################################################################################
-// DEFINES
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// MACROS
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// VARIABLES
-//----------------------------------------------------------------------------------------------------------------------------------
 double *residual = NULL;
 
-//##################################################################################################################################
-// LOCAL FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void analyze_initialize();
 void analyze_finalize();
 
-//##################################################################################################################################
-// FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void analyze_define()
 {
-    register_initialize_routine(analyze_initialize);
-    register_finalize_routine(analyze_finalize);
+    REGISTER_INITIALIZE_ROUTINE(analyze_initialize);
+    REGISTER_FINALIZE_ROUTINE(analyze_finalize);
 }
 
 void analyze_initialize()
 {
-    residual = allocate(sizeof(double) * all_variables->n_sol_variables);
-    set_value_n(0.0, residual, all_variables->n_sol_variables);
+    int n_sol_variables = all_variables->n_sol_variables;
+
+    residual = ALLOCATE(sizeof(double) * n_sol_variables);
+    set_value_n(0.0, n_sol_variables, residual);
 }
 
 void analyze_finalize()
 {
-    deallocate(residual);
+    DEALLOCATE(residual);
 }
 
 void calc_global_residual(double dt)
@@ -53,7 +40,7 @@ void calc_global_residual(double dt)
     int n_domain_cells = cells->n_domain_cells;
 
     double tmp[n_sol_variables];
-    set_value_n(0.0, tmp, n_sol_variables);
+    set_value_n(0.0, n_sol_variables, tmp);
 
     for (int i = 0; i < n_domain_cells; ++i)
     {
@@ -61,12 +48,12 @@ void calc_global_residual(double dt)
 
         for (int j = 0; j < n_sol_variables; ++j)
         {
-            tmp[j] += u_abs(phi_dt[i * n_sol_variables + j]) * volume;
+            tmp[j] += ABS(phi_dt[i * n_sol_variables + j]) * volume;
         }
     }
 
     for (int i = 0; i < n_sol_variables; ++i)
         tmp[i] *= dt / global_mesh->global_volume;
 
-    mpi_all_reduce_n(tmp, residual, n_sol_variables, MPIDouble, MPISum);
+    mpi_all_reduce_n(MPIDouble, MPISum, tmp, n_sol_variables, residual);
 }

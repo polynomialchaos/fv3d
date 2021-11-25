@@ -9,17 +9,8 @@
 #include "fv/fv_module.h"
 #include "timedisc/implicit/implicit_module.h"
 
-//##################################################################################################################################
-// DEFINES
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// MACROS
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// VARIABLES
-//----------------------------------------------------------------------------------------------------------------------------------
 int use_restart = 0;
 
 int iter_restart = 0;
@@ -31,28 +22,22 @@ double **phi_old_restart = NULL;
 
 int n_stages_restart = 0;
 
-//##################################################################################################################################
-// LOCAL FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void restart_initialize();
 void restart_finalize();
 
 void read_restart_data();
 
-//##################################################################################################################################
-// FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void restart_define()
 {
-    register_initialize_routine(restart_initialize);
-    register_finalize_routine(restart_finalize);
+    REGISTER_INITIALIZE_ROUTINE(restart_initialize);
+    REGISTER_FINALIZE_ROUTINE(restart_finalize);
 
-    set_parameter("Restart/use_restart", ParameterBool, &use_restart, "The flag to start from restart", NULL, 0);
+    SET_PARAMETER("Restart/use_restart", LogicalParameter, &use_restart, "The flag to start from restart", NULL, 0);
 }
 
 void restart_initialize()
 {
-    get_parameter("Restart/use_restart", ParameterBool, &use_restart);
+    GET_PARAMETER("Restart/use_restart", LogicalParameter, &use_restart);
 
     if (use_restart == 1)
         read_restart_data();
@@ -62,9 +47,9 @@ void restart_initialize()
 
 void restart_finalize()
 {
-    deallocate(phi_total_restart);
-    deallocate(phi_dt_restart);
-    deallocate(phi_old_restart);
+    DEALLOCATE(phi_total_restart);
+    DEALLOCATE(phi_dt_restart);
+    DEALLOCATE(phi_old_restart);
 }
 
 void read_restart_data()
@@ -78,21 +63,21 @@ void read_restart_data()
 
     hid_t last_id = open_hdf5_group(file_id, "SOLUTION");
 
-    get_hdf5_attribute(last_id, "iter", HDF5Int, &iter_restart);
-    get_hdf5_attribute(last_id, "t", HDF5Double, &t_restart);
+    GET_HDF5_ATTRIBUTE(last_id, "iter", HDF5Int, &iter_restart);
+    GET_HDF5_ATTRIBUTE(last_id, "t", HDF5Double, &t_restart);
 
-    phi_total_restart = allocate(sizeof(double) * n_tot_variables * n_domain_cells);
-    phi_dt_restart = allocate(sizeof(double) * n_sol_variables * n_domain_cells);
+    phi_total_restart = ALLOCATE(sizeof(double) * n_tot_variables * n_domain_cells);
+    phi_dt_restart = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
 
-    if (get_is_parallel())
+    if (is_parallel())
     {
         {
             hsize_t dims[2] = {n_domain_cells, n_tot_variables};
             hsize_t offset[2] = {0, 0};
             hsize_t count[2] = {n_domain_cells, n_tot_variables};
 
-            get_hdf5_dataset_select_n_m(last_id, "phi_total", HDF5Double, phi_total_restart,
-                                        2, dims, NULL, offset, count, cells->stride, n_domain_cells);
+            GET_HDF5_DATASET_SELECT_N_M(last_id, "phi_total", HDF5Double,
+                                        count, dims, offset[0], cells->stride, n_domain_cells, phi_total_restart);
         }
 
         {
@@ -100,18 +85,18 @@ void read_restart_data()
             hsize_t offset[2] = {0, 0};
             hsize_t count[2] = {n_domain_cells, n_sol_variables};
 
-            get_hdf5_dataset_select_n_m(last_id, "phi_dt", HDF5Double, phi_dt_restart,
-                                        2, dims, NULL, offset, count, cells->stride, n_domain_cells);
+            GET_HDF5_DATASET_SELECT_N_M(last_id, "phi_dt", HDF5Double,
+                                        count, dims, offset[0], cells->stride, n_domain_cells, phi_dt_restart);
         }
 
         if (n_bdf_stages > 0)
         {
-            get_hdf5_attribute(last_id, "n_stages", HDF5Int, &n_stages_restart);
-            check_error((n_stages_restart == n_bdf_stages));
+            GET_HDF5_ATTRIBUTE(last_id, "n_stages", HDF5Int, &n_stages_restart);
+            CHECK_EXPRESSION(n_stages_restart == n_bdf_stages);
 
-            phi_old_restart = allocate(sizeof(double *) * n_stages_restart);
+            phi_old_restart = ALLOCATE(sizeof(double *) * n_stages_restart);
             for (int i = 0; i < n_stages_restart; ++i)
-                phi_old_restart[i] = allocate(sizeof(double) * n_sol_variables * n_domain_cells);
+                phi_old_restart[i] = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
 
             for (int i_stage = 0; i_stage < n_stages_restart; ++i_stage)
             {
@@ -123,10 +108,10 @@ void read_restart_data()
                 hsize_t offset[2] = {0, 0};
                 hsize_t count[2] = {n_domain_cells, n_sol_variables};
 
-                get_hdf5_dataset_select_n_m(last_id, tmp, HDF5Double, phi_old_restart[i_stage],
-                                            2, dims, NULL, offset, count, cells->stride, n_domain_cells);
+                GET_HDF5_DATASET_SELECT_N_M(last_id, tmp, HDF5Double,
+                                            count, dims, offset[0], cells->stride, n_domain_cells, phi_old_restart[i_stage]);
 
-                deallocate(tmp);
+                DEALLOCATE(tmp);
             }
         }
     }
@@ -134,22 +119,22 @@ void read_restart_data()
     {
         {
             hsize_t dims[2] = {n_domain_cells, n_tot_variables};
-            get_hdf5_dataset_n_m(last_id, "phi_total", HDF5Double, phi_total_restart, 2, dims);
+            GET_HDF5_DATASET_N_M(last_id, "phi_total", HDF5Double, dims, phi_total_restart);
         }
 
         {
             hsize_t dims[2] = {n_domain_cells, n_sol_variables};
-            get_hdf5_dataset_n_m(last_id, "phi_dt", HDF5Double, phi_dt_restart, 2, dims);
+            GET_HDF5_DATASET_N_M(last_id, "phi_dt", HDF5Double, dims, phi_dt_restart);
         }
 
         if (n_bdf_stages > 0)
         {
-            get_hdf5_attribute(last_id, "n_stages", HDF5Int, &n_stages_restart);
-            check_error((n_stages_restart == n_bdf_stages));
+            GET_HDF5_ATTRIBUTE(last_id, "n_stages", HDF5Int, &n_stages_restart);
+            CHECK_EXPRESSION(n_stages_restart == n_bdf_stages);
 
-            phi_old_restart = allocate(sizeof(double *) * n_stages_restart);
+            phi_old_restart = ALLOCATE(sizeof(double *) * n_stages_restart);
             for (int i = 0; i < n_stages_restart; ++i)
-                phi_old_restart[i] = allocate(sizeof(double) * n_sol_variables * n_domain_cells);
+                phi_old_restart[i] = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
 
             for (int i_stage = 0; i_stage < n_stages_restart; ++i_stage)
             {
@@ -159,9 +144,9 @@ void read_restart_data()
 
                 hsize_t dims[2] = {n_domain_cells, n_sol_variables};
 
-                get_hdf5_dataset_n_m(last_id, tmp, HDF5Double, phi_old_restart[i_stage], 2, dims);
+                GET_HDF5_DATASET_N_M(last_id, tmp, HDF5Double, dims, phi_old_restart[i_stage]);
 
-                deallocate(tmp);
+                DEALLOCATE(tmp);
             }
         }
     }
@@ -170,15 +155,15 @@ void read_restart_data()
 
     close_hdf5_file(file_id);
 
-    copy_n(phi_total_restart, phi_total, n_tot_variables * n_domain_cells);
-    copy_n(phi_dt_restart, phi_dt, n_sol_variables * n_domain_cells);
+    copy_n(phi_total_restart, n_tot_variables * n_domain_cells, phi_total);
+    copy_n(phi_dt_restart, n_sol_variables * n_domain_cells, phi_dt);
 
     for (int i_stage = 0; i_stage < n_stages_restart; ++i_stage)
     {
-        copy_n(phi_old_restart[i_stage], phi_old[i_stage], n_sol_variables * n_domain_cells);
+        copy_n(phi_old_restart[i_stage], n_sol_variables * n_domain_cells, phi_old[i_stage]);
     }
 
-    deallocate(phi_total_restart);
-    deallocate(phi_dt_restart);
-    deallocate(phi_old_restart);
+    DEALLOCATE(phi_total_restart);
+    DEALLOCATE(phi_dt_restart);
+    DEALLOCATE(phi_old_restart);
 }

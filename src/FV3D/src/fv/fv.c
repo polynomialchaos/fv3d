@@ -6,17 +6,8 @@
 #include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
 
-//##################################################################################################################################
-// DEFINES
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// MACROS
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// VARIABLES
-//----------------------------------------------------------------------------------------------------------------------------------
 void_update_fp_t update_function_pointer = NULL;
 void_calc_flux_fp_t calc_flux_function_pointer = NULL;
 void_calc_exact_fp_t calc_exact_function_pointer = NULL;
@@ -32,21 +23,15 @@ double *phi_total_right = NULL;
 double *phi_dt = NULL;
 double *flux = NULL;
 
-//##################################################################################################################################
-// LOCAL FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void fv_initialize();
 void fv_finalize();
 
 void set_solution();
 
-//##################################################################################################################################
-// FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void fv_define()
 {
-    register_initialize_routine(fv_initialize);
-    register_finalize_routine(fv_finalize);
+    REGISTER_INITIALIZE_ROUTINE(fv_initialize);
+    REGISTER_FINALIZE_ROUTINE(fv_finalize);
 
     reconstruction_define();
     limiter_define();
@@ -63,16 +48,16 @@ void fv_initialize()
     int n_tot_variables = all_variables->n_tot_variables;
     int n_sol_variables = all_variables->n_sol_variables;
 
-    phi_total = allocate(sizeof(double) * n_tot_variables * (n_local_cells + n_boundaries));
-    grad_phi_total_x = allocate(sizeof(double) * n_tot_variables * (n_local_cells + n_boundaries));
-    grad_phi_total_y = allocate(sizeof(double) * n_tot_variables * (n_local_cells + n_boundaries));
-    grad_phi_total_z = allocate(sizeof(double) * n_tot_variables * (n_local_cells + n_boundaries));
+    phi_total = ALLOCATE(sizeof(double) * n_tot_variables * (n_local_cells + n_boundaries));
+    grad_phi_total_x = ALLOCATE(sizeof(double) * n_tot_variables * (n_local_cells + n_boundaries));
+    grad_phi_total_y = ALLOCATE(sizeof(double) * n_tot_variables * (n_local_cells + n_boundaries));
+    grad_phi_total_z = ALLOCATE(sizeof(double) * n_tot_variables * (n_local_cells + n_boundaries));
 
-    phi_total_left = allocate(sizeof(double) * n_tot_variables * n_faces);
-    phi_total_right = allocate(sizeof(double) * n_tot_variables * n_faces);
+    phi_total_left = ALLOCATE(sizeof(double) * n_tot_variables * n_faces);
+    phi_total_right = ALLOCATE(sizeof(double) * n_tot_variables * n_faces);
 
-    phi_dt = allocate(sizeof(double) * n_sol_variables * (n_local_cells + n_boundaries));
-    flux = allocate(sizeof(double) * n_sol_variables * n_faces);
+    phi_dt = ALLOCATE(sizeof(double) * n_sol_variables * (n_local_cells + n_boundaries));
+    flux = ALLOCATE(sizeof(double) * n_sol_variables * n_faces);
 
     set_solution();
 }
@@ -83,16 +68,16 @@ void fv_finalize()
     calc_flux_function_pointer = NULL;
     calc_exact_function_pointer = NULL;
 
-    deallocate(phi_total);
-    deallocate(grad_phi_total_x);
-    deallocate(grad_phi_total_y);
-    deallocate(grad_phi_total_z);
+    DEALLOCATE(phi_total);
+    DEALLOCATE(grad_phi_total_x);
+    DEALLOCATE(grad_phi_total_y);
+    DEALLOCATE(grad_phi_total_z);
 
-    deallocate(phi_total_left);
-    deallocate(phi_total_right);
+    DEALLOCATE(phi_total_left);
+    DEALLOCATE(phi_total_right);
 
-    deallocate(phi_dt);
-    deallocate(flux);
+    DEALLOCATE(phi_dt);
+    DEALLOCATE(flux);
 }
 
 void fv_time_derivative(double t)
@@ -112,7 +97,7 @@ void fv_time_derivative(double t)
     calc_flux_function_pointer();
 
     // the temporal derivative
-    set_value_n(0.0, phi_dt, n_sol_variables * (n_local_cells + n_boundaries));
+    set_value_n(0.0, n_sol_variables * (n_local_cells + n_boundaries), phi_dt);
 
     for (int i = 0; i < n_faces; ++i)
     {

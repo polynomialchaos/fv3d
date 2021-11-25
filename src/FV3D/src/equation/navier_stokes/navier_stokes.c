@@ -9,22 +9,10 @@
 #include "fv/fv_module.h"
 #include "timedisc/timedisc_module.h"
 
-//##################################################################################################################################
-// DEFINES
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// MACROS
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// VARIABLES
-//----------------------------------------------------------------------------------------------------------------------------------
 int navier_stokes_active = 0;
 
-//##################################################################################################################################
-// LOCAL FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void navier_stokes_initialize();
 void navier_stokes_finalize();
 
@@ -64,20 +52,17 @@ int ip_w = -1;
 int ip_p = -1;
 int ip_T = -1;
 
-//##################################################################################################################################
-// FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void navier_stokes_define()
 {
-    register_initialize_routine(navier_stokes_initialize);
-    register_finalize_routine(navier_stokes_finalize);
+    REGISTER_INITIALIZE_ROUTINE(navier_stokes_initialize);
+    REGISTER_FINALIZE_ROUTINE(navier_stokes_finalize);
 
-    set_parameter("Equation/Navier-Stokes/cfl_scale", ParameterNumber, &cfl_scale, "The cfl_loc scale factor (0 ... 1)", NULL, 0);
-    set_parameter("Equation/Navier-Stokes/dfl_scale", ParameterNumber, &dfl_scale, "The DFL scale factor (0 ... 1)", NULL, 0);
-    set_parameter("Equation/Navier-Stokes/mu_mix", ParameterNumber, &mu_mix, "The dynamic viscosity, N s m-2", NULL, 0);
-    set_parameter("Equation/Navier-Stokes/R_mix", ParameterNumber, &R_mix, "The specific gas constant, J kg-1 K-1", NULL, 0);
-    set_parameter("Equation/Navier-Stokes/Pr", ParameterNumber, &Pr, "The Prandtl number", NULL, 0);
-    set_parameter("Equation/Navier-Stokes/kappa", ParameterNumber, &kappa, "The isentropic exponent", NULL, 0);
+    SET_PARAMETER("Equation/Navier-Stokes/cfl_scale", NumberParameter, &cfl_scale, "The cfl_loc scale factor (0 ... 1)", NULL, 0);
+    SET_PARAMETER("Equation/Navier-Stokes/dfl_scale", NumberParameter, &dfl_scale, "The DFL scale factor (0 ... 1)", NULL, 0);
+    SET_PARAMETER("Equation/Navier-Stokes/mu_mix", NumberParameter, &mu_mix, "The dynamic viscosity, N s m-2", NULL, 0);
+    SET_PARAMETER("Equation/Navier-Stokes/R_mix", NumberParameter, &R_mix, "The specific gas constant, J kg-1 K-1", NULL, 0);
+    SET_PARAMETER("Equation/Navier-Stokes/Pr", NumberParameter, &Pr, "The Prandtl number", NULL, 0);
+    SET_PARAMETER("Equation/Navier-Stokes/kappa", NumberParameter, &kappa, "The isentropic exponent", NULL, 0);
 
     boundary_define();
     flux_define();
@@ -88,12 +73,12 @@ void navier_stokes_initialize()
     if (navier_stokes_active == 0)
         return;
 
-    get_parameter("Equation/Navier-Stokes/cfl_scale", ParameterNumber, &cfl_scale);
-    get_parameter("Equation/Navier-Stokes/dfl_scale", ParameterNumber, &dfl_scale);
-    get_parameter("Equation/Navier-Stokes/mu_mix", ParameterNumber, &mu_mix);
-    get_parameter("Equation/Navier-Stokes/R_mix", ParameterNumber, &R_mix);
-    get_parameter("Equation/Navier-Stokes/Pr", ParameterNumber, &Pr);
-    get_parameter("Equation/Navier-Stokes/kappa", ParameterNumber, &kappa);
+    GET_PARAMETER("Equation/Navier-Stokes/cfl_scale", NumberParameter, &cfl_scale);
+    GET_PARAMETER("Equation/Navier-Stokes/dfl_scale", NumberParameter, &dfl_scale);
+    GET_PARAMETER("Equation/Navier-Stokes/mu_mix", NumberParameter, &mu_mix);
+    GET_PARAMETER("Equation/Navier-Stokes/R_mix", NumberParameter, &R_mix);
+    GET_PARAMETER("Equation/Navier-Stokes/Pr", NumberParameter, &Pr);
+    GET_PARAMETER("Equation/Navier-Stokes/kappa", NumberParameter, &kappa);
 
     kappa_m1 = kappa - 1.0;
     kappa_p1 = kappa + 1.0;
@@ -148,8 +133,8 @@ void update_gradients()
 void calc_exact_func(int id, double t, double *x, double *phi)
 {
 #ifdef DEBUG
-    u_unused(t);
-    u_unused(x);
+    UNUSED(t);
+    UNUSED(x);
 #endif /* DEBUG */
     Regions_t *regions = global_mesh->regions;
     int n_tot_variables = all_variables->n_tot_variables;
@@ -157,10 +142,10 @@ void calc_exact_func(int id, double t, double *x, double *phi)
     switch (id)
     {
     case BoundaryFlow:
-        copy_n(&regions->phi_total[regions->flow_region * n_tot_variables], phi, n_tot_variables);
+        copy_n(&regions->phi_total[regions->flow_region * n_tot_variables], n_tot_variables, phi);
         break;
     default:
-        check_error(0);
+        CHECK_EXPRESSION(0);
         break;
     }
 }
@@ -171,8 +156,8 @@ double calc_time_step()
     int n_cells = cells->n_domain_cells;
     int n_tot_variables = all_variables->n_tot_variables;
 
-    double lambda_conv = DOUBLE_MAX;
-    double lambda_visc = DOUBLE_MAX;
+    double lambda_conv = BDMX;
+    double lambda_visc = BDMX;
 
     for (int i = 0; i < n_cells; ++i)
     {
@@ -181,12 +166,12 @@ double calc_time_step()
         double s_rho = 1.0 / phi_total_i[ic_rho];
         double c = sqrt(kappa * phi_total_i[ip_p] * s_rho);
 
-        double ds1 = (u_abs(phi_total_i[ip_u]) + c) * dx[0] +
-                     (u_abs(phi_total_i[ip_v]) + c) * dx[1] + (u_abs(phi_total_i[ip_w]) + c) * dx[2];
-        lambda_conv = u_min(lambda_conv, cells->volume[i] / ds1);
+        double ds1 = (ABS(phi_total_i[ip_u]) + c) * dx[0] +
+                     (ABS(phi_total_i[ip_v]) + c) * dx[1] + (ABS(phi_total_i[ip_w]) + c) * dx[2];
+        lambda_conv = MIN(lambda_conv, cells->volume[i] / ds1);
 
         double ds2 = dot_n(dx, dx, DIM);
-        lambda_visc = u_min(lambda_visc, s_rho * ds2 / cells->volume[i]);
+        lambda_visc = MIN(lambda_visc, s_rho * ds2 / cells->volume[i]);
     }
 
     lambda_conv *= cfl_scale;
@@ -194,5 +179,5 @@ double calc_time_step()
 
     is_viscous_dt = (lambda_visc < lambda_conv);
 
-    return u_min(lambda_conv, lambda_visc);
+    return MIN(lambda_conv, lambda_visc);
 }

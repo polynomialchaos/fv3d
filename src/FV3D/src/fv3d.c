@@ -11,29 +11,14 @@
 #include "restart/restart_module.h"
 #include "timedisc/timedisc_module.h"
 
-//##################################################################################################################################
-// DEFINES
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// MACROS
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// VARIABLES
-//----------------------------------------------------------------------------------------------------------------------------------
 string_t title = NULL;
 
-//##################################################################################################################################
-// LOCAL FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void main_define();
 void main_initialize();
 void main_finalize();
 
-//##################################################################################################################################
-// FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 int main(int argc, string_t *argv)
 {
     // define the program structure
@@ -47,13 +32,15 @@ int main(int argc, string_t *argv)
     restart_define();
 
     // call the global initialize routine
-    global_initialize(argc, argv, true, true);
+    global_initialize(argc, argv, BTRU, BTRU, BTRU, BTRU);
 
     // calculation
-    printf_r("\n");
-    printf_r_block('=', "Calculation");
+    PRINTF("\n");
+    printf_r_sep_title('=', "Calculation");
+
     timedisc();
-    printf_r_empty_block('=');
+
+    printf_r_sep('=');
 
     // end the program
     check_abort(1);
@@ -62,19 +49,19 @@ int main(int argc, string_t *argv)
 
 void main_define()
 {
-    register_initialize_routine(main_initialize);
-    register_finalize_routine(main_finalize);
+    REGISTER_INITIALIZE_ROUTINE(main_initialize);
+    REGISTER_FINALIZE_ROUTINE(main_finalize);
 
     string_t tmp = "untitled";
-    set_parameter("General/title", ParameterString, &tmp, "The project title", NULL, 0);
+    SET_PARAMETER("General/title", StringParameter, &tmp, "The project title", NULL, 0);
 }
 
 void main_initialize()
 {
-    get_parameter("General/title", ParameterString, &title);
+    GET_PARAMETER("General/title", StringParameter, &title);
 }
 
 void main_finalize()
 {
-    deallocate(title);
+    DEALLOCATE(title);
 }

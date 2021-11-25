@@ -7,9 +7,6 @@
 #include "equation/equation_module.h"
 #include "fv/fv_module.h"
 
-//##################################################################################################################################
-// DEFINES
-//----------------------------------------------------------------------------------------------------------------------------------
 string_t boundary_type_strings[BoundaryTypeMax] =
     {
         "FLOW",
@@ -22,29 +19,17 @@ string_t boundary_type_strings[BoundaryTypeMax] =
         "STATE",
         "FUNCTION"};
 
-//##################################################################################################################################
-// MACROS
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// VARIABLES
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// LOCAL FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void boundary_initialize();
 void boundary_finalize();
 
-void parse_primitive_state(c_string_t prefix, double *phi);
+void parse_primitive_state(cstring_t prefix, double *phi);
 
-//##################################################################################################################################
-// FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void boundary_define()
 {
-    register_initialize_routine(boundary_initialize);
-    register_finalize_routine(boundary_finalize);
+    REGISTER_INITIALIZE_ROUTINE(boundary_initialize);
+    REGISTER_FINALIZE_ROUTINE(boundary_finalize);
 }
 
 void boundary_initialize()
@@ -53,22 +38,22 @@ void boundary_initialize()
     int n_regions = regions->n_regions;
     int n_tot_variables = all_variables->n_tot_variables;
 
-    regions->type = allocate(sizeof(int) * n_regions);
-    regions->function_id = allocate(sizeof(int) * n_regions);
-    regions->phi_total = allocate(sizeof(double) * n_tot_variables * n_regions);
+    regions->type = ALLOCATE(sizeof(int) * n_regions);
+    regions->function_id = ALLOCATE(sizeof(int) * n_regions);
+    regions->phi_total = ALLOCATE(sizeof(double) * n_tot_variables * n_regions);
 
     for (int i = 0; i < n_regions; ++i)
     {
         string_t path = allocate_strcat("Equation/Navier-Stokes/Boundary/", regions->name[i]);
-        check_error((parameter_exists(path) == 1));
+        CHECK_EXPRESSION(PARAMETER_EXISTS(path) == BTRU);
 
         string_t type = allocate_strcat(path, "/type");
         string_t tmp;
-        get_parameter(type, ParameterString, &tmp);
+        GET_PARAMETER(type, StringParameter, &tmp);
 
         if (is_equal(tmp, boundary_type_strings[BoundaryFlow]))
         {
-            check_error((regions->flow_region == i));
+            CHECK_EXPRESSION(regions->flow_region == i);
             regions->type[i] = BoundaryFlow;
             parse_primitive_state(path, &regions->phi_total[i * n_tot_variables]);
             prim_to_con(&regions->phi_total[i * n_tot_variables]);
@@ -91,8 +76,8 @@ void boundary_initialize()
         {
             regions->type[i] = BoundaryIsothermalWall;
             string_t tmp_T = allocate_strcat(path, "/T");
-            get_parameter(tmp_T, ParameterNumber, &regions->phi_total[i * n_tot_variables + ip_T]);
-            deallocate(tmp_T);
+            GET_PARAMETER(tmp_T, NumberParameter, &regions->phi_total[i * n_tot_variables + ip_T]);
+            DEALLOCATE(tmp_T);
         }
         else if (is_equal(tmp, boundary_type_strings[BoundarySlipWall]))
         {
@@ -112,18 +97,18 @@ void boundary_initialize()
         {
             regions->type[i] = BoundaryFunction;
             string_t tmp_f = allocate_strcat(path, "/function_id");
-            get_parameter(tmp_f, ParameterDigit, &regions->function_id[i]);
-            check_error((regions->function_id[i] >= BoundaryTypeMax));
-            deallocate(tmp_f);
+            GET_PARAMETER(tmp_f, DigitParameter, &regions->function_id[i]);
+            CHECK_EXPRESSION(regions->function_id[i] >= BoundaryTypeMax);
+            DEALLOCATE(tmp_f);
         }
         else
         {
-            check_error(0);
+            CHECK_EXPRESSION(0);
         }
 
-        deallocate(tmp);
-        deallocate(type);
-        deallocate(path);
+        DEALLOCATE(tmp);
+        DEALLOCATE(type);
+        DEALLOCATE(path);
     }
 }
 
@@ -135,9 +120,9 @@ void boundary_finalize()
 
         if (regions)
         {
-            deallocate(regions->type);
-            deallocate(regions->function_id);
-            deallocate(regions->phi_total);
+            DEALLOCATE(regions->type);
+            DEALLOCATE(regions->function_id);
+            DEALLOCATE(regions->phi_total);
         }
     }
 }
@@ -166,13 +151,13 @@ void update_boundaries(double t)
         double *t2 = &faces->t2[bf * DIM];
 
         double *phi_total_i = &phi_total[(n_local_cells + i) * n_tot_variables];
-        copy_n(&phi_total[bc * n_tot_variables], phi_total_i, n_tot_variables);
+        copy_n(&phi_total[bc * n_tot_variables], n_tot_variables, phi_total_i);
 
         switch (regions->type[id])
         {
         case BoundaryInflow:
         case BoundaryState:
-            copy_n(&regions->phi_total[id * n_tot_variables], phi_total_i, n_tot_variables);
+            copy_n(&regions->phi_total[id * n_tot_variables], n_tot_variables, phi_total_i);
             break;
         case BoundaryOutflow:
             break;
@@ -184,7 +169,7 @@ void update_boundaries(double t)
 
             //apply boundary specific behaviour
             phi_total_i[ip_p] = calc_riemann_p(phi_total_i);
-            set_value_n(0.0, &phi_total_i[ip_u], DIM);
+            set_value_n(0.0, DIM, &phi_total_i[ip_u]);
             phi_total_i[ic_rho] = calc_ig_rho(phi_total_i[ip_p], phi_total_i[ip_T], R_mix);
 
             // rotate back to global coordinate system
@@ -204,7 +189,7 @@ void update_boundaries(double t)
 
             //apply boundary specific behaviour
             phi_total_i[ip_p] = calc_riemann_p(phi_total_i);
-            set_value_n(0.0, &phi_total_i[ip_u], DIM);
+            set_value_n(0.0, DIM, &phi_total_i[ip_u]);
             phi_total_i[ip_T] = regions->phi_total[id * n_tot_variables + ip_T];
             phi_total_i[ic_rho] = calc_ig_rho(phi_total_i[ip_p], phi_total_i[ip_T], R_mix);
 
@@ -243,7 +228,7 @@ void update_boundaries(double t)
             con_to_prim(phi_total_i);
             break;
         default:
-            check_error(0);
+            CHECK_EXPRESSION(0);
             break;
         }
 
@@ -278,9 +263,9 @@ void update_gradients_boundaries()
         double *grad_phi_total_y_i = &grad_phi_total_y[(n_local_cells + i) * n_tot_variables];
         double *grad_phi_total_z_i = &grad_phi_total_z[(n_local_cells + i) * n_tot_variables];
 
-        copy_n(&grad_phi_total_x[bc * n_tot_variables], grad_phi_total_x_i, n_tot_variables);
-        copy_n(&grad_phi_total_y[bc * n_tot_variables], grad_phi_total_y_i, n_tot_variables);
-        copy_n(&grad_phi_total_z[bc * n_tot_variables], grad_phi_total_z_i, n_tot_variables);
+        copy_n(&grad_phi_total_x[bc * n_tot_variables], n_tot_variables, grad_phi_total_x_i);
+        copy_n(&grad_phi_total_y[bc * n_tot_variables], n_tot_variables, grad_phi_total_y_i);
+        copy_n(&grad_phi_total_z[bc * n_tot_variables], n_tot_variables, grad_phi_total_z_i);
 
         switch (regions->type[id])
         {
@@ -302,7 +287,7 @@ void update_gradients_boundaries()
             }
 
             //apply boundary specific behaviour
-            set_value_n(0.0, tmp_x, n_tot_variables);
+            set_value_n(0.0, n_tot_variables, tmp_x);
 
             // rotate neighbour cell gradient back from local coordinates
             for (int j = 0; j < n_tot_variables; ++j)
@@ -313,13 +298,13 @@ void update_gradients_boundaries()
             }
             break;
         default:
-            check_error(0);
+            CHECK_EXPRESSION(0);
             break;
         }
     }
 }
 
-void parse_primitive_state(c_string_t prefix, double *phi)
+void parse_primitive_state(cstring_t prefix, double *phi)
 {
     // string_t tmp_rho    = allocate_strcat( prefix, "/rho" );
     string_t tmp_u = allocate_strcat(prefix, "/u");
@@ -328,34 +313,34 @@ void parse_primitive_state(c_string_t prefix, double *phi)
     string_t tmp_p = allocate_strcat(prefix, "/p");
     string_t tmp_T = allocate_strcat(prefix, "/T");
 
-    // int has_rho = parameter_exists( tmp_rho );
-    int has_u = parameter_exists(tmp_u);
-    int has_v = parameter_exists(tmp_v);
-    int has_w = parameter_exists(tmp_w);
-    int has_p = parameter_exists(tmp_p);
-    int has_T = parameter_exists(tmp_T);
+    // int has_rho = PARAMETER_EXISTS( tmp_rho );
+    int has_u = PARAMETER_EXISTS(tmp_u);
+    int has_v = PARAMETER_EXISTS(tmp_v);
+    int has_w = PARAMETER_EXISTS(tmp_w);
+    int has_p = PARAMETER_EXISTS(tmp_p);
+    int has_T = PARAMETER_EXISTS(tmp_T);
 
-    set_value_n(0.0, phi, all_variables->n_tot_variables);
+    set_value_n(0.0, all_variables->n_tot_variables, phi);
 
     // check the provided data and fill the arrays
     if (has_u && has_v && has_w && has_p && has_T)
     {
-        get_parameter(tmp_u, ParameterNumber, &phi[ip_u]);
-        get_parameter(tmp_v, ParameterNumber, &phi[ip_v]);
-        get_parameter(tmp_w, ParameterNumber, &phi[ip_w]);
-        get_parameter(tmp_p, ParameterNumber, &phi[ip_p]);
-        get_parameter(tmp_T, ParameterNumber, &phi[ip_T]);
+        GET_PARAMETER(tmp_u, NumberParameter, &phi[ip_u]);
+        GET_PARAMETER(tmp_v, NumberParameter, &phi[ip_v]);
+        GET_PARAMETER(tmp_w, NumberParameter, &phi[ip_w]);
+        GET_PARAMETER(tmp_p, NumberParameter, &phi[ip_p]);
+        GET_PARAMETER(tmp_T, NumberParameter, &phi[ip_T]);
         phi[ic_rho] = calc_ig_rho(phi[ip_p], phi[ip_T], R_mix);
     }
     else
     {
-        check_error(0);
+        CHECK_EXPRESSION(0);
     }
 
-    // deallocate( tmp_rho );
-    deallocate(tmp_u);
-    deallocate(tmp_v);
-    deallocate(tmp_w);
-    deallocate(tmp_p);
-    deallocate(tmp_T);
+    // DEALLOCATE( tmp_rho );
+    DEALLOCATE(tmp_u);
+    DEALLOCATE(tmp_v);
+    DEALLOCATE(tmp_w);
+    DEALLOCATE(tmp_p);
+    DEALLOCATE(tmp_T);
 }

@@ -6,17 +6,8 @@
 #include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
 
-//##################################################################################################################################
-// DEFINES
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// MACROS
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// VARIABLES
-//----------------------------------------------------------------------------------------------------------------------------------
 void_reconstruction_fp_t reconstruction_function_pointer = NULL;
 void_update_gradients_fp_t update_gradients_function_pointer = NULL;
 
@@ -25,9 +16,6 @@ string_t reconstruction_name = NULL;
 double *send_buffer = NULL;
 double *receive_buffer = NULL;
 
-//##################################################################################################################################
-// LOCAL FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void reconstruction_initialize();
 void reconstruction_finalize();
 
@@ -36,25 +24,22 @@ void reconstruction_linear();
 void calc_gradients();
 void update_parallel();
 
-//##################################################################################################################################
-// FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void reconstruction_define()
 {
-    register_initialize_routine(reconstruction_initialize);
-    register_finalize_routine(reconstruction_finalize);
+    REGISTER_INITIALIZE_ROUTINE(reconstruction_initialize);
+    REGISTER_FINALIZE_ROUTINE(reconstruction_finalize);
 
     string_t tmp_opt[] = {"Linear", "First-Order"};
     int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
     string_t tmp = tmp_opt[0];
 
-    set_parameter("FV/Reconstruction/reconstruction", ParameterString, &tmp,
+    SET_PARAMETER("FV/Reconstruction/reconstruction", StringParameter, &tmp,
                   "The reconstruction method", &tmp_opt, tmp_opt_n);
 }
 
 void reconstruction_initialize()
 {
-    get_parameter("FV/Reconstruction/reconstruction", ParameterString, &reconstruction_name);
+    GET_PARAMETER("FV/Reconstruction/reconstruction", StringParameter, &reconstruction_name);
 
     if (is_equal(reconstruction_name, "First-Order"))
     {
@@ -66,18 +51,18 @@ void reconstruction_initialize()
     }
     else
     {
-        check_error(0);
+        CHECK_EXPRESSION(0);
     }
 
-    if (get_is_parallel())
+    if (is_parallel())
     {
         Partition_t *partition = global_mesh->partition;
         int n_partition_sends = partition->n_partition_sends;
         int n_partition_receives = partition->n_partition_receives;
         int n_tot_variables = all_variables->n_tot_variables;
 
-        send_buffer = allocate(sizeof(double) * n_tot_variables * n_partition_sends);
-        receive_buffer = allocate(sizeof(double) * n_tot_variables * n_partition_receives);
+        send_buffer = ALLOCATE(sizeof(double) * n_tot_variables * n_partition_sends);
+        receive_buffer = ALLOCATE(sizeof(double) * n_tot_variables * n_partition_receives);
     }
 }
 
@@ -86,9 +71,9 @@ void reconstruction_finalize()
     reconstruction_function_pointer = NULL;
     update_gradients_function_pointer = NULL;
 
-    deallocate(reconstruction_name);
-    deallocate(send_buffer);
-    deallocate(receive_buffer);
+    DEALLOCATE(reconstruction_name);
+    DEALLOCATE(send_buffer);
+    DEALLOCATE(receive_buffer);
 }
 
 void reconstruction_first_order()
@@ -187,12 +172,12 @@ void calc_gradients()
     int n_faces = faces->n_faces;
     int n_tot_variables = all_variables->n_tot_variables;
 
-    if (get_is_parallel())
+    if (is_parallel())
         update_parallel(phi_total);
 
-    set_value_n(0.0, grad_phi_total_x, n_tot_variables * (n_local_cells + n_boundaries));
-    set_value_n(0.0, grad_phi_total_y, n_tot_variables * (n_local_cells + n_boundaries));
-    set_value_n(0.0, grad_phi_total_z, n_tot_variables * (n_local_cells + n_boundaries));
+    set_value_n(0.0, n_tot_variables * (n_local_cells + n_boundaries), grad_phi_total_x);
+    set_value_n(0.0, n_tot_variables * (n_local_cells + n_boundaries), grad_phi_total_y);
+    set_value_n(0.0, n_tot_variables * (n_local_cells + n_boundaries), grad_phi_total_z);
 
     for (int i = 0; i < n_faces; ++i)
     {
@@ -215,11 +200,11 @@ void calc_gradients()
         }
     }
 
-    if (get_is_parallel())
+    if (is_parallel())
         update_parallel(grad_phi_total_x);
-    if (get_is_parallel())
+    if (is_parallel())
         update_parallel(grad_phi_total_y);
-    if (get_is_parallel())
+    if (is_parallel())
         update_parallel(grad_phi_total_z);
 
     for (int i = 0; i < n_local_cells; ++i)
@@ -240,7 +225,7 @@ void calc_gradients()
 void update_parallel(double *phi_local)
 {
     Partition_t *partition = global_mesh->partition;
-    int rank = get_rank();
+    int rank = get_rank_number();
     int n_partitions = partition->n_partitions;
     int n_partitions_sends = partition->n_partition_sends;
     int *n_partitions_sends_to = partition->n_partition_sends_to;
@@ -268,7 +253,7 @@ void update_parallel(double *phi_local)
                     }
                 }
 
-                mpi_send(send_buffer, n_partitions_sends_to[r_rank] * n_tot_variables, MPIDouble, r_rank);
+                mpi_send(MPIDouble, r_rank, send_buffer, n_partitions_sends_to[r_rank] * n_tot_variables);
             }
         }
         else
@@ -277,7 +262,7 @@ void update_parallel(double *phi_local)
                 continue;
             int *partition_receives_from = &partition->partition_receives_from[s_rank * n_partition_receives];
 
-            mpi_receive(receive_buffer, n_partition_receives_from[s_rank] * n_tot_variables, MPIDouble, s_rank);
+            mpi_receive(MPIDouble, s_rank, n_partition_receives_from[s_rank] * n_tot_variables, receive_buffer);
 
             for (int i = 0; i < n_partition_receives_from[s_rank]; ++i)
             {

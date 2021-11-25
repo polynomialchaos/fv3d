@@ -10,17 +10,8 @@
 #include "timedisc/timedisc_module.h"
 #include "fv/fv_module.h"
 
-//##################################################################################################################################
-// DEFINES
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// MACROS
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// VARIABLES
-//----------------------------------------------------------------------------------------------------------------------------------
 int implicit_active = 0;
 int n_iter_inner = 0;
 int n_iter_lsoe = 0;
@@ -36,7 +27,7 @@ int max_iter_lsoe = 100;
 int max_krylov_dims = 15;
 int max_krylov_restarts = 2;
 
-int_fp_matvec_t matrix_vector = NULL;
+math_int_ft matrix_vector = NULL;
 int is_bicgstab = 1;
 int n_work_size = 0;
 double dt_loc = 0.0;
@@ -70,9 +61,6 @@ double *dY_n = NULL;
 double *dY_dt_n = NULL;
 double *jac = NULL;
 
-//##################################################################################################################################
-// LOCAL FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void implicit_initialize();
 void implicit_finalize();
 
@@ -80,13 +68,10 @@ void calc_jacobian_numerical(int n_var, int n_cells);
 int matrix_vector_numerical(double *x, double *b, size_t n_var, size_t n_cells);
 void time_step_newton(int iter, double t, double dt);
 
-//##################################################################################################################################
-// FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void implicit_define()
 {
-    register_initialize_routine(implicit_initialize);
-    register_finalize_routine(implicit_finalize);
+    REGISTER_INITIALIZE_ROUTINE(implicit_initialize);
+    REGISTER_FINALIZE_ROUTINE(implicit_finalize);
 
     string_t tmp_opt[] = {"BDF-2", "Euler"};
     int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
@@ -104,23 +89,23 @@ void implicit_define()
     int tmp4_opt_n = sizeof(tmp4_opt) / sizeof(string_t);
     string_t tmp4 = tmp4_opt[0];
 
-    set_parameter("TimeDisc/Implicit/scheme", ParameterString, &tmp,
+    SET_PARAMETER("TimeDisc/Implicit/scheme", StringParameter, &tmp,
                   "The implicit timestep scheme", &tmp_opt, tmp_opt_n);
-    set_parameter("TimeDisc/Implicit/method", ParameterString, &tmp2,
+    SET_PARAMETER("TimeDisc/Implicit/method", StringParameter, &tmp2,
                   "The method to solve the non-linear system of equations", &tmp2_opt, tmp2_opt_n);
-    set_parameter("TimeDisc/Implicit/max_iter_inner", ParameterDigit, &max_iter_inner,
+    SET_PARAMETER("TimeDisc/Implicit/max_iter_inner", DigitParameter, &max_iter_inner,
                   "The maximum number of inner iterations", NULL, 0);
-    set_parameter("TimeDisc/Implicit/solver", ParameterString, &tmp4,
+    SET_PARAMETER("TimeDisc/Implicit/solver", StringParameter, &tmp4,
                   "The linear system of equations solver", &tmp4_opt, tmp4_opt_n);
-    set_parameter("TimeDisc/Implicit/jacobian_type", ParameterString, &tmp3,
+    SET_PARAMETER("TimeDisc/Implicit/jacobian_type", StringParameter, &tmp3,
                   "The type of jacobian generation", &tmp3_opt, tmp3_opt_n);
-    set_parameter("TimeDisc/Implicit/tolerance_lsoe", ParameterNumber, &tolerance_lsoe,
+    SET_PARAMETER("TimeDisc/Implicit/tolerance_lsoe", NumberParameter, &tolerance_lsoe,
                   "The linear solver tolerance", NULL, 0);
-    set_parameter("TimeDisc/Implicit/max_iter_lsoe", ParameterDigit, &max_iter_lsoe,
+    SET_PARAMETER("TimeDisc/Implicit/max_iter_lsoe", DigitParameter, &max_iter_lsoe,
                   "The linear solver maximum number of iterations", NULL, 0);
-    set_parameter("TimeDisc/Implicit/max_krylov_dims", ParameterDigit, &max_krylov_dims,
+    SET_PARAMETER("TimeDisc/Implicit/max_krylov_dims", DigitParameter, &max_krylov_dims,
                   "The maximum Krylov space dimension in GMRes solver", NULL, 0);
-    set_parameter("TimeDisc/Implicit/max_krylov_restarts", ParameterDigit, &max_krylov_restarts,
+    SET_PARAMETER("TimeDisc/Implicit/max_krylov_restarts", DigitParameter, &max_krylov_restarts,
                   "The maximum restarts performed in GMRes solver", NULL, 0);
 }
 
@@ -129,15 +114,15 @@ void implicit_initialize()
     if (implicit_active == 0)
         return;
 
-    get_parameter("TimeDisc/Implicit/scheme", ParameterString, &implicit_scheme_name);
-    get_parameter("TimeDisc/Implicit/method", ParameterString, &method_name);
-    get_parameter("TimeDisc/Implicit/max_iter_inner", ParameterDigit, &max_iter_inner);
-    get_parameter("TimeDisc/Implicit/solver", ParameterString, &solver_name);
-    get_parameter("TimeDisc/Implicit/jacobian_type", ParameterString, &jacobian_type_name);
-    get_parameter("TimeDisc/Implicit/tolerance_lsoe", ParameterNumber, &tolerance_lsoe);
-    get_parameter("TimeDisc/Implicit/max_iter_lsoe", ParameterDigit, &max_iter_lsoe);
-    get_parameter("TimeDisc/Implicit/max_krylov_dims", ParameterDigit, &max_krylov_dims);
-    get_parameter("TimeDisc/Implicit/max_krylov_restarts", ParameterDigit, &max_krylov_restarts);
+    GET_PARAMETER("TimeDisc/Implicit/scheme", StringParameter, &implicit_scheme_name);
+    GET_PARAMETER("TimeDisc/Implicit/method", StringParameter, &method_name);
+    GET_PARAMETER("TimeDisc/Implicit/max_iter_inner", DigitParameter, &max_iter_inner);
+    GET_PARAMETER("TimeDisc/Implicit/solver", StringParameter, &solver_name);
+    GET_PARAMETER("TimeDisc/Implicit/jacobian_type", StringParameter, &jacobian_type_name);
+    GET_PARAMETER("TimeDisc/Implicit/tolerance_lsoe", NumberParameter, &tolerance_lsoe);
+    GET_PARAMETER("TimeDisc/Implicit/max_iter_lsoe", DigitParameter, &max_iter_lsoe);
+    GET_PARAMETER("TimeDisc/Implicit/max_krylov_dims", DigitParameter, &max_krylov_dims);
+    GET_PARAMETER("TimeDisc/Implicit/max_krylov_restarts", DigitParameter, &max_krylov_restarts);
 
     Cells_t *cells = global_mesh->cells;
     int n_domain_cells = cells->n_domain_cells;
@@ -157,7 +142,7 @@ void implicit_initialize()
     }
     else
     {
-        check_error(0);
+        CHECK_EXPRESSION(0);
     }
 
     if (is_equal(method_name, "Newton"))
@@ -166,24 +151,24 @@ void implicit_initialize()
     }
     else
     {
-        check_error(0);
+        CHECK_EXPRESSION(0);
     }
 
     if (is_equal(solver_name, "BiCGStab"))
     {
         is_bicgstab = 1;
         n_work_size = get_bicgstab_n_m_work_size(n_sol_variables, n_domain_cells);
-        work = allocate(sizeof(double) * n_work_size);
+        work = ALLOCATE(sizeof(double) * n_work_size);
     }
     else if (is_equal(solver_name, "GMRes"))
     {
         is_bicgstab = 0;
         n_work_size = get_gmres_n_m_work_size(n_sol_variables, n_domain_cells, max_krylov_dims);
-        work = allocate(sizeof(double) * n_work_size);
+        work = ALLOCATE(sizeof(double) * n_work_size);
     }
     else
     {
-        check_error(0);
+        CHECK_EXPRESSION(0);
     }
 
     if (is_equal(jacobian_type_name, "Numerical"))
@@ -192,38 +177,38 @@ void implicit_initialize()
     }
     else
     {
-        check_error(0);
+        CHECK_EXPRESSION(0);
     }
 
-    phi_old = allocate(sizeof(double *) * n_bdf_stages);
+    phi_old = ALLOCATE(sizeof(double *) * n_bdf_stages);
     for (int i = 0; i < n_bdf_stages; ++i)
-        phi_old[i] = allocate(sizeof(double) * n_sol_variables * n_domain_cells);
+        phi_old[i] = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
 
-    Y_n = allocate(sizeof(double) * n_sol_variables * n_domain_cells);
-    f_Y_n = allocate(sizeof(double) * n_sol_variables * n_domain_cells);
-    dY_n = allocate(sizeof(double) * n_sol_variables * n_domain_cells);
-    dY_dt_n = allocate(sizeof(double) * n_sol_variables * n_domain_cells);
-    jac = allocate(sizeof(double) * n_sol_variables * n_sol_variables * n_domain_cells);
+    Y_n = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
+    f_Y_n = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
+    dY_n = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
+    dY_dt_n = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
+    jac = ALLOCATE(sizeof(double) * n_sol_variables * n_sol_variables * n_domain_cells);
 }
 
 void implicit_finalize()
 {
-    deallocate(implicit_scheme_name);
-    deallocate(method_name);
-    deallocate(solver_name);
-    deallocate(jacobian_type_name);
+    DEALLOCATE(implicit_scheme_name);
+    DEALLOCATE(method_name);
+    DEALLOCATE(solver_name);
+    DEALLOCATE(jacobian_type_name);
 
     for (int i = 0; i < n_bdf_stages; ++i)
-        deallocate(phi_old[i]);
-    deallocate(phi_old);
+        DEALLOCATE(phi_old[i]);
+    DEALLOCATE(phi_old);
 
-    deallocate(work);
+    DEALLOCATE(work);
 
-    deallocate(Y_n);
-    deallocate(f_Y_n);
-    deallocate(dY_n);
-    deallocate(dY_dt_n);
-    deallocate(jac);
+    DEALLOCATE(Y_n);
+    DEALLOCATE(f_Y_n);
+    DEALLOCATE(dY_n);
+    DEALLOCATE(dY_dt_n);
+    DEALLOCATE(jac);
 }
 
 void time_step_newton(int iter, double t, double dt)
@@ -244,15 +229,15 @@ void time_step_newton(int iter, double t, double dt)
 
     // store the old state before calculating the FVTimeDerivative
     for (int i = n_bdf_stages_loc - 1; i > 0; --i)
-        copy_n(phi_old[i - 1], phi_old[i], n_sol_variables * n_domain_cells);
+        copy_n(phi_old[i - 1], n_sol_variables * n_domain_cells, phi_old[i]);
 
     for (int i = 0; i < n_domain_cells; ++i)
         for (int j = 0; j < n_sol_variables; ++j)
             phi_old[0][i * n_sol_variables + j] = phi_total[i * n_tot_variables + j];
 
     // fill inital values for newton iteration
-    copy_n(phi_old[0], Y_n, n_sol_variables * n_domain_cells);
-    copy_n(phi_dt, dY_dt_n, n_sol_variables * n_domain_cells);
+    copy_n(phi_old[0], n_sol_variables * n_domain_cells, Y_n);
+    copy_n(phi_dt, n_sol_variables * n_domain_cells, dY_dt_n);
 
     // calculate the inital error for newton abort criterion
     for (int i = 0; i < n_domain_cells; ++i)
@@ -303,7 +288,7 @@ void time_step_newton(int iter, double t, double dt)
                 }
 
             fv_time_derivative(tpdt_loc);
-            copy_n(phi_dt, dY_dt_n, n_sol_variables * n_domain_cells);
+            copy_n(phi_dt, n_sol_variables * n_domain_cells, dY_dt_n);
 
             for (int i = 0; i < n_domain_cells; ++i)
                 for (int j = 0; j < n_sol_variables; ++j)
@@ -329,7 +314,7 @@ void time_step_newton(int iter, double t, double dt)
 
         int is_error_less = (err_f_Y_old < err_f_Y_0);
         int is_error_less_g;
-        mpi_all_reduce(&is_error_less, &is_error_less_g, MPIInt, MPILogAnd);
+        MPI_ALL_REDUCE(MPIInt, MPILogAnd, &is_error_less, &is_error_less_g);
 
         if (is_error_less_g == 1)
             break;
@@ -338,7 +323,7 @@ void time_step_newton(int iter, double t, double dt)
     }
 
     if (n_iter_inner >= max_iter_inner)
-        check_error(0);
+        CHECK_EXPRESSION(0);
 }
 
 void calc_jacobian_numerical(int n_var, int n_cells)

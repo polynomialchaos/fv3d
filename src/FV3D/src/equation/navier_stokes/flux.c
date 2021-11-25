@@ -8,25 +8,13 @@
 #include "equation/equation_module.h"
 #include "fv/fv_module.h"
 
-//##################################################################################################################################
-// DEFINES
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// MACROS
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// VARIABLES
-//----------------------------------------------------------------------------------------------------------------------------------
 string_t flux_scheme_name = NULL;
 
 typedef void (*void_calc_conv_flux_fp_t)(double *phi_l, double *phi_r, double *f);
 void_calc_conv_flux_fp_t calc_convective_flux_function_pointer = NULL;
 
-//##################################################################################################################################
-// LOCAL FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void flux_initialize();
 void flux_finalize();
 
@@ -38,25 +26,22 @@ void eval_euler_flux_1d(double *phi, double *f);
 void eval_viscous_flux_1d(double *phi, double *grad_phi_x, double *grad_phi_y, double *grad_phi_z,
                           double *f, double *g, double *h);
 
-//##################################################################################################################################
-// FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void flux_define()
 {
-    register_initialize_routine(flux_initialize);
-    register_finalize_routine(flux_finalize);
+    REGISTER_INITIALIZE_ROUTINE(flux_initialize);
+    REGISTER_FINALIZE_ROUTINE(flux_finalize);
 
     string_t tmp_opt[] = {"AUSM", "Rusanov"};
     int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
     string_t tmp = tmp_opt[0];
 
-    set_parameter("Equation/Navier-Stokes/Flux/flux_scheme", ParameterString, &tmp,
+    SET_PARAMETER("Equation/Navier-Stokes/Flux/flux_scheme", StringParameter, &tmp,
                   "The Riemann solver", &tmp_opt, tmp_opt_n);
 }
 
 void flux_initialize()
 {
-    get_parameter("Equation/Navier-Stokes/Flux/flux_scheme", ParameterString, &flux_scheme_name);
+    GET_PARAMETER("Equation/Navier-Stokes/Flux/flux_scheme", StringParameter, &flux_scheme_name);
 
     if (is_equal(flux_scheme_name, "Rusanov"))
     {
@@ -68,13 +53,13 @@ void flux_initialize()
     }
     else
     {
-        check_error(0);
+        CHECK_EXPRESSION(0);
     }
 }
 
 void flux_finalize()
 {
-    deallocate(flux_scheme_name);
+    DEALLOCATE(flux_scheme_name);
 
     calc_convective_flux_function_pointer = NULL;
 }
@@ -220,7 +205,7 @@ void riemann_rusanonv(double *phi_l, double *phi_r, double *f)
 
     double c_l = sqrt(kappa * phi_l[ip_p] / phi_l[ic_rho]);
     double c_r = sqrt(kappa * phi_r[ip_p] / phi_r[ic_rho]);
-    double eigval = u_max(u_abs(phi_l[ip_u]) + c_l, u_abs(phi_r[ip_u]) + c_r);
+    double eigval = MAX(ABS(phi_l[ip_u]) + c_l, ABS(phi_r[ip_u]) + c_r);
 
     double f_l[n_sol_variables];
     double f_r[n_sol_variables];
@@ -279,18 +264,18 @@ void riemann_ausm(double *phi_l, double *phi_r, double *f)
     }
 
     // Positive Part of Flux evaluated in the left cell.
-    f[0] = u_max(0.0, M_p + M_m) * c_l * phi_l[ic_rho];
-    f[1] = u_max(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * phi_l[ip_u] + P_p;
-    f[2] = u_max(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * phi_l[ip_v];
-    f[3] = u_max(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * phi_l[ip_w];
-    f[4] = u_max(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * H_l;
+    f[0] = MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho];
+    f[1] = MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * phi_l[ip_u] + P_p;
+    f[2] = MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * phi_l[ip_v];
+    f[3] = MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * phi_l[ip_w];
+    f[4] = MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * H_l;
 
     // Negative Part of Flux evaluated in the right cell.
-    f[0] += u_min(0.0, M_p + M_m) * c_r * phi_r[ic_rho];
-    f[1] += u_min(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * phi_r[ip_u] + P_m;
-    f[2] += u_min(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * phi_r[ip_v];
-    f[3] += u_min(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * phi_r[ip_w];
-    f[4] += u_min(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * H_r;
+    f[0] += MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho];
+    f[1] += MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * phi_r[ip_u] + P_m;
+    f[2] += MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * phi_r[ip_v];
+    f[3] += MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * phi_r[ip_w];
+    f[4] += MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * H_r;
 }
 
 void viscous_flux(double *phi_l, double *grad_phi_x_l, double *grad_phi_y_l, double *grad_phi_z_l,

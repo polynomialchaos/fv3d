@@ -6,49 +6,34 @@
 #include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
 
-//##################################################################################################################################
-// DEFINES
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// MACROS
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// VARIABLES
-//----------------------------------------------------------------------------------------------------------------------------------
 double_limiter_fp_t limiter_function_pointer = NULL;
 
 string_t limiter_name = NULL;
 
-//##################################################################################################################################
-// LOCAL FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void limiter_initialize();
 void limiter_finalize();
 
 double limiter_none(int i_cell, int i_var, double slope);
 double limiter_barth_jespersenn(int i_cell, int i_var, double slope);
 
-//##################################################################################################################################
-// FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void limiter_define()
 {
-    register_initialize_routine(limiter_initialize);
-    register_finalize_routine(limiter_finalize);
+    REGISTER_INITIALIZE_ROUTINE(limiter_initialize);
+    REGISTER_FINALIZE_ROUTINE(limiter_finalize);
 
     string_t tmp_opt[] = {"Barth-Jespersenn", "None"};
     int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
     string_t tmp = tmp_opt[0];
 
-    set_parameter("FV/Limiter/limiter", ParameterString, &tmp,
+    SET_PARAMETER("FV/Limiter/limiter", StringParameter, &tmp,
                   "The limiter method", &tmp_opt, tmp_opt_n);
 }
 
 void limiter_initialize()
 {
-    get_parameter("FV/Limiter/limiter", ParameterString, &limiter_name);
+    GET_PARAMETER("FV/Limiter/limiter", StringParameter, &limiter_name);
 
     if (is_equal(limiter_name, "None"))
     {
@@ -60,7 +45,7 @@ void limiter_initialize()
     }
     else
     {
-        check_error(0);
+        CHECK_EXPRESSION(0);
     }
 }
 
@@ -68,15 +53,15 @@ void limiter_finalize()
 {
     limiter_function_pointer = NULL;
 
-    deallocate(limiter_name);
+    DEALLOCATE(limiter_name);
 }
 
 double limiter_none(int i_cell, int i_var, double slope)
 {
 #ifdef DEBUG
-    u_unused(i_cell);
-    u_unused(i_var);
-    u_unused(slope);
+    UNUSED(i_cell);
+    UNUSED(i_var);
+    UNUSED(slope);
 #endif /* DEBUG */
     return 1.0;
 }
@@ -98,13 +83,13 @@ double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
 
         if (fc[0] == i_cell)
         {
-            phi_min = u_min(phi_min, phi_total[fc[1] * n_tot_variables + i_var]);
-            phi_max = u_max(phi_max, phi_total[fc[1] * n_tot_variables + i_var]);
+            phi_min = MIN(phi_min, phi_total[fc[1] * n_tot_variables + i_var]);
+            phi_max = MAX(phi_max, phi_total[fc[1] * n_tot_variables + i_var]);
         }
         else
         {
-            phi_min = u_min(phi_min, phi_total[fc[0] * n_tot_variables + i_var]);
-            phi_max = u_max(phi_max, phi_total[fc[0] * n_tot_variables + i_var]);
+            phi_min = MIN(phi_min, phi_total[fc[0] * n_tot_variables + i_var]);
+            phi_max = MAX(phi_max, phi_total[fc[0] * n_tot_variables + i_var]);
         }
     }
 
@@ -122,7 +107,7 @@ double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
             y = (phi_min - phi_total[i_cell * n_tot_variables + i_var]) / slope;
         }
 
-        tmp = u_min(tmp, y);
+        tmp = MIN(tmp, y);
     }
 
     return tmp;

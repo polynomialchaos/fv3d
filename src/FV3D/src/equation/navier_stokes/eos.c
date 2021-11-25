@@ -7,25 +7,10 @@
 #include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
 
-//##################################################################################################################################
-// DEFINES
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// MACROS
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// VARIABLES
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// LOCAL FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void prim_to_con(double *phi)
 {
     phi[ic_rho_u] = phi[ip_u] * phi[ic_rho]; // rho * u
@@ -37,7 +22,7 @@ void prim_to_con(double *phi)
 
 void copy_prim_to_con(double *phi_i, double *phi_j)
 {
-    copy_n(phi_i, phi_j, all_variables->n_tot_variables);
+    copy_n(phi_i, all_variables->n_tot_variables, phi_j);
     prim_to_con(phi_j);
 }
 
@@ -48,13 +33,13 @@ void con_to_prim(double *phi)
     phi[ip_w] = phi[ic_rho_w] / phi[ic_rho]; // w
     phi[ip_p] = kappa_m1 * (phi[ic_rho_e] -
                             0.5 * dot_n(&phi[ic_rho_u], &phi[ip_u], DIM)); // p
-    phi[ip_p] = u_max(1.00E-10, phi[ip_p]);                                // pressure must not be negative
+    phi[ip_p] = MAX(1.00E-10, phi[ip_p]);                                // pressure must not be negative
     phi[ip_T] = calc_ig_T(phi[ip_p], phi[ic_rho], R_mix);                  // T
 }
 
 void copy_con_to_prim(double *phi_i, double *phi_j)
 {
-    copy_n(phi_i, phi_j, all_variables->n_tot_variables);
+    copy_n(phi_i, all_variables->n_tot_variables, phi_j);
     con_to_prim(phi_j);
 }
 
@@ -79,7 +64,7 @@ double calc_riemann_p(double *phi)
     {
         double c = sqrt(kappa * phi[ip_p] / phi[ic_rho]);
         return phi[ip_p] * pow(
-                               u_max(1e-4, 1. + 0.5 * kappa_m1 * phi[ip_u] / c),
+                               MAX(1e-4, 1. + 0.5 * kappa_m1 * phi[ip_u] / c),
                                2 * kappa * s_kappa_m1);
     }
     else

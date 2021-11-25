@@ -8,7 +8,10 @@
 ################################################################################
 import numpy as np
 import h5py
+import datetime
 from pymeshfv3d.utilities import ElementType
+
+from .version import __version__
 
 type_2_xdmf = [None] * (max([x.value for x in ElementType]) + 1)
 type_2_xdmf[ElementType.POINT.value] = 1
@@ -51,6 +54,8 @@ def write_mesh(file_name, mesh):
         n_partition_receives = [len(x) for x in mesh.partition_receives]
 
     with h5py.File(file_name, 'w') as fp:
+        fp.attrs['date'] = np.string_(str(datetime.datetime.now()))
+        fp.attrs['version'] = np.string_(str(__version__))
         fp.attrs['dimension'] = [mesh.dimension]
         fp.attrs['is_partitioned'] = [int(mesh.is_partitioned)]
 

@@ -8,17 +8,8 @@
 #include "fv/fv_module.h"
 #include "timedisc/timedisc_module.h"
 
-//##################################################################################################################################
-// DEFINES
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// MACROS
-//----------------------------------------------------------------------------------------------------------------------------------
 
-//##################################################################################################################################
-// VARIABLES
-//----------------------------------------------------------------------------------------------------------------------------------
 int explicit_active = 0;
 
 string_t explicit_scheme_name = NULL;
@@ -53,27 +44,21 @@ double *rk_a = NULL;
 double *rk_b = NULL;
 double *rk_g = NULL;
 
-//##################################################################################################################################
-// LOCAL FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void explicit_initialize();
 void explicit_finalize();
 
 void time_step_lserkw2(int iter, double t, double dt);
 
-//##################################################################################################################################
-// FUNCTIONS
-//----------------------------------------------------------------------------------------------------------------------------------
 void explicit_define()
 {
-    register_initialize_routine(explicit_initialize);
-    register_finalize_routine(explicit_finalize);
+    REGISTER_INITIALIZE_ROUTINE(explicit_initialize);
+    REGISTER_FINALIZE_ROUTINE(explicit_finalize);
 
     string_t tmp_opt[] = {"RK3-3", "RK4-5", "Euler"};
     int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
     string_t tmp = tmp_opt[0];
 
-    set_parameter("TimeDisc/Explicit/scheme", ParameterString, &tmp, "The explicit timestep scheme", &tmp_opt, tmp_opt_n);
+    SET_PARAMETER("TimeDisc/Explicit/scheme", StringParameter, &tmp, "The explicit timestep scheme", &tmp_opt, tmp_opt_n);
 }
 
 void explicit_initialize()
@@ -81,7 +66,7 @@ void explicit_initialize()
     if (explicit_active == 0)
         return;
 
-    get_parameter("TimeDisc/Explicit/scheme", ParameterString, &explicit_scheme_name);
+    GET_PARAMETER("TimeDisc/Explicit/scheme", StringParameter, &explicit_scheme_name);
 
     time_step_function_pointer = time_step_lserkw2;
 
@@ -108,13 +93,13 @@ void explicit_initialize()
     }
     else
     {
-        check_error(0);
+        CHECK_EXPRESSION(0);
     }
 }
 
 void explicit_finalize()
 {
-    deallocate(explicit_scheme_name);
+    DEALLOCATE(explicit_scheme_name);
     rk_a = NULL;
     rk_b = NULL;
     rk_g = NULL;
@@ -123,7 +108,7 @@ void explicit_finalize()
 void time_step_lserkw2(int iter, double t, double dt)
 {
 #if DEBUG
-    u_unused(iter);
+    UNUSED(iter);
 #endif /* DEBUG */
 
     Cells_t *cells = global_mesh->cells;
