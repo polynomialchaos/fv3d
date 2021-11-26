@@ -221,43 +221,43 @@ void calc_mesh_metrics(Mesh_t *mesh);
  * @brief Deallocate the boundaries
  * @param boundaries
  ******************************************************************************/
-void deallocate_boundaries(Boundaries_t **boundaries);
+void deallocate_boundaries(Boundaries_t *boundaries);
 
 /*******************************************************************************
  * @brief Deallocate the cells
  * @param cells
  ******************************************************************************/
-void deallocate_cells(Cells_t **cells);
+void deallocate_cells(Cells_t *cells);
 
 /*******************************************************************************
  * @brief Deallocate the faces
  * @param faces
  ******************************************************************************/
-void deallocate_faces(Faces_t **faces);
+void deallocate_faces(Faces_t *faces);
 
 /*******************************************************************************
  * @brief Deallocate the mesh
  * @param mesh
  ******************************************************************************/
-void deallocate_mesh(Mesh_t **mesh);
+void deallocate_mesh(Mesh_t *mesh);
 
 /*******************************************************************************
  * @brief Deallocate the partition
  * @param partition
  ******************************************************************************/
-void deallocate_partition(Partition_t **partition);
+void deallocate_partition(Partition_t *partition);
 
 /*******************************************************************************
  * @brief Deallocate the regions
  * @param regions
  ******************************************************************************/
-void deallocate_regions(Regions_t **regions);
+void deallocate_regions(Regions_t *regions);
 
 /*******************************************************************************
  * @brief Deallocate the vertices
  * @param vertices
  ******************************************************************************/
-void deallocate_vertices(Vertices_t **vertices);
+void deallocate_vertices(Vertices_t *vertices);
 
 /*******************************************************************************
  * @brief Define mesh

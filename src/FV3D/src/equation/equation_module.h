@@ -54,7 +54,7 @@ int add_dep_variable(Variables_t *variables, string_t name);
  * @brief Deallocate the variables
  * @param variables
  ******************************************************************************/
-void deallocate_variables(Variables_t **variables);
+void deallocate_variables(Variables_t *variables);
 
 /*******************************************************************************
  * @brief Define equation

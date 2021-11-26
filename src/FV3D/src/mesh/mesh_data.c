@@ -297,153 +297,150 @@ Vertices_t *allocate_vertices(Mesh_t *mesh, int n_vertices)
  * @brief Deallocate the boundaries
  * @param boundaries
  ******************************************************************************/
-void deallocate_boundaries(Boundaries_t **boundaries)
+void deallocate_boundaries(Boundaries_t *boundaries)
 {
-    if ((*boundaries) == NULL)
+    if (boundaries == NULL)
         return;
 
-    DEALLOCATE((*boundaries)->id);
-    DEALLOCATE((*boundaries)->type);
-    DEALLOCATE((*boundaries)->n_vertices);
-    DEALLOCATE((*boundaries)->vertices);
-    DEALLOCATE((*boundaries)->face);
-    DEALLOCATE((*boundaries)->distance);
-    DEALLOCATE((*boundaries)->n);
-    DEALLOCATE((*boundaries)->t1);
-    DEALLOCATE((*boundaries)->t2);
+    DEALLOCATE(boundaries->id);
+    DEALLOCATE(boundaries->type);
+    DEALLOCATE(boundaries->n_vertices);
+    DEALLOCATE(boundaries->vertices);
+    DEALLOCATE(boundaries->face);
+    DEALLOCATE(boundaries->distance);
+    DEALLOCATE(boundaries->n);
+    DEALLOCATE(boundaries->t1);
+    DEALLOCATE(boundaries->t2);
 
-    DEALLOCATE((*boundaries)->stride);
-
-    DEALLOCATE(*boundaries);
+    DEALLOCATE(boundaries->stride);
 }
 
 /*******************************************************************************
  * @brief Deallocate the cells
  * @param cells
  ******************************************************************************/
-void deallocate_cells(Cells_t **cells)
+void deallocate_cells(Cells_t *cells)
 {
-    if ((*cells) == NULL)
+    if (cells == NULL)
         return;
 
-    DEALLOCATE((*cells)->id);
-    DEALLOCATE((*cells)->type);
-    DEALLOCATE((*cells)->n_vertices);
-    DEALLOCATE((*cells)->vertices);
-    DEALLOCATE((*cells)->n_faces);
-    DEALLOCATE((*cells)->faces);
-    DEALLOCATE((*cells)->x);
-    DEALLOCATE((*cells)->volume);
-    DEALLOCATE((*cells)->dx);
+    DEALLOCATE(cells->id);
+    DEALLOCATE(cells->type);
+    DEALLOCATE(cells->n_vertices);
+    DEALLOCATE(cells->vertices);
+    DEALLOCATE(cells->n_faces);
+    DEALLOCATE(cells->faces);
+    DEALLOCATE(cells->x);
+    DEALLOCATE(cells->volume);
+    DEALLOCATE(cells->dx);
 
-    DEALLOCATE((*cells)->stride);
-
-    DEALLOCATE(*cells);
+    DEALLOCATE(cells->stride);
 }
 
 /*******************************************************************************
  * @brief Deallocate the faces
  * @param faces
  ******************************************************************************/
-void deallocate_faces(Faces_t **faces)
+void deallocate_faces(Faces_t *faces)
 {
-    if ((*faces) == NULL)
+    if (faces == NULL)
         return;
 
-    DEALLOCATE((*faces)->type);
-    DEALLOCATE((*faces)->n_vertices);
-    DEALLOCATE((*faces)->vertices);
-    DEALLOCATE((*faces)->cells);
-    DEALLOCATE((*faces)->boundary);
-    DEALLOCATE((*faces)->area);
-    DEALLOCATE((*faces)->lambda);
-    DEALLOCATE((*faces)->x);
-    DEALLOCATE((*faces)->n);
-    DEALLOCATE((*faces)->t1);
-    DEALLOCATE((*faces)->t2);
+    DEALLOCATE(faces->type);
+    DEALLOCATE(faces->n_vertices);
+    DEALLOCATE(faces->vertices);
+    DEALLOCATE(faces->cells);
+    DEALLOCATE(faces->boundary);
+    DEALLOCATE(faces->area);
+    DEALLOCATE(faces->lambda);
+    DEALLOCATE(faces->x);
+    DEALLOCATE(faces->n);
+    DEALLOCATE(faces->t1);
+    DEALLOCATE(faces->t2);
 
-    DEALLOCATE((*faces)->stride);
+    DEALLOCATE(faces->stride);
 
-    DEALLOCATE((*faces)->dist_cell_1);
-    DEALLOCATE((*faces)->dist_cell_2);
-    DEALLOCATE((*faces)->internal_faces);
-    DEALLOCATE((*faces)->boundary_faces);
-
-    DEALLOCATE(*faces);
+    DEALLOCATE(faces->dist_cell_1);
+    DEALLOCATE(faces->dist_cell_2);
+    DEALLOCATE(faces->internal_faces);
+    DEALLOCATE(faces->boundary_faces);
 }
 
 /*******************************************************************************
  * @brief Deallocate the mesh
  * @param mesh
  ******************************************************************************/
-void deallocate_mesh(Mesh_t **mesh)
+void deallocate_mesh(Mesh_t *mesh)
 {
-    if ((*mesh) == NULL)
+    if (mesh == NULL)
         return;
 
-    deallocate_partition(&(*mesh)->partition);
-    deallocate_vertices(&(*mesh)->vertices);
-    deallocate_cells(&(*mesh)->cells);
-    deallocate_boundaries(&(*mesh)->boundaries);
-    deallocate_faces(&(*mesh)->faces);
-    deallocate_regions(&(*mesh)->regions);
+    deallocate_partition(mesh->partition);
+    DEALLOCATE(mesh->partition);
 
-    DEALLOCATE(*mesh);
+    deallocate_vertices(mesh->vertices);
+    DEALLOCATE(mesh->vertices);
+
+    deallocate_cells(mesh->cells);
+    DEALLOCATE(mesh->cells);
+
+    deallocate_boundaries(mesh->boundaries);
+    DEALLOCATE(mesh->boundaries);
+
+    deallocate_faces(mesh->faces);
+    DEALLOCATE(mesh->faces);
+
+    deallocate_regions(mesh->regions);
+    DEALLOCATE(mesh->regions);
 }
 
 /*******************************************************************************
  * @brief Deallocate the partition
  * @param partition
  ******************************************************************************/
-void deallocate_partition(Partition_t **partition)
+void deallocate_partition(Partition_t *partition)
 {
-    if ((*partition) == NULL)
+    if (partition == NULL)
         return;
 
-    DEALLOCATE((*partition)->partition_cells);
-    DEALLOCATE((*partition)->partition_boundaries);
-    DEALLOCATE((*partition)->partition_faces);
-    DEALLOCATE((*partition)->partition_sends);
-    DEALLOCATE((*partition)->partition_sends_pid);
-    DEALLOCATE((*partition)->partition_receives);
-    DEALLOCATE((*partition)->partition_receives_pid);
+    DEALLOCATE(partition->partition_cells);
+    DEALLOCATE(partition->partition_boundaries);
+    DEALLOCATE(partition->partition_faces);
+    DEALLOCATE(partition->partition_sends);
+    DEALLOCATE(partition->partition_sends_pid);
+    DEALLOCATE(partition->partition_receives);
+    DEALLOCATE(partition->partition_receives_pid);
 
-    DEALLOCATE((*partition)->n_partition_sends_to);
-    DEALLOCATE((*partition)->partition_sends_to);
-    DEALLOCATE((*partition)->n_partition_receives_from);
-    DEALLOCATE((*partition)->partition_receives_from);
-
-    DEALLOCATE(*partition);
+    DEALLOCATE(partition->n_partition_sends_to);
+    DEALLOCATE(partition->partition_sends_to);
+    DEALLOCATE(partition->n_partition_receives_from);
+    DEALLOCATE(partition->partition_receives_from);
 }
 
 /*******************************************************************************
  * @brief Deallocate the regions
  * @param regions
  ******************************************************************************/
-void deallocate_regions(Regions_t **regions)
+void deallocate_regions(Regions_t *regions)
 {
-    if ((*regions) == NULL)
+    if (regions == NULL)
         return;
 
-    deallocate_hdf5_string_buffer((*regions)->name);
-    DEALLOCATE((*regions)->name);
-    DEALLOCATE((*regions)->is_boundary);
-
-    DEALLOCATE(*regions);
+    deallocate_hdf5_string_buffer(regions->name);
+    DEALLOCATE(regions->name);
+    DEALLOCATE(regions->is_boundary);
 }
 
 /*******************************************************************************
  * @brief Deallocate the vertices
  * @param vertices
  ******************************************************************************/
-void deallocate_vertices(Vertices_t **vertices)
+void deallocate_vertices(Vertices_t *vertices)
 {
-    if ((*vertices) == NULL)
+    if (vertices == NULL)
         return;
 
-    DEALLOCATE((*vertices)->x);
-
-    DEALLOCATE(*vertices);
+    DEALLOCATE(vertices->x);
 }
 
 /*******************************************************************************

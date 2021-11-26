@@ -71,24 +71,20 @@ int add_dep_variable(Variables_t *variables, string_t name)
  * @brief Deallocate the variables
  * @param variables
  ******************************************************************************/
-void deallocate_variables(Variables_t **variables)
+void deallocate_variables(Variables_t *variables)
 {
-    if (*variables == NULL)
+    if (variables == NULL)
         return;
 
-    for (int i = 0; i < (*variables)->n_sol_variables; ++i)
-        DEALLOCATE((&(*variables)->sol_variables[i])->name);
+    for (int i = 0; i < variables->n_sol_variables; ++i)
+        DEALLOCATE((&variables->sol_variables[i])->name);
+    DEALLOCATE(variables->sol_variables);
 
-    DEALLOCATE((*variables)->sol_variables);
+    for (int i = 0; i < variables->n_dep_variables; ++i)
+        DEALLOCATE((&variables->dep_variables[i])->name);
+    DEALLOCATE(variables->dep_variables);
 
-    for (int i = 0; i < (*variables)->n_dep_variables; ++i)
-        DEALLOCATE((&(*variables)->dep_variables[i])->name);
-
-    DEALLOCATE((*variables)->dep_variables);
-
-    DEALLOCATE((*variables)->tot_variables);
-
-    DEALLOCATE((*variables));
+    DEALLOCATE(variables->tot_variables);
 }
 
 /*******************************************************************************
@@ -114,7 +110,8 @@ void equation_define()
  ******************************************************************************/
 void equation_finalize()
 {
-    deallocate_variables(&all_variables);
+    deallocate_variables(all_variables);
+    DEALLOCATE(all_variables);
 
     DEALLOCATE(equation_name);
 }

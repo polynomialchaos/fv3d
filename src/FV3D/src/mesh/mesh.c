@@ -97,7 +97,8 @@ void mesh_define()
  ******************************************************************************/
 void mesh_finalize()
 {
-    deallocate_mesh(&global_mesh);
+    deallocate_mesh(global_mesh);
+    DEALLOCATE(global_mesh);
 
     DEALLOCATE(mesh_file);
 }
