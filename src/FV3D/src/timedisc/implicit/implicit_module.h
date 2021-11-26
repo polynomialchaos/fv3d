@@ -18,6 +18,13 @@ extern int n_bdf_stages;
 extern double **phi_old;
 
 /*******************************************************************************
+ * @brief Numerical jacobian routine
+ * @param n_var
+ * @param n_cells
+ ******************************************************************************/
+void calc_jacobian_numerical(int n_var, int n_cells);
+
+/*******************************************************************************
  * @brief Define implicit
  ******************************************************************************/
 void implicit_define();

@@ -212,6 +212,12 @@ Regions_t *allocate_regions(Mesh_t *mesh, int n_regions, int max_name_length);
 Vertices_t *allocate_vertices(Mesh_t *mesh, int n_vertices);
 
 /*******************************************************************************
+ * @brief Calculate the mesh metrics
+ * @param mesh
+ ******************************************************************************/
+void calc_mesh_metrics(Mesh_t *mesh);
+
+/*******************************************************************************
  * @brief Deallocate the boundaries
  * @param boundaries
  ******************************************************************************/
