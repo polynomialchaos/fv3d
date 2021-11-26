@@ -57,20 +57,6 @@ enum BoundaryType
     BoundaryTypeMax
 };
 
-void update_boundaries(double t);
-void update_gradients_boundaries();
-
-void prim_to_con(double *phi);
-void copy_prim_to_con(double *phi_i, double *phi_j);
-void con_to_prim(double *phi);
-void copy_con_to_prim(double *phi_i, double *phi_j);
-double calc_ig_p(double rho, double T, double R_mix);
-double calc_ig_rho(double p, double T, double R_mix);
-double calc_ig_T(double p, double rho, double R_mix);
-double calc_riemann_p(double *phi);
-
-void calc_flux();
-
 /*******************************************************************************
  * @brief Define boundary
  ******************************************************************************/
@@ -85,6 +71,76 @@ void boundary_finalize();
  * @brief Initialize boundary
  ******************************************************************************/
 void boundary_initialize();
+
+/*******************************************************************************
+ * @brief Calculate pressure (ideal gas)
+ * @param rho
+ * @param T
+ * @param R_mix
+ * @return double
+ ******************************************************************************/
+double calc_ig_p(double rho, double T, double R_mix);
+
+/*******************************************************************************
+ * @brief Calculate density (ideal gas)
+ * @param p
+ * @param T
+ * @param R_mix
+ * @return double
+ ******************************************************************************/
+double calc_ig_rho(double p, double T, double R_mix);
+
+/*******************************************************************************
+ * @brief Calculate temperature (ideal gas)
+ * @param p
+ * @param rho
+ * @param R_mix
+ * @return double
+ ******************************************************************************/
+double calc_ig_T(double p, double rho, double R_mix);
+
+/*******************************************************************************
+ * @brief Calculate Riemann pressure
+ * @param phi
+ * @return double
+ ******************************************************************************/
+double calc_riemann_p(double *phi);
+
+/*******************************************************************************
+ * @brief Calculate the flux
+ ******************************************************************************/
+void calc_flux();
+
+/*******************************************************************************
+ * @brief Convert conservative to primitive variables
+ * @param phi
+ ******************************************************************************/
+void con_to_prim(double *phi);
+
+/*******************************************************************************
+ * @brief Copy and convert conservative to primitive variables
+ * @param phi_i
+ * @param phi_j
+ ******************************************************************************/
+void copy_con_to_prim(double *phi_i, double *phi_j);
+
+/*******************************************************************************
+ * @brief Copy and convert primitive to conservative variables
+ * @param phi_i
+ * @param phi_j
+ ******************************************************************************/
+void copy_prim_to_con(double *phi_i, double *phi_j);
+
+/*******************************************************************************
+ * @brief Calculate the Euler 1D convective flux
+ ******************************************************************************/
+void eval_euler_flux_1d(double *phi, double *f);
+
+/*******************************************************************************
+ * @brief Calculate the Euler 1D viscous flux
+ ******************************************************************************/
+void eval_viscous_flux_1d(double *phi, double *grad_phi_x, double *grad_phi_y, double *grad_phi_z,
+                          double *f, double *g, double *h);
 
 /*******************************************************************************
  * @brief Define flux
@@ -115,5 +171,59 @@ void navier_stokes_finalize();
  * @brief Initialize navier_stokes
  ******************************************************************************/
 void navier_stokes_initialize();
+
+/*******************************************************************************
+ * @brief Parse primitive state parameter
+ ******************************************************************************/
+void parse_primitive_state(cstring_t prefix, double *phi);
+
+/*******************************************************************************
+ * @brief Convert primitive to conservative variables
+ * @param phi
+ ******************************************************************************/
+void prim_to_con(double *phi);
+
+/*******************************************************************************
+ * @brief Riemann solver from Rusanov
+ * @param phi_l
+ * @param phi_r
+ * @param f
+ ******************************************************************************/
+void riemann_rusanonv(double *phi_l, double *phi_r, double *f);
+
+/*******************************************************************************
+ * @brief Riemann solver from AUSM
+ * @param phi_l
+ * @param phi_r
+ * @param f
+ ******************************************************************************/
+void riemann_ausm(double *phi_l, double *phi_r, double *f);
+
+/*******************************************************************************
+ * @brief Update boundaries
+ ******************************************************************************/
+void update_boundaries(double t);
+
+/*******************************************************************************
+ * @brief Update gradient boundaries
+ ******************************************************************************/
+void update_gradients_boundaries();
+
+/*******************************************************************************
+ * @brief Viscous flux
+ * @param phi_l
+ * @param grad_phi_x_l
+ * @param grad_phi_y_l
+ * @param grad_phi_z_l
+ * @param phi_r
+ * @param grad_phi_x_r
+ * @param grad_phi_y_r
+ * @param grad_phi_z_r
+ * @param f
+ * @param g
+ * @param h
+ ******************************************************************************/
+void viscous_flux(double *phi_l, double *grad_phi_x_l, double *grad_phi_y_l, double *grad_phi_z_l,
+                  double *phi_r, double *grad_phi_x_r, double *grad_phi_y_r, double *grad_phi_z_r, double *f, double *g, double *h);
 
 #endif /* NAVIER_STOKES_MODULE_H */

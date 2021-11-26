@@ -10,64 +10,17 @@
 #include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
 
-double_limiter_fp_t limiter_function_pointer = NULL;
+double_limiter_ft limiter_function_pointer = NULL;
 
 string_t limiter_name = NULL;
 
-void limiter_initialize();
-void limiter_finalize();
-
-double limiter_none(int i_cell, int i_var, double slope);
-double limiter_barth_jespersenn(int i_cell, int i_var, double slope);
-
-void limiter_define()
-{
-    REGISTER_INITIALIZE_ROUTINE(limiter_initialize);
-    REGISTER_FINALIZE_ROUTINE(limiter_finalize);
-
-    string_t tmp_opt[] = {"Barth-Jespersenn", "None"};
-    int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
-    string_t tmp = tmp_opt[0];
-
-    SET_PARAMETER("FV/Limiter/limiter", StringParameter, &tmp,
-                  "The limiter method", &tmp_opt, tmp_opt_n);
-}
-
-void limiter_initialize()
-{
-    GET_PARAMETER("FV/Limiter/limiter", StringParameter, &limiter_name);
-
-    if (is_equal(limiter_name, "None"))
-    {
-        limiter_function_pointer = limiter_none;
-    }
-    else if (is_equal(limiter_name, "Barth-Jespersenn"))
-    {
-        limiter_function_pointer = limiter_barth_jespersenn;
-    }
-    else
-    {
-        CHECK_EXPRESSION(0);
-    }
-}
-
-void limiter_finalize()
-{
-    limiter_function_pointer = NULL;
-
-    DEALLOCATE(limiter_name);
-}
-
-double limiter_none(int i_cell, int i_var, double slope)
-{
-#ifdef DEBUG
-    UNUSED(i_cell);
-    UNUSED(i_var);
-    UNUSED(slope);
-#endif /* DEBUG */
-    return 1.0;
-}
-
+/*******************************************************************************
+ * @brief Barth-Jespersenn limiter calculation (return 0-1)
+ * @param i_cell
+ * @param i_var
+ * @param slope
+ * @return double
+ ******************************************************************************/
 double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
 {
     Cells_t *cells = global_mesh->cells;
@@ -113,4 +66,68 @@ double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
     }
 
     return tmp;
+}
+
+/*******************************************************************************
+ * @brief Define limiter
+ ******************************************************************************/
+void limiter_define()
+{
+    REGISTER_INITIALIZE_ROUTINE(limiter_initialize);
+    REGISTER_FINALIZE_ROUTINE(limiter_finalize);
+
+    string_t tmp_opt[] = {"Barth-Jespersenn", "None"};
+    int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
+    string_t tmp = tmp_opt[0];
+
+    SET_PARAMETER("FV/Limiter/limiter", StringParameter, &tmp,
+                  "The limiter method", &tmp_opt, tmp_opt_n);
+}
+
+/*******************************************************************************
+ * @brief Finalize limiter
+ ******************************************************************************/
+void limiter_finalize()
+{
+    limiter_function_pointer = NULL;
+
+    DEALLOCATE(limiter_name);
+}
+
+/*******************************************************************************
+ * @brief Initialize limiter
+ ******************************************************************************/
+void limiter_initialize()
+{
+    GET_PARAMETER("FV/Limiter/limiter", StringParameter, &limiter_name);
+
+    if (is_equal(limiter_name, "None"))
+    {
+        limiter_function_pointer = limiter_none;
+    }
+    else if (is_equal(limiter_name, "Barth-Jespersenn"))
+    {
+        limiter_function_pointer = limiter_barth_jespersenn;
+    }
+    else
+    {
+        CHECK_EXPRESSION(0);
+    }
+}
+
+/*******************************************************************************
+ * @brief None limiter calculation (return 1)
+ * @param i_cell
+ * @param i_var
+ * @param slope
+ * @return double
+ ******************************************************************************/
+double limiter_none(int i_cell, int i_var, double slope)
+{
+#ifdef DEBUG
+    UNUSED(i_cell);
+    UNUSED(i_var);
+    UNUSED(slope);
+#endif /* DEBUG */
+    return 1.0;
 }

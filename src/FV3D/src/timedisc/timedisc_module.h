@@ -11,15 +11,18 @@
 
 #include "fv3d/fv3d_module.h"
 
-typedef void (*void_timestep_fp_t)(int iter, double t, double dt);
-extern void_timestep_fp_t time_step_function_pointer;
+typedef void (*void_timestep_ft)(int iter, double t, double dt);
+extern void_timestep_ft time_step_function_pointer;
 
-typedef double (*double_calc_timestep_fp_t)();
-extern double_calc_timestep_fp_t calc_time_step_function_pointer;
+typedef double (*double_calc_timestep_ft)();
+extern double_calc_timestep_ft calc_time_step_function_pointer;
 
 extern int is_viscous_dt;
 extern int is_transient;
 
+/*******************************************************************************
+ * @brief Time discretizazion routine
+ ******************************************************************************/
 void timedisc();
 
 /*******************************************************************************

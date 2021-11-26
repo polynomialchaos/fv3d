@@ -15,8 +15,10 @@ extern int do_output_data;
 extern int i_output_data;
 extern string_t output_file;
 
+/*******************************************************************************
+ * @brief Create a file header
+ ******************************************************************************/
 void create_file_header();
-void write_output(int iter, double t);
 
 /*******************************************************************************
  * @brief Define output
@@ -32,5 +34,12 @@ void output_finalize();
  * @brief Initialize output
  ******************************************************************************/
 void output_initialize();
+
+/*******************************************************************************
+ * @brief Write data to file
+ * @param iter
+ * @param t
+ ******************************************************************************/
+void write_output(int iter, double t);
 
 #endif /* OUTPUT_MODULE_H */

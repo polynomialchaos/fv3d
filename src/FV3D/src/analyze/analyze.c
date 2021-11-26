@@ -13,15 +13,26 @@
 
 double *residual = NULL;
 
-void analyze_initialize();
-void analyze_finalize();
-
+/*******************************************************************************
+ * @brief Define analyze
+ ******************************************************************************/
 void analyze_define()
 {
     REGISTER_INITIALIZE_ROUTINE(analyze_initialize);
     REGISTER_FINALIZE_ROUTINE(analyze_finalize);
 }
 
+/*******************************************************************************
+ * @brief Finalize analyze
+ ******************************************************************************/
+void analyze_finalize()
+{
+    DEALLOCATE(residual);
+}
+
+/*******************************************************************************
+ * @brief Initialize analyze
+ ******************************************************************************/
 void analyze_initialize()
 {
     int n_sol_variables = all_variables->n_sol_variables;
@@ -30,11 +41,10 @@ void analyze_initialize()
     set_value_n(0.0, n_sol_variables, residual);
 }
 
-void analyze_finalize()
-{
-    DEALLOCATE(residual);
-}
-
+/*******************************************************************************
+ * @brief Calculate the global residual
+ * @param dt
+ ******************************************************************************/
 void calc_global_residual(double dt)
 {
     Cells_t *cells = global_mesh->cells;

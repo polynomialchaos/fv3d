@@ -46,11 +46,9 @@ double *rk_a = NULL;
 double *rk_b = NULL;
 double *rk_g = NULL;
 
-void explicit_initialize();
-void explicit_finalize();
-
-void time_step_lserkw2(int iter, double t, double dt);
-
+/*******************************************************************************
+ * @brief Define explicit
+ ******************************************************************************/
 void explicit_define()
 {
     REGISTER_INITIALIZE_ROUTINE(explicit_initialize);
@@ -63,6 +61,20 @@ void explicit_define()
     SET_PARAMETER("TimeDisc/Explicit/scheme", StringParameter, &tmp, "The explicit timestep scheme", &tmp_opt, tmp_opt_n);
 }
 
+/*******************************************************************************
+ * @brief Finalize explicit
+ ******************************************************************************/
+void explicit_finalize()
+{
+    DEALLOCATE(explicit_scheme_name);
+    rk_a = NULL;
+    rk_b = NULL;
+    rk_g = NULL;
+}
+
+/*******************************************************************************
+ * @brief Initialize explicit
+ ******************************************************************************/
 void explicit_initialize()
 {
     if (explicit_active == 0)
@@ -99,14 +111,12 @@ void explicit_initialize()
     }
 }
 
-void explicit_finalize()
-{
-    DEALLOCATE(explicit_scheme_name);
-    rk_a = NULL;
-    rk_b = NULL;
-    rk_g = NULL;
-}
-
+/*******************************************************************************
+ * @brief Explicit time discretizazion routine (LSERKW2)
+ * @param iter
+ * @param t
+ * @param dt
+ ******************************************************************************/
 void time_step_lserkw2(int iter, double t, double dt)
 {
 #if DEBUG

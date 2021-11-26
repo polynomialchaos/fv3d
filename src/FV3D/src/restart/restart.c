@@ -24,36 +24,9 @@ double **phi_old_restart = NULL;
 
 int n_stages_restart = 0;
 
-void restart_initialize();
-void restart_finalize();
-
-void read_restart_data();
-
-void restart_define()
-{
-    REGISTER_INITIALIZE_ROUTINE(restart_initialize);
-    REGISTER_FINALIZE_ROUTINE(restart_finalize);
-
-    SET_PARAMETER("Restart/use_restart", LogicalParameter, &use_restart, "The flag to start from restart", NULL, 0);
-}
-
-void restart_initialize()
-{
-    GET_PARAMETER("Restart/use_restart", LogicalParameter, &use_restart);
-
-    if (use_restart == 1)
-        read_restart_data();
-    else
-        create_file_header();
-}
-
-void restart_finalize()
-{
-    DEALLOCATE(phi_total_restart);
-    DEALLOCATE(phi_dt_restart);
-    DEALLOCATE(phi_old_restart);
-}
-
+/*******************************************************************************
+ * @brief Read restart data
+ ******************************************************************************/
 void read_restart_data()
 {
     Cells_t *cells = global_mesh->cells;
@@ -168,4 +141,38 @@ void read_restart_data()
     DEALLOCATE(phi_total_restart);
     DEALLOCATE(phi_dt_restart);
     DEALLOCATE(phi_old_restart);
+}
+
+/*******************************************************************************
+ * @brief Define restart
+ ******************************************************************************/
+void restart_define()
+{
+    REGISTER_INITIALIZE_ROUTINE(restart_initialize);
+    REGISTER_FINALIZE_ROUTINE(restart_finalize);
+
+    SET_PARAMETER("Restart/use_restart", LogicalParameter, &use_restart, "The flag to start from restart", NULL, 0);
+}
+
+/*******************************************************************************
+ * @brief Finalize restart
+ ******************************************************************************/
+void restart_finalize()
+{
+    DEALLOCATE(phi_total_restart);
+    DEALLOCATE(phi_dt_restart);
+    DEALLOCATE(phi_old_restart);
+}
+
+/*******************************************************************************
+ * @brief Initialize restart
+ ******************************************************************************/
+void restart_initialize()
+{
+    GET_PARAMETER("Restart/use_restart", LogicalParameter, &use_restart);
+
+    if (use_restart == 1)
+        read_restart_data();
+    else
+        create_file_header();
 }

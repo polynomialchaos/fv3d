@@ -32,4 +32,22 @@ void implicit_finalize();
  ******************************************************************************/
 void implicit_initialize();
 
+/*******************************************************************************
+ * @brief Implicit time discretizazion routine (Newton)
+ * @param iter
+ * @param t
+ * @param dt
+ ******************************************************************************/
+void time_step_newton(int iter, double t, double dt);
+
+/*******************************************************************************
+ * @brief Matrix vector routine (called by solver)
+ * @param x
+ * @param b
+ * @param n_var
+ * @param n_cells
+ * @return int
+ ******************************************************************************/
+int matrix_vector_numerical(double *x, double *b, size_t n_var, size_t n_cells);
+
 #endif /* IMPLICIT_MODULE_H */

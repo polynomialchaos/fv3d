@@ -14,58 +14,12 @@
 
 string_t flux_scheme_name = NULL;
 
-typedef void (*void_calc_conv_flux_fp_t)(double *phi_l, double *phi_r, double *f);
-void_calc_conv_flux_fp_t calc_convective_flux_function_pointer = NULL;
+typedef void (*void_calc_conv_flux_ft)(double *phi_l, double *phi_r, double *f);
+void_calc_conv_flux_ft calc_convective_flux_function_pointer = NULL;
 
-void flux_initialize();
-void flux_finalize();
-
-void riemann_rusanonv(double *phi_l, double *phi_r, double *f);
-void riemann_ausm(double *phi_l, double *phi_r, double *f);
-void viscous_flux(double *phi_l, double *grad_phi_x_l, double *grad_phi_y_l, double *grad_phi_z_l,
-                  double *phi_r, double *grad_phi_x_r, double *grad_phi_y_r, double *grad_phi_z_r, double *f, double *g, double *h);
-void eval_euler_flux_1d(double *phi, double *f);
-void eval_viscous_flux_1d(double *phi, double *grad_phi_x, double *grad_phi_y, double *grad_phi_z,
-                          double *f, double *g, double *h);
-
-void flux_define()
-{
-    REGISTER_INITIALIZE_ROUTINE(flux_initialize);
-    REGISTER_FINALIZE_ROUTINE(flux_finalize);
-
-    string_t tmp_opt[] = {"AUSM", "Rusanov"};
-    int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
-    string_t tmp = tmp_opt[0];
-
-    SET_PARAMETER("Equation/Navier-Stokes/Flux/flux_scheme", StringParameter, &tmp,
-                  "The Riemann solver", &tmp_opt, tmp_opt_n);
-}
-
-void flux_initialize()
-{
-    GET_PARAMETER("Equation/Navier-Stokes/Flux/flux_scheme", StringParameter, &flux_scheme_name);
-
-    if (is_equal(flux_scheme_name, "Rusanov"))
-    {
-        calc_convective_flux_function_pointer = riemann_rusanonv;
-    }
-    else if (is_equal(flux_scheme_name, "AUSM"))
-    {
-        calc_convective_flux_function_pointer = riemann_ausm;
-    }
-    else
-    {
-        CHECK_EXPRESSION(0);
-    }
-}
-
-void flux_finalize()
-{
-    DEALLOCATE(flux_scheme_name);
-
-    calc_convective_flux_function_pointer = NULL;
-}
-
+/*******************************************************************************
+ * @brief Calculate the flux
+ ******************************************************************************/
 void calc_flux()
 {
     Faces_t *faces = global_mesh->faces;
@@ -201,6 +155,113 @@ void calc_flux()
     }
 }
 
+/*******************************************************************************
+ * @brief Calculate the Euler 1D convective flux
+ ******************************************************************************/
+void eval_euler_flux_1d(double *phi, double *f)
+{
+    f[0] = phi[ic_rho_u];                           /* rho * u */
+    f[1] = phi[ic_rho_u] * phi[ip_u] + phi[ip_p];   /* rho * u * u + p */
+    f[2] = phi[ic_rho_u] * phi[ip_v];               /* rho * u * v */
+    f[3] = phi[ic_rho_u] * phi[ip_w];               /* rho * u * w */
+    f[4] = (phi[ic_rho_e] + phi[ip_p]) * phi[ip_u]; /* (rho * e + p) * u */
+}
+
+/*******************************************************************************
+ * @brief Calculate the Euler 1D viscous flux
+ ******************************************************************************/
+void eval_viscous_flux_1d(double *phi, double *grad_phi_x, double *grad_phi_y, double *grad_phi_z,
+                          double *f, double *g, double *h)
+{
+    const double s_23 = 2.0 / 3.0;
+    const double s_43 = 4.0 / 3.0;
+
+    double tau_xx = mu_mix * (s_43 * grad_phi_x[1] -
+                              s_23 * grad_phi_y[2] - s_23 * grad_phi_z[3]); /* 4/3 * mu * u_x - 2/3 * mu * v_y - 2/3 * mu * w_z */
+    double tau_yy = mu_mix * (-s_23 * grad_phi_x[1] +
+                              s_43 * grad_phi_y[2] - s_23 * grad_phi_z[3]); /* -2/3 * mu * u_x + 4/3 * mu * v_y - 2/3 * mu * w_z */
+    double tau_zz = mu_mix * (-s_23 * grad_phi_x[1] -
+                              s_23 * grad_phi_y[2] + s_43 * grad_phi_z[3]); /* -2/3 * mu * u_x - 2/3 * mu * v_y + 4/3 * mu * w_z */
+
+    double tau_xy = mu_mix * (grad_phi_y[1] + grad_phi_x[2]); /* mu * (u_y + v_x) */
+    double tau_xz = mu_mix * (grad_phi_z[1] + grad_phi_x[3]); /* mu * (u_z + w_x) */
+    double tau_yz = mu_mix * (grad_phi_z[2] + grad_phi_y[3]); /* mu * (y_z + w_y) */
+
+    f[0] = 0.0;
+    f[1] = -tau_xx; /* -4/3 * mu * u_x + 2/3 * mu * (v_y + w_z) */
+    f[2] = -tau_xy; /* -mu * (u_y + v_x) */
+    f[3] = -tau_xz; /* -mu * (u_z + w_x) */
+    f[4] = -tau_xx * phi[ip_u] - tau_xy * phi[ip_v] -
+           tau_xz * phi[ip_w] - lambda * grad_phi_x[ip_T]; /* -(tau_xx * phi + tau_xy * v + tau_xz * w - q_x) q_x=-lambda * T_x */
+
+    g[0] = 0.0;
+    g[1] = -tau_xy; /* -mu * (u_y + v_x) */
+    g[2] = -tau_yy; /* -4/3 * mu * v_y + 2/3 * mu * (u_x + w_z) */
+    g[3] = -tau_yz; /* -mu * (y_z + w_y) */
+    g[4] = -tau_xy * phi[ip_u] - tau_yy * phi[ip_v] -
+           tau_yz * phi[ip_w] - lambda * grad_phi_y[ip_T]; /* -(tau_yx * phi + tau_yy * v + tau_yz * w - q_y) q_y=-lambda * T_y */
+
+    h[0] = 0.0;
+    h[1] = -tau_xz; /* -mu * (u_z + w_x) */
+    h[2] = -tau_yz; /* -mu * (y_z + w_y) */
+    h[3] = -tau_zz; /* -4/3 * mu * w_z + 2/3 * mu * (u_x + v_y) */
+    h[4] = -tau_xz * phi[ip_u] - tau_yz * phi[ip_v] -
+           tau_zz * phi[ip_w] - lambda * grad_phi_z[ip_T]; /* -(tau_zx * phi + tau_zy * v + tau_zz * w - q_z) q_z=-lambda * T_z */
+}
+
+/*******************************************************************************
+ * @brief Define flux
+ ******************************************************************************/
+void flux_define()
+{
+    REGISTER_INITIALIZE_ROUTINE(flux_initialize);
+    REGISTER_FINALIZE_ROUTINE(flux_finalize);
+
+    string_t tmp_opt[] = {"AUSM", "Rusanov"};
+    int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
+    string_t tmp = tmp_opt[0];
+
+    SET_PARAMETER("Equation/Navier-Stokes/Flux/flux_scheme", StringParameter, &tmp,
+                  "The Riemann solver", &tmp_opt, tmp_opt_n);
+}
+
+/*******************************************************************************
+ * @brief Finalize flux
+ ******************************************************************************/
+void flux_finalize()
+{
+    DEALLOCATE(flux_scheme_name);
+
+    calc_convective_flux_function_pointer = NULL;
+}
+
+/*******************************************************************************
+ * @brief Initialize flux
+ ******************************************************************************/
+void flux_initialize()
+{
+    GET_PARAMETER("Equation/Navier-Stokes/Flux/flux_scheme", StringParameter, &flux_scheme_name);
+
+    if (is_equal(flux_scheme_name, "Rusanov"))
+    {
+        calc_convective_flux_function_pointer = riemann_rusanonv;
+    }
+    else if (is_equal(flux_scheme_name, "AUSM"))
+    {
+        calc_convective_flux_function_pointer = riemann_ausm;
+    }
+    else
+    {
+        CHECK_EXPRESSION(0);
+    }
+}
+
+/*******************************************************************************
+ * @brief Riemann solver from Rusanov
+ * @param phi_l
+ * @param phi_r
+ * @param f
+ ******************************************************************************/
 void riemann_rusanonv(double *phi_l, double *phi_r, double *f)
 {
     int n_sol_variables = all_variables->n_sol_variables;
@@ -218,6 +279,12 @@ void riemann_rusanonv(double *phi_l, double *phi_r, double *f)
         f[j] = 0.5 * (f_l[j] + f_r[j]) - 0.5 * eigval * (phi_r[j] - phi_l[j]);
 }
 
+/*******************************************************************************
+ * @brief Riemann solver from AUSM
+ * @param phi_l
+ * @param phi_r
+ * @param f
+ ******************************************************************************/
 void riemann_ausm(double *phi_l, double *phi_r, double *f)
 {
     double c_l = sqrt(kappa * phi_l[ip_p] / phi_l[ic_rho]);
@@ -280,6 +347,20 @@ void riemann_ausm(double *phi_l, double *phi_r, double *f)
     f[4] += MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * H_r;
 }
 
+/*******************************************************************************
+ * @brief Viscous flux
+ * @param phi_l
+ * @param grad_phi_x_l
+ * @param grad_phi_y_l
+ * @param grad_phi_z_l
+ * @param phi_r
+ * @param grad_phi_x_r
+ * @param grad_phi_y_r
+ * @param grad_phi_z_r
+ * @param f
+ * @param g
+ * @param h
+ ******************************************************************************/
 void viscous_flux(double *phi_l, double *grad_phi_x_l, double *grad_phi_y_l, double *grad_phi_z_l,
                   double *phi_r, double *grad_phi_x_r, double *grad_phi_y_r, double *grad_phi_z_r, double *f, double *g, double *h)
 {
@@ -296,52 +377,4 @@ void viscous_flux(double *phi_l, double *grad_phi_x_l, double *grad_phi_y_l, dou
         g[j] = 0.5 * (g_l[j] + g_r[j]);
         h[j] = 0.5 * (h_l[j] + h_r[j]);
     }
-}
-
-void eval_euler_flux_1d(double *phi, double *f)
-{
-    f[0] = phi[ic_rho_u];                           /* rho * u */
-    f[1] = phi[ic_rho_u] * phi[ip_u] + phi[ip_p];   /* rho * u * u + p */
-    f[2] = phi[ic_rho_u] * phi[ip_v];               /* rho * u * v */
-    f[3] = phi[ic_rho_u] * phi[ip_w];               /* rho * u * w */
-    f[4] = (phi[ic_rho_e] + phi[ip_p]) * phi[ip_u]; /* (rho * e + p) * u */
-}
-
-void eval_viscous_flux_1d(double *phi, double *grad_phi_x, double *grad_phi_y, double *grad_phi_z,
-                          double *f, double *g, double *h)
-{
-    const double s_23 = 2.0 / 3.0;
-    const double s_43 = 4.0 / 3.0;
-
-    double tau_xx = mu_mix * (s_43 * grad_phi_x[1] -
-                              s_23 * grad_phi_y[2] - s_23 * grad_phi_z[3]); /* 4/3 * mu * u_x - 2/3 * mu * v_y - 2/3 * mu * w_z */
-    double tau_yy = mu_mix * (-s_23 * grad_phi_x[1] +
-                              s_43 * grad_phi_y[2] - s_23 * grad_phi_z[3]); /* -2/3 * mu * u_x + 4/3 * mu * v_y - 2/3 * mu * w_z */
-    double tau_zz = mu_mix * (-s_23 * grad_phi_x[1] -
-                              s_23 * grad_phi_y[2] + s_43 * grad_phi_z[3]); /* -2/3 * mu * u_x - 2/3 * mu * v_y + 4/3 * mu * w_z */
-
-    double tau_xy = mu_mix * (grad_phi_y[1] + grad_phi_x[2]); /* mu * (u_y + v_x) */
-    double tau_xz = mu_mix * (grad_phi_z[1] + grad_phi_x[3]); /* mu * (u_z + w_x) */
-    double tau_yz = mu_mix * (grad_phi_z[2] + grad_phi_y[3]); /* mu * (y_z + w_y) */
-
-    f[0] = 0.0;
-    f[1] = -tau_xx; /* -4/3 * mu * u_x + 2/3 * mu * (v_y + w_z) */
-    f[2] = -tau_xy; /* -mu * (u_y + v_x) */
-    f[3] = -tau_xz; /* -mu * (u_z + w_x) */
-    f[4] = -tau_xx * phi[ip_u] - tau_xy * phi[ip_v] -
-           tau_xz * phi[ip_w] - lambda * grad_phi_x[ip_T]; /* -(tau_xx * phi + tau_xy * v + tau_xz * w - q_x) q_x=-lambda * T_x */
-
-    g[0] = 0.0;
-    g[1] = -tau_xy; /* -mu * (u_y + v_x) */
-    g[2] = -tau_yy; /* -4/3 * mu * v_y + 2/3 * mu * (u_x + w_z) */
-    g[3] = -tau_yz; /* -mu * (y_z + w_y) */
-    g[4] = -tau_xy * phi[ip_u] - tau_yy * phi[ip_v] -
-           tau_yz * phi[ip_w] - lambda * grad_phi_y[ip_T]; /* -(tau_yx * phi + tau_yy * v + tau_yz * w - q_y) q_y=-lambda * T_y */
-
-    h[0] = 0.0;
-    h[1] = -tau_xz; /* -mu * (u_z + w_x) */
-    h[2] = -tau_yz; /* -mu * (y_z + w_y) */
-    h[3] = -tau_zz; /* -4/3 * mu * w_z + 2/3 * mu * (u_x + v_y) */
-    h[4] = -tau_xz * phi[ip_u] - tau_yz * phi[ip_v] -
-           tau_zz * phi[ip_w] - lambda * grad_phi_z[ip_T]; /* -(tau_zx * phi + tau_zy * v + tau_zz * w - q_z) q_z=-lambda * T_z */
 }

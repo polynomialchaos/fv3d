@@ -63,13 +63,73 @@ double *dY_n = NULL;
 double *dY_dt_n = NULL;
 double *jac = NULL;
 
-void implicit_initialize();
-void implicit_finalize();
+/*******************************************************************************
+ * @brief Numerical jacobian routine
+ * @param n_var
+ * @param n_cells
+ ******************************************************************************/
+void calc_jacobian_numerical(int n_var, int n_cells)
+{
+    int n_tot_variables = all_variables->n_tot_variables;
 
-void calc_jacobian_numerical(int n_var, int n_cells);
-int matrix_vector_numerical(double *x, double *b, size_t n_var, size_t n_cells);
-void time_step_newton(int iter, double t, double dt);
+    for (int i_var = 0; i_var < n_var; ++i_var)
+    {
+        double eps_fd = 0.0;
+        for (int i = 0; i < n_cells; ++i)
+            eps_fd += Y_n[i * n_var + i_var] * Y_n[i * n_var + i_var];
 
+        eps_fd = sqrt(eps_fd) * 1e-4;
+
+        /* positive + eps */
+        for (int i = 0; i < n_cells; ++i)
+        {
+            for (int j = 0; j < n_var; ++j)
+                phi_total[i * n_tot_variables + j] = Y_n[i * n_var + j];
+
+            phi_total[i * n_tot_variables + i_var] += 0.5 * eps_fd;
+        }
+
+        fv_time_derivative(tpdt_loc);
+
+        for (int i = 0; i < n_cells; ++i)
+        {
+            int idx_i = i * n_var * n_var + i_var * n_var;
+
+            for (int j = 0; j < n_var; ++j)
+            {
+                jac[idx_i + j] = -phi_dt[i * n_var + j];
+            }
+        }
+
+        /* negative + eps */
+        for (int i = 0; i < n_cells; ++i)
+        {
+            for (int j = 0; j < n_var; ++j)
+                phi_total[i * n_tot_variables + j] = Y_n[i * n_var + j];
+
+            phi_total[i * n_tot_variables + i_var] -= 0.5 * eps_fd;
+        }
+
+        fv_time_derivative(tpdt_loc);
+
+        for (int i = 0; i < n_cells; ++i)
+        {
+            int idx_i = i * n_var * n_var + i_var * n_var;
+
+            for (int j = 0; j < n_var; ++j)
+            {
+                jac[idx_i + j] += phi_dt[i * n_var + j];
+                jac[idx_i + j] *= bdf_b_loc / (eps_fd + SMALL);
+            }
+
+            jac[idx_i + i_var] += 1.0 / dt_loc;
+        }
+    }
+}
+
+/*******************************************************************************
+ * @brief Define implicit timedisc
+ ******************************************************************************/
 void implicit_define()
 {
     REGISTER_INITIALIZE_ROUTINE(implicit_initialize);
@@ -111,6 +171,32 @@ void implicit_define()
                   "The maximum restarts performed in GMRes solver", NULL, 0);
 }
 
+/*******************************************************************************
+ * @brief Finalize implicit timedisc
+ ******************************************************************************/
+void implicit_finalize()
+{
+    DEALLOCATE(implicit_scheme_name);
+    DEALLOCATE(method_name);
+    DEALLOCATE(solver_name);
+    DEALLOCATE(jacobian_type_name);
+
+    for (int i = 0; i < n_bdf_stages; ++i)
+        DEALLOCATE(phi_old[i]);
+    DEALLOCATE(phi_old);
+
+    DEALLOCATE(work);
+
+    DEALLOCATE(Y_n);
+    DEALLOCATE(f_Y_n);
+    DEALLOCATE(dY_n);
+    DEALLOCATE(dY_dt_n);
+    DEALLOCATE(jac);
+}
+
+/*******************************************************************************
+ * @brief Initialize implicit timedisc
+ ******************************************************************************/
 void implicit_initialize()
 {
     if (implicit_active == 0)
@@ -193,26 +279,12 @@ void implicit_initialize()
     jac = ALLOCATE(sizeof(double) * n_sol_variables * n_sol_variables * n_domain_cells);
 }
 
-void implicit_finalize()
-{
-    DEALLOCATE(implicit_scheme_name);
-    DEALLOCATE(method_name);
-    DEALLOCATE(solver_name);
-    DEALLOCATE(jacobian_type_name);
-
-    for (int i = 0; i < n_bdf_stages; ++i)
-        DEALLOCATE(phi_old[i]);
-    DEALLOCATE(phi_old);
-
-    DEALLOCATE(work);
-
-    DEALLOCATE(Y_n);
-    DEALLOCATE(f_Y_n);
-    DEALLOCATE(dY_n);
-    DEALLOCATE(dY_dt_n);
-    DEALLOCATE(jac);
-}
-
+/*******************************************************************************
+ * @brief Implicit time discretizazion routine (Newton)
+ * @param iter
+ * @param t
+ * @param dt
+ ******************************************************************************/
 void time_step_newton(int iter, double t, double dt)
 {
     Cells_t *cells = global_mesh->cells;
@@ -328,65 +400,14 @@ void time_step_newton(int iter, double t, double dt)
         CHECK_EXPRESSION(0);
 }
 
-void calc_jacobian_numerical(int n_var, int n_cells)
-{
-    int n_tot_variables = all_variables->n_tot_variables;
-
-    for (int i_var = 0; i_var < n_var; ++i_var)
-    {
-        double eps_fd = 0.0;
-        for (int i = 0; i < n_cells; ++i)
-            eps_fd += Y_n[i * n_var + i_var] * Y_n[i * n_var + i_var];
-
-        eps_fd = sqrt(eps_fd) * 1e-4;
-
-        /* positive + eps */
-        for (int i = 0; i < n_cells; ++i)
-        {
-            for (int j = 0; j < n_var; ++j)
-                phi_total[i * n_tot_variables + j] = Y_n[i * n_var + j];
-
-            phi_total[i * n_tot_variables + i_var] += 0.5 * eps_fd;
-        }
-
-        fv_time_derivative(tpdt_loc);
-
-        for (int i = 0; i < n_cells; ++i)
-        {
-            int idx_i = i * n_var * n_var + i_var * n_var;
-
-            for (int j = 0; j < n_var; ++j)
-            {
-                jac[idx_i + j] = -phi_dt[i * n_var + j];
-            }
-        }
-
-        /* negative + eps */
-        for (int i = 0; i < n_cells; ++i)
-        {
-            for (int j = 0; j < n_var; ++j)
-                phi_total[i * n_tot_variables + j] = Y_n[i * n_var + j];
-
-            phi_total[i * n_tot_variables + i_var] -= 0.5 * eps_fd;
-        }
-
-        fv_time_derivative(tpdt_loc);
-
-        for (int i = 0; i < n_cells; ++i)
-        {
-            int idx_i = i * n_var * n_var + i_var * n_var;
-
-            for (int j = 0; j < n_var; ++j)
-            {
-                jac[idx_i + j] += phi_dt[i * n_var + j];
-                jac[idx_i + j] *= bdf_b_loc / (eps_fd + SMALL);
-            }
-
-            jac[idx_i + i_var] += 1.0 / dt_loc;
-        }
-    }
-}
-
+/*******************************************************************************
+ * @brief Matrix vector routine (called by solver)
+ * @param x
+ * @param b
+ * @param n_var
+ * @param n_cells
+ * @return int
+ ******************************************************************************/
 int matrix_vector_numerical(double *x, double *b, size_t n_var, size_t n_cells)
 {
     for (size_t i = 0; i < n_cells; ++i)

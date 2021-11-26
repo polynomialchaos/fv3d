@@ -23,17 +23,36 @@ string_t boundary_type_strings[BoundaryTypeMax] =
         "STATE",
         "FUNCTION"};
 
-void boundary_initialize();
-void boundary_finalize();
-
-void parse_primitive_state(cstring_t prefix, double *phi);
-
+/*******************************************************************************
+ * @brief Define boundary
+ ******************************************************************************/
 void boundary_define()
 {
     REGISTER_INITIALIZE_ROUTINE(boundary_initialize);
     REGISTER_FINALIZE_ROUTINE(boundary_finalize);
 }
 
+/*******************************************************************************
+ * @brief Finalize boundary
+ ******************************************************************************/
+void boundary_finalize()
+{
+    if (global_mesh)
+    {
+        Regions_t *regions = global_mesh->regions;
+
+        if (regions)
+        {
+            DEALLOCATE(regions->type);
+            DEALLOCATE(regions->function_id);
+            DEALLOCATE(regions->phi_total);
+        }
+    }
+}
+
+/*******************************************************************************
+ * @brief Initialize boundary
+ ******************************************************************************/
 void boundary_initialize()
 {
     Regions_t *regions = global_mesh->regions;
@@ -114,21 +133,54 @@ void boundary_initialize()
     }
 }
 
-void boundary_finalize()
-{
-    if (global_mesh)
-    {
-        Regions_t *regions = global_mesh->regions;
 
-        if (regions)
-        {
-            DEALLOCATE(regions->type);
-            DEALLOCATE(regions->function_id);
-            DEALLOCATE(regions->phi_total);
-        }
+/*******************************************************************************
+ * @brief Parse primitive state parameter
+ ******************************************************************************/
+void parse_primitive_state(cstring_t prefix, double *phi)
+{
+    /* string_t tmp_rho    = allocate_strcat( prefix, "/rho" ); */
+    string_t tmp_u = allocate_strcat(prefix, "/u");
+    string_t tmp_v = allocate_strcat(prefix, "/v");
+    string_t tmp_w = allocate_strcat(prefix, "/w");
+    string_t tmp_p = allocate_strcat(prefix, "/p");
+    string_t tmp_T = allocate_strcat(prefix, "/T");
+
+    /* int has_rho = PARAMETER_EXISTS( tmp_rho ); */
+    int has_u = PARAMETER_EXISTS(tmp_u);
+    int has_v = PARAMETER_EXISTS(tmp_v);
+    int has_w = PARAMETER_EXISTS(tmp_w);
+    int has_p = PARAMETER_EXISTS(tmp_p);
+    int has_T = PARAMETER_EXISTS(tmp_T);
+
+    set_value_n(0.0, all_variables->n_tot_variables, phi);
+
+    /* check the provided data and fill the arrays */
+    if (has_u && has_v && has_w && has_p && has_T)
+    {
+        GET_PARAMETER(tmp_u, NumberParameter, &phi[ip_u]);
+        GET_PARAMETER(tmp_v, NumberParameter, &phi[ip_v]);
+        GET_PARAMETER(tmp_w, NumberParameter, &phi[ip_w]);
+        GET_PARAMETER(tmp_p, NumberParameter, &phi[ip_p]);
+        GET_PARAMETER(tmp_T, NumberParameter, &phi[ip_T]);
+        phi[ic_rho] = calc_ig_rho(phi[ip_p], phi[ip_T], R_mix);
     }
+    else
+    {
+        CHECK_EXPRESSION(0);
+    }
+
+    /* DEALLOCATE( tmp_rho ); */
+    DEALLOCATE(tmp_u);
+    DEALLOCATE(tmp_v);
+    DEALLOCATE(tmp_w);
+    DEALLOCATE(tmp_p);
+    DEALLOCATE(tmp_T);
 }
 
+/*******************************************************************************
+ * @brief Update boundaries
+ ******************************************************************************/
 void update_boundaries(double t)
 {
     Cells_t *cells = global_mesh->cells;
@@ -238,6 +290,9 @@ void update_boundaries(double t)
     }
 }
 
+/*******************************************************************************
+ * @brief Update gradient boundaries
+ ******************************************************************************/
 void update_gradients_boundaries()
 {
     Cells_t *cells = global_mesh->cells;
@@ -304,45 +359,4 @@ void update_gradients_boundaries()
             break;
         }
     }
-}
-
-void parse_primitive_state(cstring_t prefix, double *phi)
-{
-    /* string_t tmp_rho    = allocate_strcat( prefix, "/rho" ); */
-    string_t tmp_u = allocate_strcat(prefix, "/u");
-    string_t tmp_v = allocate_strcat(prefix, "/v");
-    string_t tmp_w = allocate_strcat(prefix, "/w");
-    string_t tmp_p = allocate_strcat(prefix, "/p");
-    string_t tmp_T = allocate_strcat(prefix, "/T");
-
-    /* int has_rho = PARAMETER_EXISTS( tmp_rho ); */
-    int has_u = PARAMETER_EXISTS(tmp_u);
-    int has_v = PARAMETER_EXISTS(tmp_v);
-    int has_w = PARAMETER_EXISTS(tmp_w);
-    int has_p = PARAMETER_EXISTS(tmp_p);
-    int has_T = PARAMETER_EXISTS(tmp_T);
-
-    set_value_n(0.0, all_variables->n_tot_variables, phi);
-
-    /* check the provided data and fill the arrays */
-    if (has_u && has_v && has_w && has_p && has_T)
-    {
-        GET_PARAMETER(tmp_u, NumberParameter, &phi[ip_u]);
-        GET_PARAMETER(tmp_v, NumberParameter, &phi[ip_v]);
-        GET_PARAMETER(tmp_w, NumberParameter, &phi[ip_w]);
-        GET_PARAMETER(tmp_p, NumberParameter, &phi[ip_p]);
-        GET_PARAMETER(tmp_T, NumberParameter, &phi[ip_T]);
-        phi[ic_rho] = calc_ig_rho(phi[ip_p], phi[ip_T], R_mix);
-    }
-    else
-    {
-        CHECK_EXPRESSION(0);
-    }
-
-    /* DEALLOCATE( tmp_rho ); */
-    DEALLOCATE(tmp_u);
-    DEALLOCATE(tmp_v);
-    DEALLOCATE(tmp_w);
-    DEALLOCATE(tmp_p);
-    DEALLOCATE(tmp_T);
 }

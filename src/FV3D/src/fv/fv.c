@@ -10,9 +10,9 @@
 #include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
 
-void_update_fp_t update_function_pointer = NULL;
-void_calc_flux_fp_t calc_flux_function_pointer = NULL;
-void_calc_exact_fp_t calc_exact_function_pointer = NULL;
+void_update_ft update_function_pointer = NULL;
+void_calc_flux_ft calc_flux_function_pointer = NULL;
+void_calc_exact_ft calc_exact_function_pointer = NULL;
 
 double *phi_total = NULL;
 double *grad_phi_total_x = NULL;
@@ -25,11 +25,9 @@ double *phi_total_right = NULL;
 double *phi_dt = NULL;
 double *flux = NULL;
 
-void fv_initialize();
-void fv_finalize();
-
-void set_solution();
-
+/*******************************************************************************
+ * @brief Define fv
+ ******************************************************************************/
 void fv_define()
 {
     REGISTER_INITIALIZE_ROUTINE(fv_initialize);
@@ -39,6 +37,30 @@ void fv_define()
     limiter_define();
 }
 
+/*******************************************************************************
+ * @brief Finalize fv
+ ******************************************************************************/
+void fv_finalize()
+{
+    update_function_pointer = NULL;
+    calc_flux_function_pointer = NULL;
+    calc_exact_function_pointer = NULL;
+
+    DEALLOCATE(phi_total);
+    DEALLOCATE(grad_phi_total_x);
+    DEALLOCATE(grad_phi_total_y);
+    DEALLOCATE(grad_phi_total_z);
+
+    DEALLOCATE(phi_total_left);
+    DEALLOCATE(phi_total_right);
+
+    DEALLOCATE(phi_dt);
+    DEALLOCATE(flux);
+}
+
+/*******************************************************************************
+ * @brief Initialize fv
+ ******************************************************************************/
 void fv_initialize()
 {
     Cells_t *cells = global_mesh->cells;
@@ -64,24 +86,10 @@ void fv_initialize()
     set_solution();
 }
 
-void fv_finalize()
-{
-    update_function_pointer = NULL;
-    calc_flux_function_pointer = NULL;
-    calc_exact_function_pointer = NULL;
-
-    DEALLOCATE(phi_total);
-    DEALLOCATE(grad_phi_total_x);
-    DEALLOCATE(grad_phi_total_y);
-    DEALLOCATE(grad_phi_total_z);
-
-    DEALLOCATE(phi_total_left);
-    DEALLOCATE(phi_total_right);
-
-    DEALLOCATE(phi_dt);
-    DEALLOCATE(flux);
-}
-
+/*******************************************************************************
+ * @brief The finite volume time derivative
+ * @param t
+ ******************************************************************************/
 void fv_time_derivative(double t)
 {
     Cells_t *cells = global_mesh->cells;
@@ -124,6 +132,10 @@ void fv_time_derivative(double t)
     }
 }
 
+/*******************************************************************************
+ * @brief Set/initialize the solution pointer
+ * @param t
+ ******************************************************************************/
 void set_solution()
 {
     Cells_t *cells = global_mesh->cells;

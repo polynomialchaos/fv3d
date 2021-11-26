@@ -28,4 +28,12 @@ void explicit_finalize();
  ******************************************************************************/
 void explicit_initialize();
 
+/*******************************************************************************
+ * @brief Explicit time discretizazion routine (LSERKW2)
+ * @param iter
+ * @param t
+ * @param dt
+ ******************************************************************************/
+void time_step_lserkw2(int iter, double t, double dt);
+
 #endif /* EXPLICIT_MODULE_H */

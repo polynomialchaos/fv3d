@@ -15,9 +15,6 @@
 
 int navier_stokes_active = 0;
 
-void navier_stokes_initialize();
-void navier_stokes_finalize();
-
 void update(double t);
 void update_gradients();
 void calc_exact_func(int id, double t, double *x, double *phi);
@@ -54,6 +51,9 @@ int ip_w = -1;
 int ip_p = -1;
 int ip_T = -1;
 
+/*******************************************************************************
+ * @brief Define navier_stokes
+ ******************************************************************************/
 void navier_stokes_define()
 {
     REGISTER_INITIALIZE_ROUTINE(navier_stokes_initialize);
@@ -70,6 +70,16 @@ void navier_stokes_define()
     flux_define();
 }
 
+/*******************************************************************************
+ * @brief Finalize navier_stokes
+ ******************************************************************************/
+void navier_stokes_finalize()
+{
+}
+
+/*******************************************************************************
+ * @brief Initialize navier_stokes
+ ******************************************************************************/
 void navier_stokes_initialize()
 {
     if (navier_stokes_active == 0)
@@ -109,10 +119,6 @@ void navier_stokes_initialize()
     calc_exact_function_pointer = calc_exact_func;
     calc_time_step_function_pointer = calc_time_step;
     calc_flux_function_pointer = calc_flux;
-}
-
-void navier_stokes_finalize()
-{
 }
 
 void update(double t)

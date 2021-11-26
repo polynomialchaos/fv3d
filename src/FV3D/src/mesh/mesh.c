@@ -13,13 +13,76 @@ Mesh_t *global_mesh = NULL;
 
 string_t mesh_file = NULL;
 
-void mesh_initialize();
-void mesh_finalize();
+/*******************************************************************************
+ * @brief Calculate the mesh metrics
+ * @param mesh
+ ******************************************************************************/
+void calc_mesh_metrics(Mesh_t *mesh)
+{
+    Cells_t *cells = mesh->cells;
+    Faces_t *faces = mesh->faces;
+    Regions_t *regions = mesh->regions;
 
-void read_mesh_file(Mesh_t *mesh);
-void remap_local_mesh(Mesh_t *mesh);
-void calc_mesh_metrics(Mesh_t *mesh);
+    mesh->local_volume = sum_n(&cells->volume[0], cells->n_domain_cells);
+    MPI_ALL_REDUCE(MPIDouble, MPISum, &mesh->local_volume, &mesh->global_volume);
 
+    faces->n_internal_faces = 0;
+    for (int i = 0; i < faces->n_faces; ++i)
+        if (faces->boundary[i] < 0)
+            faces->n_internal_faces += 1;
+
+    faces->n_boundary_faces = faces->n_faces - faces->n_internal_faces;
+
+    faces->dist_cell_1 = ALLOCATE(sizeof(double) * faces->n_faces * DIM);
+    faces->dist_cell_2 = ALLOCATE(sizeof(double) * faces->n_faces * DIM);
+    faces->internal_faces = ALLOCATE(sizeof(int) * faces->n_internal_faces);
+    faces->boundary_faces = ALLOCATE(sizeof(int) * faces->n_boundary_faces);
+
+    int k = 0;
+    int l = 0;
+    for (int i = 0; i < faces->n_faces; ++i)
+    {
+        int *fc = &faces->cells[i * FACE_CELLS];
+
+        for (int j = 0; j < DIM; ++j)
+            faces->dist_cell_1[i * DIM + j] = faces->x[i * DIM + j] - cells->x[fc[0] * DIM + j];
+
+        if (fc[1] >= 0)
+        {
+            for (int j = 0; j < DIM; ++j)
+                faces->dist_cell_2[i * DIM + j] = faces->x[i * DIM + j] - cells->x[fc[1] * DIM + j];
+
+            faces->internal_faces[k] = i;
+            k += 1;
+        }
+        else
+        {
+            for (int j = 0; j < DIM; ++j)
+                faces->dist_cell_2[i * DIM + j] = 0.0;
+
+            fc[1] = cells->n_local_cells + faces->boundary[i];
+
+            faces->boundary_faces[l] = i;
+            l += 1;
+        }
+    }
+
+    CHECK_EXPRESSION(k == faces->n_internal_faces);
+    CHECK_EXPRESSION(l == faces->n_boundary_faces);
+
+    for (int i = 0; i < regions->n_regions; ++i)
+    {
+        if (regions->is_boundary[i] == 0)
+        {
+            regions->flow_region = i;
+            break;
+        }
+    }
+}
+
+/*******************************************************************************
+ * @brief Define mesh
+ ******************************************************************************/
 void mesh_define()
 {
     REGISTER_INITIALIZE_ROUTINE(mesh_initialize);
@@ -29,6 +92,19 @@ void mesh_define()
     SET_PARAMETER("Mesh/mesh_file", StringParameter, &tmp, "The mesh file", NULL, 0);
 }
 
+/*******************************************************************************
+ * @brief Finalize mesh
+ ******************************************************************************/
+void mesh_finalize()
+{
+    deallocate_mesh(&global_mesh);
+
+    DEALLOCATE(mesh_file);
+}
+
+/*******************************************************************************
+ * @brief Initialize mesh
+ ******************************************************************************/
 void mesh_initialize()
 {
     GET_PARAMETER("Mesh/mesh_file", StringParameter, &mesh_file);
@@ -41,13 +117,10 @@ void mesh_initialize()
     calc_mesh_metrics(global_mesh);
 }
 
-void mesh_finalize()
-{
-    deallocate_mesh(&global_mesh);
-
-    DEALLOCATE(mesh_file);
-}
-
+/*******************************************************************************
+ * @brief Read the mesh file
+ * @param mesh
+ ******************************************************************************/
 void read_mesh_file(Mesh_t *mesh)
 {
     Partition_t *partition = mesh->partition;
@@ -444,6 +517,10 @@ void read_mesh_file(Mesh_t *mesh)
     close_hdf5_file(file_id);
 }
 
+/*******************************************************************************
+ * @brief Remap the mesh (global/local)
+ * @param mesh
+ ******************************************************************************/
 void remap_local_mesh(Mesh_t *mesh)
 {
     Partition_t *partition = mesh->partition;
@@ -571,67 +648,4 @@ void remap_local_mesh(Mesh_t *mesh)
     DEALLOCATE(global_cells);
     DEALLOCATE(global_boundaries);
     DEALLOCATE(global_faces);
-}
-
-void calc_mesh_metrics(Mesh_t *mesh)
-{
-    Cells_t *cells = mesh->cells;
-    Faces_t *faces = mesh->faces;
-    Regions_t *regions = mesh->regions;
-
-    mesh->local_volume = sum_n(&cells->volume[0], cells->n_domain_cells);
-    MPI_ALL_REDUCE(MPIDouble, MPISum, &mesh->local_volume, &mesh->global_volume);
-
-    faces->n_internal_faces = 0;
-    for (int i = 0; i < faces->n_faces; ++i)
-        if (faces->boundary[i] < 0)
-            faces->n_internal_faces += 1;
-
-    faces->n_boundary_faces = faces->n_faces - faces->n_internal_faces;
-
-    faces->dist_cell_1 = ALLOCATE(sizeof(double) * faces->n_faces * DIM);
-    faces->dist_cell_2 = ALLOCATE(sizeof(double) * faces->n_faces * DIM);
-    faces->internal_faces = ALLOCATE(sizeof(int) * faces->n_internal_faces);
-    faces->boundary_faces = ALLOCATE(sizeof(int) * faces->n_boundary_faces);
-
-    int k = 0;
-    int l = 0;
-    for (int i = 0; i < faces->n_faces; ++i)
-    {
-        int *fc = &faces->cells[i * FACE_CELLS];
-
-        for (int j = 0; j < DIM; ++j)
-            faces->dist_cell_1[i * DIM + j] = faces->x[i * DIM + j] - cells->x[fc[0] * DIM + j];
-
-        if (fc[1] >= 0)
-        {
-            for (int j = 0; j < DIM; ++j)
-                faces->dist_cell_2[i * DIM + j] = faces->x[i * DIM + j] - cells->x[fc[1] * DIM + j];
-
-            faces->internal_faces[k] = i;
-            k += 1;
-        }
-        else
-        {
-            for (int j = 0; j < DIM; ++j)
-                faces->dist_cell_2[i * DIM + j] = 0.0;
-
-            fc[1] = cells->n_local_cells + faces->boundary[i];
-
-            faces->boundary_faces[l] = i;
-            l += 1;
-        }
-    }
-
-    CHECK_EXPRESSION(k == faces->n_internal_faces);
-    CHECK_EXPRESSION(l == faces->n_boundary_faces);
-
-    for (int i = 0; i < regions->n_regions; ++i)
-    {
-        if (regions->is_boundary[i] == 0)
-        {
-            regions->flow_region = i;
-            break;
-        }
-    }
 }

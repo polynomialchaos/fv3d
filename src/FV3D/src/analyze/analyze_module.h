@@ -13,8 +13,6 @@
 
 extern double *residual;
 
-void calc_global_residual(double dt);
-
 /*******************************************************************************
  * @brief Define analyze
  ******************************************************************************/
@@ -29,5 +27,11 @@ void analyze_finalize();
  * @brief Initialize analyze
  ******************************************************************************/
 void analyze_initialize();
+
+/*******************************************************************************
+ * @brief Calculate the global residual
+ * @param dt
+ ******************************************************************************/
+void calc_global_residual(double dt);
 
 #endif /* ANALYZE_MODULE_H */

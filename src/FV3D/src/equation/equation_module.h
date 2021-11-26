@@ -29,8 +29,32 @@ typedef struct Variables
 
 extern Variables_t *all_variables;
 
+/*******************************************************************************
+ * @brief Allocate the variables
+ ******************************************************************************/
+Variables_t *allocate_variables();
+
+/*******************************************************************************
+ * @brief Add a solution variable
+ * @param variables
+ * @param name
+ * @return int
+ ******************************************************************************/
 int add_sol_variable(Variables_t *variables, string_t name);
+
+/*******************************************************************************
+ * @brief Add a dependent variable
+ * @param variables
+ * @param name
+ * @return int
+ ******************************************************************************/
 int add_dep_variable(Variables_t *variables, string_t name);
+
+/*******************************************************************************
+ * @brief Deallocate the variables
+ * @param variables
+ ******************************************************************************/
+void deallocate_variables(Variables_t **variables);
 
 /*******************************************************************************
  * @brief Define equation
@@ -46,5 +70,11 @@ void equation_finalize();
  * @brief Initialize equation
  ******************************************************************************/
 void equation_initialize();
+
+/*******************************************************************************
+ * @brief Set the total variables
+ * @param variables
+ ******************************************************************************/
+void set_tot_variables(Variables_t *variables);
 
 #endif /* EQUATION_MODULE_H */

@@ -18,31 +18,9 @@ int i_output_data = -1;
 int do_output_data = 0;
 string_t output_file = NULL;
 
-void output_initialize();
-void output_finalize();
-
-void output_define()
-{
-    REGISTER_INITIALIZE_ROUTINE(output_initialize);
-    REGISTER_FINALIZE_ROUTINE(output_finalize);
-
-    SET_PARAMETER("Output/i_output_data", DigitParameter, &i_output_data,
-                  "The output file frequency  (-1 ... first/solutions/last, 0 ... disable)", NULL, 0);
-}
-
-void output_initialize()
-{
-    GET_PARAMETER("Output/i_output_data", DigitParameter, &i_output_data);
-    do_output_data = (i_output_data != 0);
-
-    output_file = allocate_strcat(title, ".h5");
-}
-
-void output_finalize()
-{
-    DEALLOCATE(output_file);
-}
-
+/*******************************************************************************
+ * @brief Create a file header
+ ******************************************************************************/
 void create_file_header()
 {
     hid_t file_id = create_hdf5_file(output_file);
@@ -88,6 +66,42 @@ void create_file_header()
     close_hdf5_file(file_id);
 }
 
+/*******************************************************************************
+ * @brief Define output
+ ******************************************************************************/
+void output_define()
+{
+    REGISTER_INITIALIZE_ROUTINE(output_initialize);
+    REGISTER_FINALIZE_ROUTINE(output_finalize);
+
+    SET_PARAMETER("Output/i_output_data", DigitParameter, &i_output_data,
+                  "The output file frequency  (-1 ... first/solutions/last, 0 ... disable)", NULL, 0);
+}
+
+/*******************************************************************************
+ * @brief Finalize output
+ ******************************************************************************/
+void output_finalize()
+{
+    DEALLOCATE(output_file);
+}
+
+/*******************************************************************************
+ * @brief Initialize output
+ ******************************************************************************/
+void output_initialize()
+{
+    GET_PARAMETER("Output/i_output_data", DigitParameter, &i_output_data);
+    do_output_data = (i_output_data != 0);
+
+    output_file = allocate_strcat(title, ".h5");
+}
+
+/*******************************************************************************
+ * @brief Write data to file
+ * @param iter
+ * @param t
+ ******************************************************************************/
 void write_output(int iter, double t)
 {
     Cells_t *cells = global_mesh->cells;

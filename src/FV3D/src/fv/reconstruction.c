@@ -10,22 +10,80 @@
 #include "mesh/mesh_module.h"
 #include "equation/equation_module.h"
 
-void_reconstruction_fp_t reconstruction_function_pointer = NULL;
-void_update_gradients_fp_t update_gradients_function_pointer = NULL;
+void_reconstruction_ft reconstruction_function_pointer = NULL;
+void_update_gradients_ft update_gradients_function_pointer = NULL;
 
 string_t reconstruction_name = NULL;
 
 double *send_buffer = NULL;
 double *receive_buffer = NULL;
 
-void reconstruction_initialize();
-void reconstruction_finalize();
+/*******************************************************************************
+ * @brief Calculate (reconstruct) gradients
+ ******************************************************************************/
+void calc_gradients()
+{
+    Cells_t *cells = global_mesh->cells;
+    Boundaries_t *boundaries = global_mesh->boundaries;
+    Faces_t *faces = global_mesh->faces;
+    int n_local_cells = cells->n_local_cells;
+    int n_boundaries = boundaries->n_boundaries;
+    int n_faces = faces->n_faces;
+    int n_tot_variables = all_variables->n_tot_variables;
 
-void reconstruction_first_order();
-void reconstruction_linear();
-void calc_gradients();
-void update_parallel();
+    if (is_parallel())
+        update_parallel(phi_total);
 
+    set_value_n(0.0, n_tot_variables * (n_local_cells + n_boundaries), grad_phi_total_x);
+    set_value_n(0.0, n_tot_variables * (n_local_cells + n_boundaries), grad_phi_total_y);
+    set_value_n(0.0, n_tot_variables * (n_local_cells + n_boundaries), grad_phi_total_z);
+
+    for (int i = 0; i < n_faces; ++i)
+    {
+        int *fc = &faces->cells[i * FACE_CELLS];
+        double *n = &faces->n[i * DIM];
+        double area = faces->area[i];
+
+        for (int j = 0; j < n_tot_variables; ++j)
+        {
+            double phi_mean = phi_total[fc[0] * n_tot_variables + j] + faces->lambda[i] *
+                                                                           (phi_total[fc[1] * n_tot_variables + j] - phi_total[fc[0] * n_tot_variables + j]);
+
+            grad_phi_total_x[fc[0] * n_tot_variables + j] += phi_mean * n[0] * area;
+            grad_phi_total_y[fc[0] * n_tot_variables + j] += phi_mean * n[1] * area;
+            grad_phi_total_z[fc[0] * n_tot_variables + j] += phi_mean * n[2] * area;
+
+            grad_phi_total_x[fc[1] * n_tot_variables + j] -= phi_mean * n[0] * area;
+            grad_phi_total_y[fc[1] * n_tot_variables + j] -= phi_mean * n[1] * area;
+            grad_phi_total_z[fc[1] * n_tot_variables + j] -= phi_mean * n[2] * area;
+        }
+    }
+
+    if (is_parallel())
+        update_parallel(grad_phi_total_x);
+    if (is_parallel())
+        update_parallel(grad_phi_total_y);
+    if (is_parallel())
+        update_parallel(grad_phi_total_z);
+
+    for (int i = 0; i < n_local_cells; ++i)
+    {
+        double s_volume = 1.0 / cells->volume[i];
+
+        for (int j = 0; j < n_tot_variables; ++j)
+        {
+            grad_phi_total_x[i * n_tot_variables + j] *= s_volume;
+            grad_phi_total_y[i * n_tot_variables + j] *= s_volume;
+            grad_phi_total_z[i * n_tot_variables + j] *= s_volume;
+        }
+    }
+
+    update_gradients_function_pointer();
+}
+
+/*******************************************************************************
+ * @brief Define reconstruction
+ ******************************************************************************/
 void reconstruction_define()
 {
     REGISTER_INITIALIZE_ROUTINE(reconstruction_initialize);
@@ -39,6 +97,45 @@ void reconstruction_define()
                   "The reconstruction method", &tmp_opt, tmp_opt_n);
 }
 
+/*******************************************************************************
+ * @brief Finalize reconstruction
+ ******************************************************************************/
+void reconstruction_finalize()
+{
+    reconstruction_function_pointer = NULL;
+    update_gradients_function_pointer = NULL;
+
+    DEALLOCATE(reconstruction_name);
+    DEALLOCATE(send_buffer);
+    DEALLOCATE(receive_buffer);
+}
+
+/*******************************************************************************
+ * @brief First-order reconstruction
+ ******************************************************************************/
+void reconstruction_first_order()
+{
+    Faces_t *faces = global_mesh->faces;
+    int n_faces = faces->n_faces;
+    int n_tot_variables = all_variables->n_tot_variables;
+
+    calc_gradients();
+
+    for (int i = 0; i < n_faces; ++i)
+    {
+        int *fc = &faces->cells[i * FACE_CELLS];
+
+        for (int j = 0; j < n_tot_variables; ++j)
+        {
+            phi_total_left[i * n_tot_variables + j] = phi_total[fc[0] * n_tot_variables + j];
+            phi_total_right[i * n_tot_variables + j] = phi_total[fc[1] * n_tot_variables + j];
+        }
+    }
+}
+
+/*******************************************************************************
+ * @brief Initialize reconstruction
+ ******************************************************************************/
 void reconstruction_initialize()
 {
     GET_PARAMETER("FV/Reconstruction/reconstruction", StringParameter, &reconstruction_name);
@@ -68,36 +165,9 @@ void reconstruction_initialize()
     }
 }
 
-void reconstruction_finalize()
-{
-    reconstruction_function_pointer = NULL;
-    update_gradients_function_pointer = NULL;
-
-    DEALLOCATE(reconstruction_name);
-    DEALLOCATE(send_buffer);
-    DEALLOCATE(receive_buffer);
-}
-
-void reconstruction_first_order()
-{
-    Faces_t *faces = global_mesh->faces;
-    int n_faces = faces->n_faces;
-    int n_tot_variables = all_variables->n_tot_variables;
-
-    calc_gradients();
-
-    for (int i = 0; i < n_faces; ++i)
-    {
-        int *fc = &faces->cells[i * FACE_CELLS];
-
-        for (int j = 0; j < n_tot_variables; ++j)
-        {
-            phi_total_left[i * n_tot_variables + j] = phi_total[fc[0] * n_tot_variables + j];
-            phi_total_right[i * n_tot_variables + j] = phi_total[fc[1] * n_tot_variables + j];
-        }
-    }
-}
-
+/*******************************************************************************
+ * @brief Second-order (linear) reconstruction
+ ******************************************************************************/
 void reconstruction_linear()
 {
     Faces_t *faces = global_mesh->faces;
@@ -164,66 +234,10 @@ void reconstruction_linear()
     }
 }
 
-void calc_gradients()
-{
-    Cells_t *cells = global_mesh->cells;
-    Boundaries_t *boundaries = global_mesh->boundaries;
-    Faces_t *faces = global_mesh->faces;
-    int n_local_cells = cells->n_local_cells;
-    int n_boundaries = boundaries->n_boundaries;
-    int n_faces = faces->n_faces;
-    int n_tot_variables = all_variables->n_tot_variables;
-
-    if (is_parallel())
-        update_parallel(phi_total);
-
-    set_value_n(0.0, n_tot_variables * (n_local_cells + n_boundaries), grad_phi_total_x);
-    set_value_n(0.0, n_tot_variables * (n_local_cells + n_boundaries), grad_phi_total_y);
-    set_value_n(0.0, n_tot_variables * (n_local_cells + n_boundaries), grad_phi_total_z);
-
-    for (int i = 0; i < n_faces; ++i)
-    {
-        int *fc = &faces->cells[i * FACE_CELLS];
-        double *n = &faces->n[i * DIM];
-        double area = faces->area[i];
-
-        for (int j = 0; j < n_tot_variables; ++j)
-        {
-            double phi_mean = phi_total[fc[0] * n_tot_variables + j] + faces->lambda[i] *
-                                                                           (phi_total[fc[1] * n_tot_variables + j] - phi_total[fc[0] * n_tot_variables + j]);
-
-            grad_phi_total_x[fc[0] * n_tot_variables + j] += phi_mean * n[0] * area;
-            grad_phi_total_y[fc[0] * n_tot_variables + j] += phi_mean * n[1] * area;
-            grad_phi_total_z[fc[0] * n_tot_variables + j] += phi_mean * n[2] * area;
-
-            grad_phi_total_x[fc[1] * n_tot_variables + j] -= phi_mean * n[0] * area;
-            grad_phi_total_y[fc[1] * n_tot_variables + j] -= phi_mean * n[1] * area;
-            grad_phi_total_z[fc[1] * n_tot_variables + j] -= phi_mean * n[2] * area;
-        }
-    }
-
-    if (is_parallel())
-        update_parallel(grad_phi_total_x);
-    if (is_parallel())
-        update_parallel(grad_phi_total_y);
-    if (is_parallel())
-        update_parallel(grad_phi_total_z);
-
-    for (int i = 0; i < n_local_cells; ++i)
-    {
-        double s_volume = 1.0 / cells->volume[i];
-
-        for (int j = 0; j < n_tot_variables; ++j)
-        {
-            grad_phi_total_x[i * n_tot_variables + j] *= s_volume;
-            grad_phi_total_y[i * n_tot_variables + j] *= s_volume;
-            grad_phi_total_z[i * n_tot_variables + j] *= s_volume;
-        }
-    }
-
-    update_gradients_function_pointer();
-}
-
+/*******************************************************************************
+ * @brief Update the given variable across all domains
+ * @param phi_local
+ ******************************************************************************/
 void update_parallel(double *phi_local)
 {
     Partition_t *partition = global_mesh->partition;
