@@ -29,7 +29,7 @@ def calc_area(vertices, element):
         raise TypeError(element.element_type)
 
     if area < 0.0:
-        raise(ValueError('Area', area))
+        raise ValueError('Area', area)
 
     return area
 
@@ -80,7 +80,7 @@ def calc_volume(vertices, element):
         raise TypeError(element.element_type)
 
     if volume < 0.0:
-        raise(ValueError('Volume', volume))
+        raise ValueError('Volume', volume)
 
     return volume
 
@@ -90,7 +90,7 @@ def calc_distance(cells, faces, element):
     tmp = np.dot(dx, element.n) / (len_vector(dx) * len_vector(element.n))
     distance = len_vector(dx) * max(min(tmp, 1.0), -1.0)
     if distance < 1e-16:
-        raise(ValueError('Distance', distance))
+        raise ValueError('Distance', distance)
     return distance
 
 
@@ -104,7 +104,7 @@ def calc_weight(cells, element):
         if d1 + d2 > 1e-16:
             weight = d1 / (d1 + d2)
         else:
-            raise(ValueError('Weight', d1 + d2))
+            raise ValueError('Weight', d1 + d2)
     else:
         weight = 1.0
 

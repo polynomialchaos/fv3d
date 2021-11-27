@@ -7,75 +7,101 @@
 # @copyright Copyright (c) 2021
 ################################################################################
 import os
+import sys
 import argparse
-import json
 import shutil
+import logging
 from pymeshfv3d.reader import read_handler_lin1d, read_handler_gmsh
 from pychemistry.version import __version__
+from pymeshfv3d import get_param, read_param_file, write_param_file
 from pymeshfv3d import process_mesh, write_mesh
 
-main_path = os.path.abspath(__file__)
+
+class LessThanFilter(logging.Filter):
+    def __init__(self, exclusive_maximum, name=''):
+        super(LessThanFilter, self).__init__(name)
+        self.max_level = exclusive_maximum
+
+    def filter(self, record):
+        # non-zero return means we log this message
+        return 1 if record.levelno < self.max_level else 0
 
 
-def get_arg_by_path(arguments, path, value='/value'):
-    root = arguments
-    for x in (path + value).split('/'):
-        root = root[x]
+logging.getLogger().setLevel(logging.DEBUG)
 
-    return root
+err_handler = logging.StreamHandler(stream=sys.stderr)
+err_handler.setLevel(logging.ERROR)
+err_handler.setFormatter(logging.Formatter(
+    '%(levelname)s:%(name)s:%(message)s'))
+logging.getLogger().addHandler(err_handler)
+
+out_handler = logging.StreamHandler(stream=sys.stdout)
+out_handler.setLevel(logging.INFO)
+out_handler.addFilter(LessThanFilter(logging.ERROR))
+out_handler.setFormatter(logging.Formatter(
+    '%(levelname)s:%(name)s:%(message)s'))
+logging.getLogger().addHandler(out_handler)
 
 
 def main():
-
+    """Main function entrance point."""
     # define the argument parser
     parser = argparse.ArgumentParser(
         description='pyMeshFV3D - Finite volume solver (FV3D) mesh preprocessing')
+    parser.add_argument('-d', '--debugging',
+                        action='store_true', help='Debugging output')
     parser.add_argument('-g', '--generate', dest='generate',
                         action='store_true', help='The preprocessing input file')
-    parser.add_argument('inifile', nargs='+',
-                        help='The preprocessing input file')
     parser.add_argument('-v', '--version', action='version',
                         version='%(prog)s (version {:})'.format(__version__))
+    parser.add_argument('inifile', nargs='?',
+                        help='The preprocessing input file')
     args = parser.parse_args()
 
+    # setup additional output for debugging
+    if args.debugging:
+        debug_handler = logging.FileHandler(
+            '{:}.log'.format(args.inifile), mode='w')
+        debug_handler.setLevel(logging.DEBUG)
+        debug_handler.setFormatter(logging.Formatter(
+            '%(levelname)s:%(name)s:%(message)s'))
+        logging.getLogger().addHandler(debug_handler)
+
     # modify arguments
-    args.inifile = args.inifile[0]
     if args.generate:
-        tpl_file = os.path.join(os.path.dirname(main_path), 'template.json')
-        shutil.copyfile(tpl_file, args.inifile)
+        write_param_file(args.inifile)
         raise SystemExit
 
     # read the input file
-    with open(args.inifile, 'r') as fp:
-        arguments = json.load(fp)
+    arguments = read_param_file(args.inifile)
 
     # define/read the mesh
-    mesh_reader = get_arg_by_path(arguments, 'Reader/mesh_reader')
+    mesh_reader = get_param(arguments, 'Reader/mesh_reader')
     if mesh_reader == 'Gmsh':
         mesh = read_handler_gmsh(
-            get_arg_by_path(arguments, 'Reader/mesh_file'))
+            get_param(arguments, 'Reader/mesh_file'))
     elif mesh_reader == 'Lin1D':
-        x_left = get_arg_by_path(arguments, 'Reader/Lin1D/x_left')
-        x_right = get_arg_by_path(arguments, 'Reader/Lin1D/x_right')
-        n_elements = get_arg_by_path(arguments, 'Reader/Lin1D/n_elements')
+        x_left = get_param(arguments, 'Reader/Lin1D/x_left')
+        x_right = get_param(arguments, 'Reader/Lin1D/x_right')
+        n_elements = get_param(arguments, 'Reader/Lin1D/n_elements')
         mesh = read_handler_lin1d(x_left, x_right, n_elements)
     else:
-        raise(KeyError('Reader/mesh_reader', mesh_reader))
+        raise KeyError('Reader/mesh_reader', mesh_reader)
 
     # process the mesh
-    mesh_scale = get_arg_by_path(arguments, 'Process/mesh_scale')
-    n_partitions = get_arg_by_path(arguments, 'Process/n_partitions')
+    mesh_scale = get_param(arguments, 'Process/mesh_scale')
+    n_partitions = get_param(arguments, 'Process/n_partitions')
     mesh = process_mesh(mesh, mesh_scale, n_partitions)
 
     # write the mesh
     file_name = '{:}.mesh.h5'.format(
-        get_arg_by_path(arguments, 'General/title'))
+        get_param(arguments, 'General/title'))
     write_mesh(file_name, mesh)
 
 
-####################################################################################################################################
+################################################################################
 # CALL BY SCRIPT
-# -----------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 if __name__ == "__main__":
 
     main()

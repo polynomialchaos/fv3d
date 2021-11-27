@@ -61,7 +61,7 @@ def metis_part_mesh_nodal(mesh):
                                       epart, npart)
 
     if i_error != 1:
-        raise(ValueError('Metis', i_error))
+        raise ValueError('Metis', i_error)
 
     for i, cell in enumerate(mesh.cells):
         cell.partition_id = epart[i]

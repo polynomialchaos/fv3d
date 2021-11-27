@@ -6,6 +6,7 @@
 # @date 2021-11-23
 # @copyright Copyright (c) 2021
 ################################################################################
+import logging
 from pymeshfv3d.utilities import ElementType, Element, Mesh
 
 gmsh_to_ElementType = [None] * 15
@@ -30,8 +31,8 @@ gmsh_elem_nodes[7] = 5
 
 
 def read_handler_gmsh(file_name):
-
-    print('Reading mesh: "{:}"'.format(file_name))
+    """Generate a mesh (1D) by reading Gmsh file."""
+    logging.info('Generate mesh (Gmsh) p="%s"', file_name)
 
     with open(file_name, 'r') as fp:
         while True:
@@ -47,14 +48,14 @@ def read_handler_gmsh(file_name):
                 for i in range(n_regions):
                     _, id_r, name = fp.readline().split(' ')
                     if i != int(id_r) - 1:
-                        raise(IndexError('Region', i, id_r))
+                        raise IndexError('Region', i, id_r)
                     regions.append(name.replace('"', '').strip())
 
                 check_read_line(fp.readline(), '$EndPhysicalNames')
             elif line == '$Entities':
                 n_entities = [int(x) for x in fp.readline().split(' ')]
                 if len(n_entities) != 4:
-                    raise(ValueError('Number of Entities', n_entities))
+                    raise ValueError('Number of Entities', n_entities)
 
                 entities = []
                 for i in range(4):
@@ -118,7 +119,7 @@ def read_handler_gmsh(file_name):
             else:
                 if not line:
                     break
-                raise(KeyError('Identifier', line))
+                raise KeyError('Identifier', line)
 
     return Mesh(vertices, regions, elements)
 
