@@ -29,4 +29,4 @@ def read_handler_lin1d(x_left=0.0, x_right=1.0, n=10):
 
     elements.append(Element(ElementType.POINT, n, regions.index('right')))
 
-    return Mesh(vertices, regions, elements)
+    return Mesh('Lin1D', elements, regions, vertices)

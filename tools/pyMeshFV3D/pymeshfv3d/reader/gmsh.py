@@ -6,6 +6,7 @@
 # @date 2021-11-23
 # @copyright Copyright (c) 2021
 ################################################################################
+import os
 import logging
 from pymeshfv3d.utilities import ElementType, Element, Mesh
 
@@ -67,12 +68,13 @@ def read_handler_gmsh(file_name):
                         if i == 0:
                             id_e, n_tags_1 = int(tmp[0]), int(tmp[4])
                             tags_1 = [int(x) for x in tmp[5:5+n_tags_1]]
-                            # tags_2          = None
+                            # tags_2 = None
                         else:
                             id_e, n_tags_1 = int(tmp[0]), int(tmp[7])
                             tags_1 = [int(x) for x in tmp[8:8+n_tags_1]]
-                            # n_tags_2        = int( tmp[8+n_tags_1] )
-                            # tags_2          = [int( x ) for x in tmp[9+n_tags_1:9+n_tags_1+n_tags_2]]
+                            # n_tags_2 = int( tmp[8+n_tags_1] )
+                            # tags_2 = [int( x ) for x in
+                            # tmp[9+n_tags_1:9+n_tags_1+n_tags_2]]
 
                         r_id = tags_1[0]-1 if tags_1 else None
                         entities[i].append((id_e, r_id))
@@ -84,8 +86,8 @@ def read_handler_gmsh(file_name):
                 vertices = [None] * (n_vertices)
 
                 for i in range(n_blocks):
-                    _, _, _, n_sub_blocks = [int(x)
-                                             for x in fp.readline().split(' ')]
+                    _, _, _, n_sub_blocks = \
+                        [int(x) for x in fp.readline().split(' ')]
 
                     vertice_ids = []
                     for j in range(n_sub_blocks):
@@ -93,8 +95,8 @@ def read_handler_gmsh(file_name):
                         vertice_ids.append(int(tmp))
 
                     for j in range(n_sub_blocks):
-                        vertices[vertice_ids[j] -
-                                 1] = [float(x) for x in fp.readline().split(' ')]
+                        vertices[vertice_ids[j] - 1] = \
+                            [float(x) for x in fp.readline().split(' ')]
 
                 check_read_line(fp.readline(), '$EndNodes')
             elif line == '$Elements':
@@ -121,7 +123,8 @@ def read_handler_gmsh(file_name):
                     break
                 raise KeyError('Identifier', line)
 
-    return Mesh(vertices, regions, elements)
+    return Mesh('Gmsh({:})'.format(os.path.basename(file_name)),
+                elements, regions, vertices)
 
 
 def get_entity_by_id(entities, id_d, id_e):

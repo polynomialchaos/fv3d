@@ -10,4 +10,4 @@ from .element import ElementType, Element, Cell, Boundary, Face, Region
 from .geometry import calc_area, calc_distance, calc_normal
 from .geometry import calc_t1, calc_t2, calc_volume, calc_weight
 from .mesh import Mesh
-from .metis import metis_part_mesh_nodal
+from .metis import MetisLibrary

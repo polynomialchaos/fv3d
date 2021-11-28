@@ -7,41 +7,47 @@
 # @copyright Copyright (c) 2021
 ################################################################################
 import numpy as np
-from pymeshfv3d.utilities import ElementType, Cell, Boundary, Face
+from pymeshfv3d.utilities import ElementType
 
 
-class Mesh(object):
-    def __init__(self, vertices=None, regions=None, elements=None, title='untitled'):
-        self.vertices = np.array([] if vertices is None else vertices)
-        self.regions = [] if regions is None else regions
-        self.elements = [] if elements is None else elements
-        self.title = title
+class Mesh():
+    """Mesh object."""
 
-    @property
-    def dimension(self):
-        types = [x.element_type for x in self.elements]
-        if any(x.value > ElementType.QUADRANGLE.value for x in types):
-            return 3
-        elif any(x.value > ElementType.LINE.value for x in types):
-            return 2
-        else:
-            return 1
-
-    @property
-    def n_vertices(self):
-        return len(self.vertices)
-
-    @property
-    def n_regions(self):
-        return len(self.regions)
-
-    @property
-    def n_elements(self):
-        return len(self.elements)
+    def __init__(self, name, elements, regions, vertices):
+        self.name = name
+        self.elements = elements
+        self.regions = regions
+        self.vertices = np.array(vertices)
 
     def __repr__(self):
         return '<{:}: {:}>'.format(self.__class__.__name__, self)
 
     def __str__(self):
-        return '"{:}" (nv={:}, nr={:}, ne={:}, d={:})'.format(
-            self.title, self.n_vertices, self.n_regions, self.n_elements, self.dimension)
+        return '"{:}" (d={:}, ne={:}, nr={:}, nv={:})'.format(
+            self.name, self.dimension, self.n_elements, self.n_regions, self.n_vertices)
+
+    @property
+    def dimension(self):
+        """The mesh dimension by element type."""
+        types = [x.element_type for x in self.elements]
+        if any(x.value > ElementType.QUADRANGLE.value for x in types):
+            return 3
+        if any(x.value > ElementType.LINE.value for x in types):
+            return 2
+
+        return 1
+
+    @property
+    def n_elements(self):
+        """The number of elements."""
+        return len(self.elements)
+
+    @property
+    def n_regions(self):
+        """The number of regions."""
+        return len(self.regions)
+
+    @property
+    def n_vertices(self):
+        """The number of vertices."""
+        return len(self.vertices)

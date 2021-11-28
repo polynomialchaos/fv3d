@@ -12,6 +12,7 @@ import numpy as np
 
 @unique
 class ElementType(Enum):
+    """MeshFV3D element types (sorted by dimension)"""
     POINT = 1
     LINE = 2
     TRIANGLE = 3
@@ -22,15 +23,13 @@ class ElementType(Enum):
     PYRAMID = 8
 
 
-class Element(object):
+class Element():
+    """Element class."""
+
     def __init__(self, element_type, vertice_ids, region_id):
         self.element_type = element_type
         self.vertice_ids = list(np.atleast_1d(vertice_ids))
         self.region_id = region_id
-
-    @property
-    def n_vertice_ids(self):
-        return len(self.vertice_ids)
 
     def __repr__(self):
         return '<{:}: {:}>'.format(self.__class__.__name__, self)
@@ -38,67 +37,91 @@ class Element(object):
     def __str__(self):
         return '{:}'.format(self.__dict__)
 
+    @property
+    def n_vertice_ids(self):
+        """Number of vertice IDs."""
+        return len(self.vertice_ids)
+
 
 class Cell(Element):
-    def __init__(self, element_type, vertice_ids, region_id, face_ids=None, volume=None, x=None, dx=None, partition_id=None):
+    """Cell class."""
+
+    def __init__(self, element_type, vertice_ids, region_id):
         super().__init__(element_type, vertice_ids, region_id)
-        self.face_ids = [] if face_ids is None else list(
-            np.atleast_1d(face_ids))
-        self.x = x
-        self.volume = volume
-        self.dx = [0.0, 0.0, 0.0] if dx is None else list(np.atleast_1d(dx))
-        self.partition_id = partition_id
+        self.face_ids = []
+        self.x_v = None
+        self.volume = None
+        self.dx = None
+        self.partition_id = None
 
-    def get_faces(self):
-        v = self.vertice_ids
+    def get_faces_elements(self):
+        """Generate list of face elements based on element type."""
+        vertices = self.vertice_ids
+
         tmp_faces = []
-
         if self.element_type == ElementType.LINE:
-            tmp_faces.append(Face(ElementType.POINT, v[0]))
-            tmp_faces.append(Face(ElementType.POINT, v[1]))
+            v_0, v_1 = vertices[0], vertices[1]
+            tmp_faces.append(Face(ElementType.POINT, v_0))
+            tmp_faces.append(Face(ElementType.POINT, v_1))
         elif self.element_type == ElementType.TRIANGLE:
-            tmp_faces.append(Face(ElementType.LINE, (v[0], v[1])))
-            tmp_faces.append(Face(ElementType.LINE, (v[1], v[2])))
-            tmp_faces.append(Face(ElementType.LINE, (v[2], v[0])))
+            v_0, v_1 = vertices[0], vertices[1]
+            v_2 = vertices[2]
+            tmp_faces.append(Face(ElementType.LINE, (v_0, v_1)))
+            tmp_faces.append(Face(ElementType.LINE, (v_1, v_2)))
+            tmp_faces.append(Face(ElementType.LINE, (v_2, v_0)))
         elif self.element_type == ElementType.QUADRANGLE:
-            tmp_faces.append(Face(ElementType.LINE, (v[0], v[1])))
-            tmp_faces.append(Face(ElementType.LINE, (v[1], v[2])))
-            tmp_faces.append(Face(ElementType.LINE, (v[2], v[3])))
-            tmp_faces.append(Face(ElementType.LINE, (v[3], v[0])))
+            v_0, v_1 = vertices[0], vertices[1]
+            v_2, v_3 = vertices[2], vertices[3]
+            tmp_faces.append(Face(ElementType.LINE, (v_0, v_1)))
+            tmp_faces.append(Face(ElementType.LINE, (v_1, v_2)))
+            tmp_faces.append(Face(ElementType.LINE, (v_2, v_3)))
+            tmp_faces.append(Face(ElementType.LINE, (v_3, v_0)))
         elif self.element_type == ElementType.TETRAEDER:
-            tmp_faces.append(Face(ElementType.TRIANGLE, (v[0], v[1], v[2])))
-            tmp_faces.append(Face(ElementType.TRIANGLE, (v[0], v[3], v[1])))
-            tmp_faces.append(Face(ElementType.TRIANGLE, (v[0], v[3], v[2])))
-            tmp_faces.append(Face(ElementType.TRIANGLE, (v[2], v[3], v[1])))
+            v_0, v_1 = vertices[0], vertices[1]
+            v_2, v_3 = vertices[2], vertices[3]
+            tmp_faces.append(Face(ElementType.TRIANGLE, (v_0, v_1, v_2)))
+            tmp_faces.append(Face(ElementType.TRIANGLE, (v_0, v_3, v_1)))
+            tmp_faces.append(Face(ElementType.TRIANGLE, (v_0, v_3, v_2)))
+            tmp_faces.append(Face(ElementType.TRIANGLE, (v_2, v_3, v_1)))
         elif self.element_type == ElementType.HEXAEDER:
+            v_0, v_1 = vertices[0], vertices[1]
+            v_2, v_3 = vertices[2], vertices[3]
+            v_4, v_5 = vertices[4], vertices[5]
+            v_6, v_7 = vertices[6], vertices[7]
             tmp_faces.append(
-                Face(ElementType.QUADRANGLE, (v[0], v[1], v[2], v[3])))
+                Face(ElementType.QUADRANGLE, (v_0, v_1, v_2, v_3)))
             tmp_faces.append(
-                Face(ElementType.QUADRANGLE, (v[4], v[5], v[6], v[7])))
+                Face(ElementType.QUADRANGLE, (v_4, v_5, v_6, v_7)))
             tmp_faces.append(
-                Face(ElementType.QUADRANGLE, (v[0], v[4], v[7], v[3])))
+                Face(ElementType.QUADRANGLE, (v_0, v_4, v_7, v_3)))
             tmp_faces.append(
-                Face(ElementType.QUADRANGLE, (v[0], v[4], v[5], v[1])))
+                Face(ElementType.QUADRANGLE, (v_0, v_4, v_5, v_1)))
             tmp_faces.append(
-                Face(ElementType.QUADRANGLE, (v[1], v[5], v[6], v[2])))
+                Face(ElementType.QUADRANGLE, (v_1, v_5, v_6, v_2)))
             tmp_faces.append(
-                Face(ElementType.QUADRANGLE, (v[3], v[7], v[6], v[2])))
+                Face(ElementType.QUADRANGLE, (v_3, v_7, v_6, v_2)))
         elif self.element_type == ElementType.PRISM:
+            v_0, v_1 = vertices[0], vertices[1]
+            v_2, v_3 = vertices[2], vertices[3]
+            v_4, v_5 = vertices[4], vertices[5]
             tmp_faces.append(
-                Face(ElementType.QUADRANGLE, (v[0], v[1], v[4], v[3])))
+                Face(ElementType.QUADRANGLE, (v_0, v_1, v_4, v_3)))
             tmp_faces.append(
-                Face(ElementType.QUADRANGLE, (v[1], v[2], v[5], v[4])))
+                Face(ElementType.QUADRANGLE, (v_1, v_2, v_5, v_4)))
             tmp_faces.append(
-                Face(ElementType.QUADRANGLE, (v[0], v[2], v[5], v[3])))
-            tmp_faces.append(Face(ElementType.TRIANGLE, (v[0], v[1], v[2])))
-            tmp_faces.append(Face(ElementType.TRIANGLE, (v[3], v[4], v[5])))
+                Face(ElementType.QUADRANGLE, (v_0, v_2, v_5, v_3)))
+            tmp_faces.append(Face(ElementType.TRIANGLE, (v_0, v_1, v_2)))
+            tmp_faces.append(Face(ElementType.TRIANGLE, (v_3, v_4, v_5)))
         elif self.element_type == ElementType.PYRAMID:
+            v_0, v_1 = vertices[0], vertices[1]
+            v_2, v_3 = vertices[2], vertices[3]
+            v_4 = vertices[4]
             tmp_faces.append(
-                Face(ElementType.QUADRANGLE, (v[0], v[1], v[2], v[3])))
-            tmp_faces.append(Face(ElementType.TRIANGLE, (v[0], v[1], v[4])))
-            tmp_faces.append(Face(ElementType.TRIANGLE, (v[1], v[2], v[4])))
-            tmp_faces.append(Face(ElementType.TRIANGLE, (v[2], v[3], v[4])))
-            tmp_faces.append(Face(ElementType.TRIANGLE, (v[0], v[3], v[1])))
+                Face(ElementType.QUADRANGLE, (v_0, v_1, v_2, v_3)))
+            tmp_faces.append(Face(ElementType.TRIANGLE, (v_0, v_1, v_4)))
+            tmp_faces.append(Face(ElementType.TRIANGLE, (v_1, v_2, v_4)))
+            tmp_faces.append(Face(ElementType.TRIANGLE, (v_2, v_3, v_4)))
+            tmp_faces.append(Face(ElementType.TRIANGLE, (v_0, v_3, v_1)))
         else:
             raise TypeError(self.element_type)
 
@@ -106,40 +129,54 @@ class Cell(Element):
 
     @property
     def n_face_ids(self):
+        """Number of face IDs."""
         return len(self.face_ids)
 
 
 class Boundary(Element):
-    def __init__(self, element_type, vertice_ids, region_id,
-                 face_id=None, n=None, t1=None, t2=None, distance=None, partition_id=None):
+    """Boundary class."""
+    # pylint: disable=too-few-public-methods
+
+    def __init__(self, element_type, vertice_ids, region_id):
         super().__init__(element_type, vertice_ids, region_id)
-        self.face_id = face_id
-        self.n = n
-        self.t1 = t1
-        self.t2 = t2
-        self.distance = distance
-        self.partition_id = partition_id
+        self.face_id = None
+        self.n_v = None
+        self.t1_v = None
+        self.t2_v = None
+        self.distance = None
+        self.partition_id = None
 
 
 class Face(Element):
-    def __init__(self, element_type, vertice_ids, cell_ids=None, boundary_id=None,
-                 x=None, n=None, t1=None, t2=None, area=None, weight=None):
+    """Face class."""
+    # pylint: disable=too-many-instance-attributes
+
+    def __init__(self, element_type, vertice_ids):
         super().__init__(element_type, vertice_ids, None)
-        self.cell_ids = [-1, -1] if cell_ids is None else cell_ids
-        self.boundary_id = boundary_id
-        self.x = x
-        self.n = n
-        self.t1 = t1
-        self.t2 = t2
-        self.area = area
-        self.weight = weight
+        self.cell_ids = [-1, -1]
+        self.boundary_id = None
+        self.x_v = None
+        self.n_v = None
+        self.t1_v = None
+        self.t2_v = None
+        self.area = None
+        self.weight = None
+
+    @property
+    def is_boundary(self):
+        """Return flag if face is boundary (second cell index is below 0)."""
+        return self.cell_ids[1] < 0
 
 
-class Region(Element):
+class Region():
+    """Region class."""
+
     def __init__(self, name, is_boundary=False):
         self.name = name
         self.is_boundary = is_boundary
 
-    @property
-    def n_vertice_ids(self):
-        raise NotImplementedError
+    def __repr__(self):
+        return '<{:}: {:}>'.format(self.__class__.__name__, self)
+
+    def __str__(self):
+        return '{:}'.format(self.__dict__)
