@@ -14,16 +14,6 @@ from pymeshfv3d.utilities import ElementType
 
 from .version import __version__
 
-type_2_xdmf = [None] * (max([x.value for x in ElementType]) + 1)
-type_2_xdmf[ElementType.POINT.value] = 1
-type_2_xdmf[ElementType.LINE.value] = 2
-type_2_xdmf[ElementType.TRIANGLE.value] = 4
-type_2_xdmf[ElementType.QUADRANGLE.value] = 5
-type_2_xdmf[ElementType.TETRAEDER.value] = 6
-type_2_xdmf[ElementType.HEXAEDER.value] = 9
-type_2_xdmf[ElementType.PRISM.value] = 8
-type_2_xdmf[ElementType.PYRAMID.value] = 7
-
 
 def write_mesh(file_name, mesh):
     """Write the mesh."""
@@ -48,9 +38,6 @@ def write_mesh(file_name, mesh):
 def write_mesh_boundaries(h5_root, mesh):
     """Write the mesh boundaries."""
     max_boundary_vertices = max(x.n_vertice_ids for x in mesh.boundaries)
-    max_boundary_vertices = max_boundary_vertices + 1
-    if mesh.dimension < 3:
-        max_boundary_vertices += 1
 
     fp_g = h5_root.create_group('BOUNDARIES')
     fp_g.attrs['n_boundaries'] = [len(mesh.boundaries)]
@@ -77,17 +64,10 @@ def write_mesh_boundaries(h5_root, mesh):
         fp_g.create_dataset(
             'pid', data=[x.partition_id for x in mesh.boundaries])
 
-    fp_g.create_dataset('xdmf', data=gen_xdmf_2d(
-        mesh.boundaries, max_boundary_vertices, mesh.dimension))
-
 
 def write_mesh_cells(h5_root, mesh):
     """Write the mesh boundaries."""
     max_cell_vertices = max(x.n_vertice_ids for x in mesh.cells)
-    max_cell_vertices = max_cell_vertices + 1
-    if mesh.dimension < 2:
-        max_cell_vertices += 1
-
     max_cell_faces = max(x.n_face_ids for x in mesh.cells)
 
     fp_g = h5_root.create_group('CELLS')
@@ -117,16 +97,10 @@ def write_mesh_cells(h5_root, mesh):
         fp_g.create_dataset(
             'pid', data=[x.partition_id for x in mesh.cells])
 
-    fp_g.create_dataset('xdmf', data=gen_xdmf_3d(
-        mesh.cells, max_cell_vertices, mesh.dimension))
-
 
 def write_mesh_faces(h5_root, mesh):
     """Write the mesh faces."""
     max_face_vertices = max(x.n_vertice_ids for x in mesh.faces)
-    max_face_vertices = max_face_vertices + 1
-    if mesh.dimension < 3:
-        max_face_vertices += 1
 
     fp_g = h5_root.create_group('FACES')
     fp_g.attrs['n_faces'] = [len(mesh.faces)]
@@ -153,9 +127,6 @@ def write_mesh_faces(h5_root, mesh):
         [x.area for x in mesh.faces]))
     fp_g.create_dataset('lambda', data=np.array(
         [x.weight for x in mesh.faces]))
-
-    fp_g.create_dataset('xdmf', data=gen_xdmf_2d(
-        mesh.faces, max_face_vertices, mesh.dimension))
 
 
 def write_mesh_partitions(h5_root, mesh):
@@ -226,41 +197,5 @@ def fill_array(datas, fill, dtype, size_y=None):
     tmp = np.full((size_x, size_y), fill, dtype=dtype)
     for i, data in enumerate(datas):
         tmp[i, :len(data)] = data
-
-    return tmp
-
-
-def gen_xdmf_3d(datas, size_y, dim):
-    """Generate a XDMF output for cell elements."""
-    size_x = len(datas)
-    tmp = np.zeros((size_x, size_y), dtype=np.int)
-    for i, data in enumerate(datas):
-        if dim >= 2:
-            tmp[i, 0] = type_2_xdmf[data.element_type.value]
-            tmp[i, 1:1+len(data.vertice_ids)] = data.vertice_ids
-        else:
-            tmp[i, 0] = type_2_xdmf[data.element_type.value]
-            tmp[i, 1] = 2
-            tmp[i, 2:2+len(data.vertice_ids)] = data.vertice_ids
-
-    return tmp
-
-
-def gen_xdmf_2d(datas, size_y, dim):
-    """Generate a XDMF output for face elements."""
-    size_x = len(datas)
-    tmp = np.zeros((size_x, size_y), dtype=np.int)
-    for i, data in enumerate(datas):
-        if dim > 2:
-            tmp[i, 0] = type_2_xdmf[data.element_type.value]
-            tmp[i, 1:1+len(data.vertice_ids)] = data.vertice_ids
-        elif dim == 2:
-            tmp[i, 0] = type_2_xdmf[data.element_type.value]
-            tmp[i, 1] = 2
-            tmp[i, 2:2+len(data.vertice_ids)] = data.vertice_ids
-        else:
-            tmp[i, 0] = type_2_xdmf[data.element_type.value]
-            tmp[i, 1] = 1
-            tmp[i, 2:2+len(data.vertice_ids)] = data.vertice_ids
 
     return tmp
