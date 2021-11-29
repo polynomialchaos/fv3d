@@ -1,0 +1,205 @@
+{
+    "General": {
+        "title": {
+            "value": "untitled",
+            "The project title": null
+        }
+    },
+    "Mesh": {
+        "mesh_file": {
+            "value": "naca0012.mesh.h5",
+            "The mesh file": null
+        }
+    },
+    "Equation": {
+        "equation": {
+            "value": "Navier-Stokes",
+            "The equation to solve": [
+                "Navier-Stokes"
+            ]
+        },
+        "Navier-Stokes": {
+            "cfl_scale": {
+                "value": 1.00000E+00,
+                "The cfl_loc scale factor (0 ... 1)": null
+            },
+            "dfl_scale": {
+                "value": 1.00000E+00,
+                "The DFL scale factor (0 ... 1)": null
+            },
+            "mu_mix": {
+                "value": 1.81300E-05,
+                "The dynamic viscosity, N s m-2": null
+            },
+            "R_mix": {
+                "value": 2.87102E+02,
+                "The specific gas constant, J kg-1 K-1": null
+            },
+            "Pr": {
+                "value": 7.18000E-01,
+                "The Prandtl number": null
+            },
+            "kappa": {
+                "value": 1.40000E+00,
+                "The isentropic exponent": null
+            },
+            "Flux": {
+                "flux_scheme": {
+                    "value": "AUSM",
+                    "The Riemann solver": [
+                        "AUSM",
+                        "Rusanov"
+                    ]
+                }
+            },
+            "Boundary": {
+                "inflow"    : {
+                    "type"  : "inflow",
+                    "u"     : 100.0,
+                    "v"     : 20.0,
+                    "w"     : 0.0,
+                    "p"     : 1e5,
+                    "T"     : 300.0
+                },
+                "outflow"   : {
+                    "type"  : "outflow"
+                },
+                "profile"   : {
+                    "type"  : "wall-isothermal",
+                    "T"     : 800.0
+                },
+                "flow"      : {
+                    "type"  : "flow",
+                    "u"     : 100.0,
+                    "v"     : 20.0,
+                    "w"     : 0.0,
+                    "p"     : 1e5,
+                    "T"     : 300.0
+                }
+            }
+        }
+    },
+    "FV": {
+        "Reconstruction": {
+            "reconstruction": {
+                "value": "Linear",
+                "The spatial reconstruction scheme": [
+                    "First-Order",
+                    "Linear"
+                ]
+            }
+        },
+        "Limiter": {
+            "limiter": {
+                "value": "Barth-Jespersenn",
+                "The slope limiter method": [
+                    "None",
+                    "Barth-Jespersenn"
+                ]
+            }
+        }
+    },
+    "Output": {
+        "i_output_data": {
+            "value": 1000,
+            "The output file frequency  (-1 ... first/solutions/last, 0 ... disable)": null
+        }
+    },
+    "Restart": {
+        "use_restart": {
+            "value": false,
+            "The flag to start from restart": null
+        }
+    },
+    "TimeDisc": {
+        "time_step": {
+            "value": "Explicit",
+            "The timestep mehtod": [
+                "Explicit",
+                "Implicit"
+            ]
+        },
+        "max_iter": {
+            "value": 250000,
+            "The maximum number of iterations": null
+        },
+        "transient": {
+            "value": true,
+            "The flag wheter to be transient or steady-state": null
+        },
+        "abort_residual": {
+            "value": 1.00000E-10,
+            "The abort residual": null
+        },
+        "t_start": {
+            "value": 0.00000E+00,
+            "The start time": null
+        },
+        "t_end": {
+            "value": 2.00000E-00,
+            "The end time": null
+        },
+        "dt": {
+            "value": 1.00000E-3,
+            "The timestep": null
+        },
+        "Explicit": {
+            "scheme": {
+                "value": "RK3-3",
+                "The explicit scheme": [
+                    "Euler",
+                    "RK3-3",
+                    "RK4-5"
+                ]
+            }
+        },
+        "Implicit": {
+            "scheme": {
+                "value": "Euler",
+                "The implicit scheme": [
+                    "Euler",
+                    "BDF-2"
+                ]
+            },
+            "method": {
+                "value": "Newton",
+                "The method to solve the non-linear system of equations": [
+                    "Newton"
+                ]
+            },
+            "max_iter": {
+                "value": 100,
+                "The maximum number of inner iterations": null
+            },
+            "jacobian_type": {
+                "value": "Numerical",
+                "The type of jacobian generation": [
+                    "Numerical"
+                ]
+            },
+            "solver": {
+                "value": "BiCGStab",
+                "The linear system of equations solver": [
+                    "GMRes",
+                    "BiCGStab"
+                ]
+            },
+            "tolerance_lsoe": {
+                "value": 1.00000E-3,
+                "The linear solver tolerance": null
+            },
+            "max_iter_lsoe": {
+                "value": 100,
+                "The linear solver maximum number of iterations": null
+            },
+            "max_krylov_dims": {
+                "value": 10,
+                "The maximum Krylov space dimension": null
+            },
+            "max_krylov_restarts": {
+                "value": 3,
+                "The maximum restarts performed in GMRes iteration": null
+            }
+        }
+    }
+}

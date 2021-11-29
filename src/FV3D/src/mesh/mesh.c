@@ -115,6 +115,7 @@ void mesh_initialize()
     read_mesh_file(global_mesh);
     if (is_parallel())
         remap_local_mesh(global_mesh);
+
     calc_mesh_metrics(global_mesh);
 }
 
@@ -133,7 +134,7 @@ void read_mesh_file(Mesh_t *mesh)
 
     int rank = get_rank_number();
 
-    hid_t file_id = open_hdf5_file(mesh_file);
+    hid_t file_id = open_hdf5_file_read_only(mesh_file);
     GET_HDF5_ATTRIBUTE(file_id, "dimension", HDF5Int, &mesh->dimension);
     GET_HDF5_ATTRIBUTE(file_id, "is_partitioned", HDF5Int, &mesh->is_partitioned);
 

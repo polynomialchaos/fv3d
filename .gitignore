@@ -1,7 +1,7 @@
 # Compiled source #
 ###################
 *.h5
-*.json
+!*.json
 *.msh
 *.vtu
 
