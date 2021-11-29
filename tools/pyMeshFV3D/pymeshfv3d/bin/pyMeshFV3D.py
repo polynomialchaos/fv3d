@@ -6,26 +6,13 @@
 # @date 2021-11-23
 # @copyright Copyright (c) 2021
 ################################################################################
-import os
 import sys
 import argparse
-import shutil
 import logging
-from pymeshfv3d.reader import read_handler_lin1d, read_handler_gmsh
-from pychemistry.version import __version__
+from pymeshfv3d import read_handler_lin1d, read_handler_gmsh
 from pymeshfv3d import get_param, read_param_file, write_param_file
-from pymeshfv3d import process_mesh, write_mesh
-
-
-class LessThanFilter(logging.Filter):
-    def __init__(self, exclusive_maximum, name=''):
-        super(LessThanFilter, self).__init__(name)
-        self.max_level = exclusive_maximum
-
-    def filter(self, record):
-        # non-zero return means we log this message
-        return 1 if record.levelno < self.max_level else 0
-
+from pymeshfv3d import process_mesh, write_mesh, LessThanFilter
+from pychemistry.version import __version__
 
 logging.getLogger().setLevel(logging.DEBUG)
 
