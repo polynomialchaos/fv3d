@@ -9,12 +9,11 @@
 import sys
 import argparse
 import logging
-from typing import Type
-import h5py
 from pymeshfv3d.utilities.element import Boundary
+import h5py
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk
-from pymeshfv3d import LessThanFilter, ElementType, reader
+from pymeshfv3d import LessThanFilter, ElementType
 from pychemistry.version import __version__
 
 logging.getLogger().setLevel(logging.DEBUG)
