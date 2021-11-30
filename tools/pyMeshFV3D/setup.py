@@ -24,6 +24,7 @@ setup(
         'console_scripts': [
             'pyMeshFV3D=pymeshfv3d.bin.pyMeshFV3D:main',
             'pyMeshVtk=pymeshfv3d.bin.pyMeshVtk:main',
+            'pySolutionVtk=pymeshfv3d.bin.pySolutionVtk:main',
         ]
     }
 )

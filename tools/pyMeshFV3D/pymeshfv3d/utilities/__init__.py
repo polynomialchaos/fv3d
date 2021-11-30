@@ -12,3 +12,5 @@ from .geometry import calc_area, calc_distance, calc_normal
 from .geometry import calc_t1, calc_t2, calc_volume, calc_weight
 from .mesh import Mesh
 from .metis import MetisLibrary
+from .vtk_helper import generate_vtk_grid, set_vtk_celldata
+from .vtk_helper import write_vtk_grid, shallow_copy

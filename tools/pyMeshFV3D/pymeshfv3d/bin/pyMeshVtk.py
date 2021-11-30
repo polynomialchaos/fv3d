@@ -9,11 +9,9 @@
 import sys
 import argparse
 import logging
-from pymeshfv3d.utilities.element import Boundary
 import h5py
-import vtk
-from vtk.util.numpy_support import numpy_to_vtk
-from pymeshfv3d import LessThanFilter, ElementType
+from pymeshfv3d import LessThanFilter
+from pymeshfv3d import generate_vtk_grid, set_vtk_celldata, write_vtk_grid
 from pychemistry.version import __version__
 
 logging.getLogger().setLevel(logging.DEBUG)
@@ -30,17 +28,6 @@ out_handler.addFilter(LessThanFilter(logging.ERROR))
 out_handler.setFormatter(logging.Formatter(
     '%(levelname)s:%(name)s:%(message)s'))
 logging.getLogger().addHandler(out_handler)
-
-
-vtk_constructor = [None] * 9
-vtk_constructor[ElementType.POINT.value] = vtk.vtkVertex()
-vtk_constructor[ElementType.LINE.value] = vtk.vtkLine()
-vtk_constructor[ElementType.QUADRANGLE.value] = vtk.vtkQuad()
-vtk_constructor[ElementType.TRIANGLE.value] = vtk.vtkTriangle()
-vtk_constructor[ElementType.HEXAEDER.value] = vtk.vtkHexahedron()
-vtk_constructor[ElementType.PRISM.value] = vtk.vtkWedge()
-vtk_constructor[ElementType.PYRAMID.value] = vtk.vtkPyramid()
-vtk_constructor[ElementType.TETRAEDER.value] = vtk.vtkTetra()
 
 
 def main():
@@ -109,80 +96,38 @@ def main():
 
     cells = generate_vtk_grid(
         points, cell_types, cell_n_vertices, cell_vertices)
-    set_vtk_celldata(cells, 'id', cell_ids, vtk.VTK_INT)
-    set_vtk_celldata(cells, 'volume', cell_volumes, vtk.VTK_DOUBLE)
-    set_vtk_celldata(cells, 'x', cell_xs, vtk.VTK_DOUBLE)
-    set_vtk_celldata(cells, 'dx', cell_dxs, vtk.VTK_DOUBLE)
+    set_vtk_celldata(cells, 'id', cell_ids)
+    set_vtk_celldata(cells, 'volume', cell_volumes)
+    set_vtk_celldata(cells, 'x', cell_xs)
+    set_vtk_celldata(cells, 'dx', cell_dxs)
     if is_partitioned:
-        set_vtk_celldata(cells, 'pid', cell_pids, vtk.VTK_INT)
+        set_vtk_celldata(cells, 'pid', cell_pids)
     write_vtk_grid(args.mesh_file + '.cells.vtu', cells)
 
     faces = generate_vtk_grid(
         points, face_types, face_n_vertices, face_vertices)
-    set_vtk_celldata(faces, 'cells', face_cells, vtk.VTK_INT)
-    set_vtk_celldata(faces, 'boundary', face_boundaries, vtk.VTK_INT)
-    set_vtk_celldata(faces, 'x', face_xs, vtk.VTK_DOUBLE)
-    set_vtk_celldata(faces, 'n', face_ns, vtk.VTK_DOUBLE)
-    set_vtk_celldata(faces, 't1', face_t1s, vtk.VTK_DOUBLE)
-    set_vtk_celldata(faces, 't2', face_t2s, vtk.VTK_DOUBLE)
-    set_vtk_celldata(faces, 'area', face_areas, vtk.VTK_DOUBLE)
-    set_vtk_celldata(faces, 'lambda', face_lambdas, vtk.VTK_DOUBLE)
+    set_vtk_celldata(faces, 'cells', face_cells)
+    set_vtk_celldata(faces, 'boundary', face_boundaries)
+    set_vtk_celldata(faces, 'x', face_xs)
+    set_vtk_celldata(faces, 'n', face_ns)
+    set_vtk_celldata(faces, 't1', face_t1s)
+    set_vtk_celldata(faces, 't2', face_t2s)
+    set_vtk_celldata(faces, 'area', face_areas)
+    set_vtk_celldata(faces, 'lambda', face_lambdas)
     write_vtk_grid(args.mesh_file + '.faces.vtu', faces)
 
     boundaries = generate_vtk_grid(
         points, boundary_types, boundary_n_vertices, boundary_vertices)
-    set_vtk_celldata(boundaries, 'id', boundary_ids, vtk.VTK_INT)
-    set_vtk_celldata(boundaries, 'face', boundary_faces, vtk.VTK_INT)
-    set_vtk_celldata(boundaries, 'n', boundary_ns, vtk.VTK_DOUBLE)
-    set_vtk_celldata(boundaries, 't1', boundary_t1s, vtk.VTK_DOUBLE)
-    set_vtk_celldata(boundaries, 't2', boundary_t2s, vtk.VTK_DOUBLE)
+    set_vtk_celldata(boundaries, 'id', boundary_ids)
+    set_vtk_celldata(boundaries, 'face', boundary_faces)
+    set_vtk_celldata(boundaries, 'n', boundary_ns)
+    set_vtk_celldata(boundaries, 't1', boundary_t1s)
+    set_vtk_celldata(boundaries, 't2', boundary_t2s)
     set_vtk_celldata(boundaries, 'distance',
-                     boundary_distances, vtk.VTK_DOUBLE)
+                     boundary_distances)
     if is_partitioned:
-        set_vtk_celldata(boundaries, 'pid', boundary_pids, vtk.VTK_INT)
+        set_vtk_celldata(boundaries, 'pid', boundary_pids)
     write_vtk_grid(args.mesh_file + '.boundaries.vtu', boundaries)
-
-
-def generate_vtk_grid(points, element_types,
-                      n_element_vertics, element_vertics):
-    """Generate a unstructured grid for the given points and elements."""
-    # define the points
-    vtk_points = vtk.vtkPoints()
-    for point in points:
-        vtk_points.InsertNextPoint(point)
-
-    # define the unstructured grid
-    grid = vtk.vtkUnstructuredGrid()
-    grid.SetPoints(vtk_points)
-
-    # append the cells
-    for e_t, e_nv, e_v in zip(
-            element_types, n_element_vertics, element_vertics):
-
-        cell = vtk_constructor[e_t]
-        cell_pids = cell.GetPointIds()
-        for i in range(e_nv):
-            cell_pids.SetId(i, e_v[i])
-
-        grid.InsertNextCell(cell.GetCellType(), cell_pids)
-
-    return grid
-
-
-def set_vtk_celldata(grid, key, data, vtk_type):
-    """Append cell data to the grid."""
-    vtkArray = numpy_to_vtk(data, array_type=vtk_type)
-    vtkArray.SetName(key)
-
-    grid.GetCellData().AddArray(vtkArray)
-
-
-def write_vtk_grid(path, grid):
-    """Write the grid to the given path."""
-    writer = vtk.vtkXMLUnstructuredGridWriter()
-    writer.SetFileName(path)
-    writer.SetInputData(grid)
-    writer.Write()
 
 
 ################################################################################
