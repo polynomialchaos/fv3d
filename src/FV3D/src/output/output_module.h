@@ -13,12 +13,12 @@
 
 extern int do_output_data;
 extern int i_output_data;
-extern string_t output_file;
 
 /*******************************************************************************
  * @brief Create a file header
+ * @param file_name
  ******************************************************************************/
-void create_file_header();
+void create_file_header(cstring_t file_name);
 
 /*******************************************************************************
  * @brief Define output

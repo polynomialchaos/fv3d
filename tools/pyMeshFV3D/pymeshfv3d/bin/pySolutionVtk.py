@@ -43,7 +43,7 @@ def main():
                         required=True, type=str, help='The mesh file')
     parser.add_argument('-v', '--version', action='version',
                         version='%(prog)s (version {:})'.format(__version__))
-    parser.add_argument('solution_file', nargs='?',
+    parser.add_argument('solution_files', nargs='+',
                         help='The solution file')
     args = parser.parse_args()
 
@@ -59,21 +59,18 @@ def main():
     cells = generate_vtk_grid(
         points, cell_types, cell_n_vertices, cell_vertices)
 
-    with h5py.File(args.solution_file, 'r') as h5_root:
-        variables = [str(x.decode()) for x in h5_root['tot_variables']]
-
-        h5_solutions = h5_root['SOLUTIONS']
-        for key in h5_solutions:
-            h5_sol = h5_solutions[key]
-            phi_total = h5_sol['phi_total'][:]
+    for solution_file in args.solution_files:
+        with h5py.File(solution_file, 'r') as h5_root:
+            variables = [str(x.decode()) for x in h5_root['tot_variables']]
+            phi_total = h5_root['phi_total'][:]
 
             grid = shallow_copy(cells)
             for i, variable in enumerate(variables):
                 set_vtk_celldata(
                     grid, variable, phi_total[:, i])
 
-            file_name = args.solution_file.replace('.h5', '')
-            write_vtk_grid('{:}.{:}.vtu'.format(file_name, key), grid)
+            file_name = solution_file.replace('.h5', '.vtu')
+            write_vtk_grid(file_name, grid)
 
 
 ################################################################################

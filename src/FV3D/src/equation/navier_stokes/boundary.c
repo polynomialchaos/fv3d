@@ -11,17 +11,16 @@
 #include "equation/equation_module.h"
 #include "fv/fv_module.h"
 
-string_t boundary_type_strings[BoundaryTypeMax] =
-    {
-        "FLOW",
-        "INFLOW",
-        "OUTFLOW",
-        "WALL-ADIABATIC",
-        "WALL-ISOTHERMAL",
-        "WALL-SLIP",
-        "SYMMETRY",
-        "STATE",
-        "FUNCTION"};
+string_t boundary_type_strings[BoundaryTypeMax] = {
+    "flow",
+    "inflow",
+    "outflow",
+    "wall-adiabatic",
+    "wall-isothermal",
+    "wall-slip",
+    "symmetry",
+    "state",
+    "function"};
 
 /*******************************************************************************
  * @brief Define boundary
