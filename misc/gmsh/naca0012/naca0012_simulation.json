@@ -101,7 +101,7 @@
     },
     "Output": {
         "i_output_data": {
-            "value": 1000,
+            "value": 10,
             "The output file frequency  (-1 ... first/solutions/last, 0 ... disable)": null
         }
     },

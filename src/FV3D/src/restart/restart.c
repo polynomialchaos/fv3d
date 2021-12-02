@@ -80,7 +80,7 @@ void read_restart_data()
 
             for (int i_stage = 0; i_stage < n_stages_restart; ++i_stage)
             {
-                char iter_string[10];
+                char iter_string[256];
                 sprintf(iter_string, "%d", i_stage);
                 string_t tmp = allocate_strcat("phi_old:", iter_string);
 
@@ -118,7 +118,7 @@ void read_restart_data()
 
             for (int i_stage = 0; i_stage < n_stages_restart; ++i_stage)
             {
-                char iter_string[10];
+                char iter_string[256];
                 sprintf(iter_string, "%d", i_stage);
                 string_t tmp = allocate_strcat("phi_old:", iter_string);
 
@@ -175,6 +175,7 @@ void restart_finalize()
 void restart_initialize()
 {
     GET_PARAMETER("Restart/use_restart", LogicalParameter, &use_restart);
+    GET_PARAMETER("Restart/restart_iter", DigitParameter, &restart_iter);
 
     if (use_restart == 1)
         read_restart_data();
