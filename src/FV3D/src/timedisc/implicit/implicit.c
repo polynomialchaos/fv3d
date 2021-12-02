@@ -212,7 +212,7 @@ void implicit_initialize()
     GET_PARAMETER("TimeDisc/Implicit/max_krylov_dims", DigitParameter, &max_krylov_dims);
     GET_PARAMETER("TimeDisc/Implicit/max_krylov_restarts", DigitParameter, &max_krylov_restarts);
 
-    Cells_t *cells = global_mesh->cells;
+    Cells_t *cells = solver_mesh->cells;
     int n_domain_cells = cells->n_domain_cells;
     int n_sol_variables = all_variables->n_sol_variables;
 
@@ -287,7 +287,7 @@ void implicit_initialize()
  ******************************************************************************/
 void time_step_newton(int iter, double t, double dt)
 {
-    Cells_t *cells = global_mesh->cells;
+    Cells_t *cells = solver_mesh->cells;
     int n_domain_cells = cells->n_domain_cells;
     int n_sol_variables = all_variables->n_sol_variables;
     int n_tot_variables = all_variables->n_tot_variables;

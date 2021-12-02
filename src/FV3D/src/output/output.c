@@ -105,7 +105,7 @@ void output_initialize()
  ******************************************************************************/
 void write_output(int iter, double t)
 {
-    Cells_t *cells = global_mesh->cells;
+    Cells_t *cells = solver_mesh->cells;
     int n_domain_cells = cells->n_domain_cells;
     int n_global_cells = cells->n_global_cells;
     int n_tot_variables = all_variables->n_tot_variables;
@@ -113,6 +113,7 @@ void write_output(int iter, double t)
 
     char file_prefix[256];
     sprintf(file_prefix, ".%09d.h5", iter);
+    cstring_t title = get_simulation_title();
     string_t output_file = allocate_strcat(title, file_prefix);
     create_file_header(output_file);
 

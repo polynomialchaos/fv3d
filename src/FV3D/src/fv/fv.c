@@ -63,9 +63,9 @@ void fv_finalize()
  ******************************************************************************/
 void fv_initialize()
 {
-    Cells_t *cells = global_mesh->cells;
-    Boundaries_t *boundaries = global_mesh->boundaries;
-    Faces_t *faces = global_mesh->faces;
+    Cells_t *cells = solver_mesh->cells;
+    Boundaries_t *boundaries = solver_mesh->boundaries;
+    Faces_t *faces = solver_mesh->faces;
     int n_local_cells = cells->n_local_cells;
     int n_boundaries = boundaries->n_boundaries;
     int n_faces = faces->n_faces;
@@ -92,9 +92,9 @@ void fv_initialize()
  ******************************************************************************/
 void fv_time_derivative(double t)
 {
-    Cells_t *cells = global_mesh->cells;
-    Boundaries_t *boundaries = global_mesh->boundaries;
-    Faces_t *faces = global_mesh->faces;
+    Cells_t *cells = solver_mesh->cells;
+    Boundaries_t *boundaries = solver_mesh->boundaries;
+    Faces_t *faces = solver_mesh->faces;
     int n_local_cells = cells->n_local_cells;
     int n_domain_cells = cells->n_domain_cells;
     int n_boundaries = boundaries->n_boundaries;
@@ -138,7 +138,7 @@ void fv_time_derivative(double t)
  ******************************************************************************/
 void set_solution()
 {
-    Cells_t *cells = global_mesh->cells;
+    Cells_t *cells = solver_mesh->cells;
     int n_domain_cells = cells->n_domain_cells;
     int n_tot_variables = all_variables->n_tot_variables;
 

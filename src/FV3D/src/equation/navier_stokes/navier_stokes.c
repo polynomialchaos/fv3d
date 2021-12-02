@@ -123,7 +123,7 @@ void navier_stokes_initialize()
 
 void update(double t)
 {
-    Cells_t *cells = global_mesh->cells;
+    Cells_t *cells = solver_mesh->cells;
     int n_domain_cells = cells->n_domain_cells;
     int n_tot_variables = all_variables->n_tot_variables;
 
@@ -144,7 +144,7 @@ void calc_exact_func(int id, double t, double *x, double *phi)
     UNUSED(t);
     UNUSED(x);
 #endif /* DEBUG */
-    Regions_t *regions = global_mesh->regions;
+    Regions_t *regions = solver_mesh->regions;
     int n_tot_variables = all_variables->n_tot_variables;
 
     switch (id)
@@ -160,7 +160,7 @@ void calc_exact_func(int id, double t, double *x, double *phi)
 
 double calc_time_step()
 {
-    Cells_t *cells = global_mesh->cells;
+    Cells_t *cells = solver_mesh->cells;
     int n_cells = cells->n_domain_cells;
     int n_tot_variables = all_variables->n_tot_variables;
 

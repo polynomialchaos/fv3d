@@ -1,29 +1,35 @@
 /*******************************************************************************
- * @file mesh_module.h
+ * @file solver.c
  * @author Florian Eigentler
  * @brief
  * @version 1.0.0
  * @date 2021-11-15
  * @copyright Copyright (c) 2021
  ******************************************************************************/
-#ifndef MESH_MODULE_H
-#define MESH_MODULE_H
+#include "solver_private.h"
 
-#include "fv3d/fv3d_module.h"
-
-/*******************************************************************************
- * @brief Define mesh
- ******************************************************************************/
-void mesh_define();
+string_t solver_title = NULL;
 
 /*******************************************************************************
- * @brief Finalize mesh
+ * @brief Free solver
  ******************************************************************************/
-void mesh_finalize();
+void free_solver()
+{
+    DEALLOCATE(solver_title);
+}
 
 /*******************************************************************************
- * @brief Initialize mesh
+ * @brief Return the simulation title
  ******************************************************************************/
-void mesh_initialize();
+cstring_t get_simulation_title()
+{
+    return solver_title;
+}
 
-#endif /* MESH_MODULE_H */
+/*******************************************************************************
+ * @brief Initialize solver
+ ******************************************************************************/
+void init_solver(cstring_t title)
+{
+    solver_title = allocate_strcpy(title);
+}

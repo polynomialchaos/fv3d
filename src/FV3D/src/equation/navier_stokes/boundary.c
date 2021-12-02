@@ -36,9 +36,9 @@ void boundary_define()
  ******************************************************************************/
 void boundary_finalize()
 {
-    if (global_mesh)
+    if (solver_mesh)
     {
-        Regions_t *regions = global_mesh->regions;
+        Regions_t *regions = solver_mesh->regions;
 
         if (regions)
         {
@@ -54,7 +54,7 @@ void boundary_finalize()
  ******************************************************************************/
 void boundary_initialize()
 {
-    Regions_t *regions = global_mesh->regions;
+    Regions_t *regions = solver_mesh->regions;
     int n_regions = regions->n_regions;
     int n_tot_variables = all_variables->n_tot_variables;
 
@@ -181,10 +181,10 @@ void parse_primitive_state(cstring_t prefix, double *phi)
  ******************************************************************************/
 void update_boundaries(double t)
 {
-    Cells_t *cells = global_mesh->cells;
-    Boundaries_t *boundaries = global_mesh->boundaries;
-    Faces_t *faces = global_mesh->faces;
-    Regions_t *regions = global_mesh->regions;
+    Cells_t *cells = solver_mesh->cells;
+    Boundaries_t *boundaries = solver_mesh->boundaries;
+    Faces_t *faces = solver_mesh->faces;
+    Regions_t *regions = solver_mesh->regions;
     int n_local_cells = cells->n_local_cells;
     int n_boundaries = boundaries->n_boundaries;
     int n_tot_variables = all_variables->n_tot_variables;
@@ -293,10 +293,10 @@ void update_boundaries(double t)
  ******************************************************************************/
 void update_gradients_boundaries()
 {
-    Cells_t *cells = global_mesh->cells;
-    Boundaries_t *boundaries = global_mesh->boundaries;
-    Faces_t *faces = global_mesh->faces;
-    Regions_t *regions = global_mesh->regions;
+    Cells_t *cells = solver_mesh->cells;
+    Boundaries_t *boundaries = solver_mesh->boundaries;
+    Faces_t *faces = solver_mesh->faces;
+    Regions_t *regions = solver_mesh->regions;
     int n_local_cells = cells->n_local_cells;
     int n_boundaries = boundaries->n_boundaries;
     int n_tot_variables = all_variables->n_tot_variables;

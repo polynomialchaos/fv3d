@@ -6,7 +6,7 @@
 # @date 2021-11-08
 # @copyright Copyright (c) 2021
 #*******************************************************************************
-set(target ${CMAKE_PROJECT_NAME})
+set(target solver)
 
 #*******************************************************************************
 # Add subdirecotries
@@ -14,14 +14,17 @@ set(target ${CMAKE_PROJECT_NAME})
 file(GLOB target_sources
     src/*.c
     src/*/*.c
-    src/*/*/*.c
 )
 
 #*******************************************************************************
 # Build target
 #******************************************************************************/
-add_executable(${target} ${target_sources})
-target_link_libraries(${target} basec solver)
+if(shared_lib)
+    add_library(${target} SHARED ${target_sources})
+else()
+    add_library(${target} STATIC ${target_sources})
+endif()
+target_link_libraries(${target} basec)
 set_target_properties(${target} PROPERTIES VERSION ${PROJECT_VERSION})
 
 target_include_directories(${target} PUBLIC
@@ -31,6 +34,7 @@ target_include_directories(${target} PUBLIC
 #*******************************************************************************
 # Install target
 #******************************************************************************/
+install(DIRECTORY include/ DESTINATION include FILES_MATCHING PATTERN "*.h")
 install(TARGETS ${target} EXPORT ${install_target}
     RUNTIME DESTINATION bin INCLUDES DESTINATION include
     LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)

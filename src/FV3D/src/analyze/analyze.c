@@ -47,7 +47,7 @@ void analyze_initialize()
  ******************************************************************************/
 void calc_global_residual(double dt)
 {
-    Cells_t *cells = global_mesh->cells;
+    Cells_t *cells = solver_mesh->cells;
     int n_sol_variables = all_variables->n_sol_variables;
     int n_domain_cells = cells->n_domain_cells;
 
@@ -65,7 +65,7 @@ void calc_global_residual(double dt)
     }
 
     for (int i = 0; i < n_sol_variables; ++i)
-        tmp[i] *= dt / global_mesh->global_volume;
+        tmp[i] *= dt / solver_mesh->global_volume;
 
     mpi_all_reduce_n(MPIDouble, MPISum, tmp, n_sol_variables, residual);
 }

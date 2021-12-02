@@ -31,13 +31,14 @@ int n_stages_restart = 0;
  ******************************************************************************/
 void read_restart_data()
 {
-    Cells_t *cells = global_mesh->cells;
+    Cells_t *cells = solver_mesh->cells;
     int n_domain_cells = cells->n_domain_cells;
     int n_tot_variables = all_variables->n_tot_variables;
     int n_sol_variables = all_variables->n_sol_variables;
 
     char file_prefix[256];
     sprintf(file_prefix, ".%09d.h5", restart_iter);
+    cstring_t title = get_simulation_title();
     string_t output_file = allocate_strcat(title, file_prefix);
     create_file_header(output_file);
 

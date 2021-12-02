@@ -13,6 +13,7 @@ set(install_target ${target})
 # Add subdirecotries
 #******************************************************************************/
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_subdirectory(Solver)
 add_subdirectory(FV3D)
 
 #*******************************************************************************

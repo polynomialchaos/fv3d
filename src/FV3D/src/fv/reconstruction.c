@@ -23,9 +23,9 @@ double *receive_buffer = NULL;
  ******************************************************************************/
 void calc_gradients()
 {
-    Cells_t *cells = global_mesh->cells;
-    Boundaries_t *boundaries = global_mesh->boundaries;
-    Faces_t *faces = global_mesh->faces;
+    Cells_t *cells = solver_mesh->cells;
+    Boundaries_t *boundaries = solver_mesh->boundaries;
+    Faces_t *faces = solver_mesh->faces;
     int n_local_cells = cells->n_local_cells;
     int n_boundaries = boundaries->n_boundaries;
     int n_faces = faces->n_faces;
@@ -115,7 +115,7 @@ void reconstruction_finalize()
  ******************************************************************************/
 void reconstruction_first_order()
 {
-    Faces_t *faces = global_mesh->faces;
+    Faces_t *faces = solver_mesh->faces;
     int n_faces = faces->n_faces;
     int n_tot_variables = all_variables->n_tot_variables;
 
@@ -155,7 +155,7 @@ void reconstruction_initialize()
 
     if (is_parallel())
     {
-        Partition_t *partition = global_mesh->partition;
+        Partition_t *partition = solver_mesh->partition;
         int n_partition_sends = partition->n_partition_sends;
         int n_partition_receives = partition->n_partition_receives;
         int n_tot_variables = all_variables->n_tot_variables;
@@ -170,7 +170,7 @@ void reconstruction_initialize()
  ******************************************************************************/
 void reconstruction_linear()
 {
-    Faces_t *faces = global_mesh->faces;
+    Faces_t *faces = solver_mesh->faces;
     int n_internal_faces = faces->n_internal_faces;
     int n_boundary_faces = faces->n_boundary_faces;
     int n_tot_variables = all_variables->n_tot_variables;
@@ -240,7 +240,7 @@ void reconstruction_linear()
  ******************************************************************************/
 void update_parallel(double *phi_local)
 {
-    Partition_t *partition = global_mesh->partition;
+    Partition_t *partition = solver_mesh->partition;
     int rank = get_rank_number();
     int n_partitions = partition->n_partitions;
     int n_partitions_sends = partition->n_partition_sends;

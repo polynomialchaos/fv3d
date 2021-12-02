@@ -23,8 +23,8 @@ string_t limiter_name = NULL;
  ******************************************************************************/
 double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
 {
-    Cells_t *cells = global_mesh->cells;
-    Faces_t *faces = global_mesh->faces;
+    Cells_t *cells = solver_mesh->cells;
+    Faces_t *faces = solver_mesh->faces;
     int max_cell_faces = cells->max_cell_faces;
     int n_tot_variables = all_variables->n_tot_variables;
     int *cf = &cells->faces[i_cell * max_cell_faces];

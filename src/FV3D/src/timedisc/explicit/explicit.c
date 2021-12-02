@@ -123,7 +123,7 @@ void time_step_lserkw2(int iter, double t, double dt)
     UNUSED(iter);
 #endif /* DEBUG */
 
-    Cells_t *cells = global_mesh->cells;
+    Cells_t *cells = solver_mesh->cells;
     int n_domain_cells = cells->n_domain_cells;
     int n_sol_variables = all_variables->n_sol_variables;
     int n_tot_variables = all_variables->n_tot_variables;

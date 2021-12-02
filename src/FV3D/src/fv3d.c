@@ -15,8 +15,6 @@
 #include "restart/restart_module.h"
 #include "timedisc/timedisc_module.h"
 
-string_t title = NULL;
-
 /*******************************************************************************
  * @brief Main function
  * @param argc
@@ -38,12 +36,16 @@ int main(int argc, string_t *argv)
     /* call the global initialize routine */
     global_initialize(argc, argv, BTRU, BTRU, BTRU, BTRU);
 
+    /* mesh info */
+    PRINTF("\n");
+    printf_r_sep_title('=', "Mesh");
+    print_mesh_info();
+    printf_r_sep('=');
+
     /* calculation */
     PRINTF("\n");
     printf_r_sep_title('=', "Calculation");
-
     timedisc();
-
     printf_r_sep('=');
 
     /* end the program */
@@ -68,7 +70,7 @@ void fv3d_define()
  ******************************************************************************/
 void fv3d_finalize()
 {
-    DEALLOCATE(title);
+    free_solver();
 }
 
 /*******************************************************************************
@@ -76,5 +78,8 @@ void fv3d_finalize()
  ******************************************************************************/
 void fv3d_initialize()
 {
+    string_t title = NULL;
     GET_PARAMETER("General/title", StringParameter, &title);
+    init_solver(title);
+    DEALLOCATE(title);
 }
