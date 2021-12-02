@@ -148,10 +148,70 @@ typedef struct Mesh
 
 extern Mesh_t *solver_mesh; /** Global mesh */
 
+typedef struct Variable
+{
+    string_t name;
+} Variable_t;
+
+typedef struct Variables
+{
+    int n_sol_variables;
+    int n_dep_variables;
+    int n_tot_variables;
+
+    Variable_t *sol_variables;
+    Variable_t *dep_variables;
+    Variable_t **tot_variables;
+} Variables_t;
+
+extern Variables_t *solver_variables;
+
+extern int solver_i_output_data;
+extern bool_t solver_do_output_data;
+
+extern int solver_use_restart;
+extern int solver_iter_restart;
+extern double solver_t_restart;
+
+/*******************************************************************************
+ * @brief Add a solution variable
+ * @param name
+ * @return int
+ ******************************************************************************/
+int add_sol_variable(string_t name);
+
+/*******************************************************************************
+ * @brief Add a dependent variable
+ * @param name
+ * @return int
+ ******************************************************************************/
+int add_dep_variable(string_t name);
+
+/*******************************************************************************
+ * @brief Create a file header
+ * @param file_name
+ ******************************************************************************/
+void create_file_header(cstring_t file_name);
+
+/*******************************************************************************
+ * @brief Free equation
+ ******************************************************************************/
+void free_equation();
+
 /*******************************************************************************
  * @brief Free mesh
  ******************************************************************************/
 void free_mesh();
+
+/*******************************************************************************
+ * @brief Free output
+ ******************************************************************************/
+void free_output();
+
+/*******************************************************************************
+ * @brief Free restart
+ ******************************************************************************/
+void free_restart();
 
 /*******************************************************************************
  * @brief Free solver
@@ -164,9 +224,25 @@ void free_solver();
 cstring_t get_simulation_title();
 
 /*******************************************************************************
+ * @brief Initialize equation
+ ******************************************************************************/
+void init_equation();
+
+/*******************************************************************************
  * @brief Initialize mesh
  ******************************************************************************/
 void init_mesh(cstring_t mesh_file);
+
+/*******************************************************************************
+ * @brief Initialize output
+ * @param i_output_data
+ ******************************************************************************/
+void init_output(int i_output_data);
+
+/*******************************************************************************
+ * @brief Initialize restart
+ ******************************************************************************/
+void init_restart(bool_t use_restart, cstring_t restart_file);
 
 /*******************************************************************************
  * @brief Initialize solver
@@ -178,5 +254,17 @@ void init_solver(cstring_t title);
  * @param mesh
  ******************************************************************************/
 void print_mesh_info();
+
+/*******************************************************************************
+ * @brief Print the variables
+ ******************************************************************************/
+void print_variables();
+
+/*******************************************************************************
+ * @brief Write data to file
+ * @param iter
+ * @param t
+ ******************************************************************************/
+void write_output(int iter, double t);
 
 #endif /* SOLVER_MODULE_H */

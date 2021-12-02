@@ -8,7 +8,7 @@
  ******************************************************************************/
 #include "fv3d_private.h"
 #include "mesh/mesh_module.h"
-#include "equation/equation_module.h"
+#include "navier_stokes/navier_stokes_module.h"
 #include "fv/fv_module.h"
 #include "analyze/analyze_module.h"
 #include "output/output_module.h"
@@ -26,7 +26,7 @@ int main(int argc, string_t *argv)
     /* define the program structure */
     fv3d_define();
     mesh_define();
-    equation_define();
+    navier_stokes_define();
     fv_define();
     analyze_define();
     output_define();
@@ -40,6 +40,12 @@ int main(int argc, string_t *argv)
     PRINTF("\n");
     printf_r_sep_title('=', "Mesh");
     print_mesh_info();
+    printf_r_sep('=');
+
+    /* equation info */
+    PRINTF("\n");
+    printf_r_sep_title('=', "Variables");
+    print_variables();
     printf_r_sep('=');
 
     /* calculation */
@@ -61,8 +67,9 @@ void fv3d_define()
     REGISTER_INITIALIZE_ROUTINE(fv3d_initialize);
     REGISTER_FINALIZE_ROUTINE(fv3d_finalize);
 
-    string_t tmp = "untitled";
-    SET_PARAMETER("General/title", StringParameter, &tmp, "The project title", NULL, 0);
+    string_t title = "untitled";
+    SET_PARAMETER("General/title", StringParameter, &title,
+                  "The project title", NULL, 0);
 }
 
 /*******************************************************************************

@@ -8,7 +8,6 @@
  ******************************************************************************/
 #include "navier_stokes_module.h"
 #include "mesh/mesh_module.h"
-#include "equation/equation_module.h"
 #include "fv/fv_module.h"
 
 string_t boundary_type_strings[BoundaryTypeMax] = {
@@ -56,7 +55,7 @@ void boundary_initialize()
 {
     Regions_t *regions = solver_mesh->regions;
     int n_regions = regions->n_regions;
-    int n_tot_variables = all_variables->n_tot_variables;
+    int n_tot_variables = solver_variables->n_tot_variables;
 
     regions->type = ALLOCATE(sizeof(int) * n_regions);
     regions->function_id = ALLOCATE(sizeof(int) * n_regions);
@@ -151,7 +150,7 @@ void parse_primitive_state(cstring_t prefix, double *phi)
     int has_p = PARAMETER_EXISTS(tmp_p);
     int has_T = PARAMETER_EXISTS(tmp_T);
 
-    set_value_n(0.0, all_variables->n_tot_variables, phi);
+    set_value_n(0.0, solver_variables->n_tot_variables, phi);
 
     /* check the provided data and fill the arrays */
     if (has_u && has_v && has_w && has_p && has_T)
@@ -187,7 +186,7 @@ void update_boundaries(double t)
     Regions_t *regions = solver_mesh->regions;
     int n_local_cells = cells->n_local_cells;
     int n_boundaries = boundaries->n_boundaries;
-    int n_tot_variables = all_variables->n_tot_variables;
+    int n_tot_variables = solver_variables->n_tot_variables;
 
     double tmp_u;
     double tmp_v;
@@ -299,7 +298,7 @@ void update_gradients_boundaries()
     Regions_t *regions = solver_mesh->regions;
     int n_local_cells = cells->n_local_cells;
     int n_boundaries = boundaries->n_boundaries;
-    int n_tot_variables = all_variables->n_tot_variables;
+    int n_tot_variables = solver_variables->n_tot_variables;
 
     double tmp_x[n_tot_variables];
     double tmp_y[n_tot_variables];

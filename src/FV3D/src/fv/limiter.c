@@ -8,7 +8,6 @@
  ******************************************************************************/
 #include "fv_module.h"
 #include "mesh/mesh_module.h"
-#include "equation/equation_module.h"
 
 double_limiter_ft limiter_function_pointer = NULL;
 
@@ -26,7 +25,7 @@ double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
     Cells_t *cells = solver_mesh->cells;
     Faces_t *faces = solver_mesh->faces;
     int max_cell_faces = cells->max_cell_faces;
-    int n_tot_variables = all_variables->n_tot_variables;
+    int n_tot_variables = solver_variables->n_tot_variables;
     int *cf = &cells->faces[i_cell * max_cell_faces];
 
     double phi_min = phi_total[i_cell * n_tot_variables + i_var];

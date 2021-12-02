@@ -8,7 +8,6 @@
  ******************************************************************************/
 #include "fv_module.h"
 #include "mesh/mesh_module.h"
-#include "equation/equation_module.h"
 
 void_reconstruction_ft reconstruction_function_pointer = NULL;
 void_update_gradients_ft update_gradients_function_pointer = NULL;
@@ -29,7 +28,7 @@ void calc_gradients()
     int n_local_cells = cells->n_local_cells;
     int n_boundaries = boundaries->n_boundaries;
     int n_faces = faces->n_faces;
-    int n_tot_variables = all_variables->n_tot_variables;
+    int n_tot_variables = solver_variables->n_tot_variables;
 
     if (is_parallel())
         update_parallel(phi_total);
@@ -117,7 +116,7 @@ void reconstruction_first_order()
 {
     Faces_t *faces = solver_mesh->faces;
     int n_faces = faces->n_faces;
-    int n_tot_variables = all_variables->n_tot_variables;
+    int n_tot_variables = solver_variables->n_tot_variables;
 
     calc_gradients();
 
@@ -158,7 +157,7 @@ void reconstruction_initialize()
         Partition_t *partition = solver_mesh->partition;
         int n_partition_sends = partition->n_partition_sends;
         int n_partition_receives = partition->n_partition_receives;
-        int n_tot_variables = all_variables->n_tot_variables;
+        int n_tot_variables = solver_variables->n_tot_variables;
 
         send_buffer = ALLOCATE(sizeof(double) * n_tot_variables * n_partition_sends);
         receive_buffer = ALLOCATE(sizeof(double) * n_tot_variables * n_partition_receives);
@@ -173,7 +172,7 @@ void reconstruction_linear()
     Faces_t *faces = solver_mesh->faces;
     int n_internal_faces = faces->n_internal_faces;
     int n_boundary_faces = faces->n_boundary_faces;
-    int n_tot_variables = all_variables->n_tot_variables;
+    int n_tot_variables = solver_variables->n_tot_variables;
 
     calc_gradients();
 
@@ -247,7 +246,7 @@ void update_parallel(double *phi_local)
     int *n_partitions_sends_to = partition->n_partition_sends_to;
     int n_partition_receives = partition->n_partition_receives;
     int *n_partition_receives_from = partition->n_partition_receives_from;
-    int n_tot_variables = all_variables->n_tot_variables;
+    int n_tot_variables = solver_variables->n_tot_variables;
 
     for (int s_rank = 0; s_rank < n_partitions; ++s_rank)
     {

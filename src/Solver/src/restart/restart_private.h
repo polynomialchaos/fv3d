@@ -1,29 +1,30 @@
 /*******************************************************************************
- * @file output_module.h
+ * @file restart_private.h
  * @author Florian Eigentler
  * @brief
  * @version 1.0.0
  * @date 2021-11-15
  * @copyright Copyright (c) 2021
  ******************************************************************************/
-#ifndef OUTPUT_MODULE_H
-#define OUTPUT_MODULE_H
+#ifndef RESTART_PRIVATE_H
+#define RESTART_PRIVATE_H
 
-#include "fv3d/fv3d_module.h"
-
-/*******************************************************************************
- * @brief Define output
- ******************************************************************************/
-void output_define();
+#include "solver/solver_module.h"
 
 /*******************************************************************************
- * @brief Finalize output
+ * @brief Free restart
  ******************************************************************************/
-void output_finalize();
+void free_restart();
 
 /*******************************************************************************
- * @brief Initialize output
+ * @brief Initialize restart
  ******************************************************************************/
-void output_initialize();
+void init_restart(bool_t use_restart, cstring_t restart_file);
 
-#endif /* OUTPUT_MODULE_H */
+/*******************************************************************************
+ * @brief Read restart data
+ * @param restart_file
+ ******************************************************************************/
+void read_restart_data(cstring_t restart_file);
+
+#endif /* RESTART_PRIVATE_H */

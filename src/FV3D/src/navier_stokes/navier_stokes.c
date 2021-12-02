@@ -9,7 +9,6 @@
 #include <math.h>
 #include "navier_stokes_module.h"
 #include "mesh/mesh_module.h"
-#include "equation/equation_module.h"
 #include "fv/fv_module.h"
 #include "timedisc/timedisc_module.h"
 
@@ -75,6 +74,7 @@ void navier_stokes_define()
  ******************************************************************************/
 void navier_stokes_finalize()
 {
+    free_equation();
 }
 
 /*******************************************************************************
@@ -82,9 +82,6 @@ void navier_stokes_finalize()
  ******************************************************************************/
 void navier_stokes_initialize()
 {
-    if (navier_stokes_active == 0)
-        return;
-
     GET_PARAMETER("Equation/Navier-Stokes/cfl_scale", NumberParameter, &cfl_scale);
     GET_PARAMETER("Equation/Navier-Stokes/dfl_scale", NumberParameter, &dfl_scale);
     GET_PARAMETER("Equation/Navier-Stokes/mu_mix", NumberParameter, &mu_mix);
@@ -102,17 +99,18 @@ void navier_stokes_initialize()
     kappa_pr = kappa / Pr;
     lambda = mu_mix * cp / Pr;
 
-    ic_rho = add_sol_variable(all_variables, "rho");
-    ic_rho_u = add_sol_variable(all_variables, "rho_u");
-    ic_rho_v = add_sol_variable(all_variables, "rho_v");
-    ic_rho_w = add_sol_variable(all_variables, "rho_w");
-    ic_rho_e = add_sol_variable(all_variables, "rho_e");
+    init_equation();
+    ic_rho = add_sol_variable("rho");
+    ic_rho_u = add_sol_variable("rho_u");
+    ic_rho_v = add_sol_variable("rho_v");
+    ic_rho_w = add_sol_variable("rho_w");
+    ic_rho_e = add_sol_variable("rho_e");
 
-    ip_u = add_dep_variable(all_variables, "u");
-    ip_v = add_dep_variable(all_variables, "v");
-    ip_w = add_dep_variable(all_variables, "w");
-    ip_p = add_dep_variable(all_variables, "p");
-    ip_T = add_dep_variable(all_variables, "T");
+    ip_u = add_dep_variable("u");
+    ip_v = add_dep_variable("v");
+    ip_w = add_dep_variable("w");
+    ip_p = add_dep_variable("p");
+    ip_T = add_dep_variable("T");
 
     update_function_pointer = update;
     update_gradients_function_pointer = update_gradients;
@@ -125,7 +123,7 @@ void update(double t)
 {
     Cells_t *cells = solver_mesh->cells;
     int n_domain_cells = cells->n_domain_cells;
-    int n_tot_variables = all_variables->n_tot_variables;
+    int n_tot_variables = solver_variables->n_tot_variables;
 
     for (int i = 0; i < n_domain_cells; ++i)
         con_to_prim(&phi_total[i * n_tot_variables]);
@@ -145,7 +143,7 @@ void calc_exact_func(int id, double t, double *x, double *phi)
     UNUSED(x);
 #endif /* DEBUG */
     Regions_t *regions = solver_mesh->regions;
-    int n_tot_variables = all_variables->n_tot_variables;
+    int n_tot_variables = solver_variables->n_tot_variables;
 
     switch (id)
     {
@@ -162,7 +160,7 @@ double calc_time_step()
 {
     Cells_t *cells = solver_mesh->cells;
     int n_cells = cells->n_domain_cells;
-    int n_tot_variables = all_variables->n_tot_variables;
+    int n_tot_variables = solver_variables->n_tot_variables;
 
     double lambda_conv = BDMX;
     double lambda_visc = BDMX;

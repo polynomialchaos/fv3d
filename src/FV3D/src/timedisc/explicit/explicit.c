@@ -8,7 +8,6 @@
  ******************************************************************************/
 #include "explicit_module.h"
 #include "mesh/mesh_module.h"
-#include "equation/equation_module.h"
 #include "fv/fv_module.h"
 #include "timedisc/timedisc_module.h"
 
@@ -125,8 +124,8 @@ void time_step_lserkw2(int iter, double t, double dt)
 
     Cells_t *cells = solver_mesh->cells;
     int n_domain_cells = cells->n_domain_cells;
-    int n_sol_variables = all_variables->n_sol_variables;
-    int n_tot_variables = all_variables->n_tot_variables;
+    int n_sol_variables = solver_variables->n_sol_variables;
+    int n_tot_variables = solver_variables->n_tot_variables;
 
     double phi_dt_tmp[n_sol_variables * n_domain_cells];
 

@@ -10,7 +10,6 @@
 #include <math.h>
 #include "implicit_module.h"
 #include "mesh/mesh_module.h"
-#include "equation/equation_module.h"
 #include "timedisc/timedisc_module.h"
 #include "fv/fv_module.h"
 
@@ -70,7 +69,7 @@ double *jac = NULL;
  ******************************************************************************/
 void calc_jacobian_numerical(int n_var, int n_cells)
 {
-    int n_tot_variables = all_variables->n_tot_variables;
+    int n_tot_variables = solver_variables->n_tot_variables;
 
     for (int i_var = 0; i_var < n_var; ++i_var)
     {
@@ -214,7 +213,7 @@ void implicit_initialize()
 
     Cells_t *cells = solver_mesh->cells;
     int n_domain_cells = cells->n_domain_cells;
-    int n_sol_variables = all_variables->n_sol_variables;
+    int n_sol_variables = solver_variables->n_sol_variables;
 
     if (is_equal(implicit_scheme_name, "Euler"))
     {
@@ -289,8 +288,8 @@ void time_step_newton(int iter, double t, double dt)
 {
     Cells_t *cells = solver_mesh->cells;
     int n_domain_cells = cells->n_domain_cells;
-    int n_sol_variables = all_variables->n_sol_variables;
-    int n_tot_variables = all_variables->n_tot_variables;
+    int n_sol_variables = solver_variables->n_sol_variables;
+    int n_tot_variables = solver_variables->n_tot_variables;
 
     /* discretization parameters */
     n_bdf_stages_loc = (iter < n_bdf_stages) ? NBDFStagesEuler : n_bdf_stages;

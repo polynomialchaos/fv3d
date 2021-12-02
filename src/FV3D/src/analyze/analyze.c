@@ -7,7 +7,6 @@
  * @copyright Copyright (c) 2021
  ******************************************************************************/
 #include "analyze_module.h"
-#include "equation/equation_module.h"
 #include "mesh/mesh_module.h"
 #include "fv/fv_module.h"
 
@@ -35,7 +34,7 @@ void analyze_finalize()
  ******************************************************************************/
 void analyze_initialize()
 {
-    int n_sol_variables = all_variables->n_sol_variables;
+    int n_sol_variables = solver_variables->n_sol_variables;
 
     residual = ALLOCATE(sizeof(double) * n_sol_variables);
     set_value_n(0.0, n_sol_variables, residual);
@@ -48,7 +47,7 @@ void analyze_initialize()
 void calc_global_residual(double dt)
 {
     Cells_t *cells = solver_mesh->cells;
-    int n_sol_variables = all_variables->n_sol_variables;
+    int n_sol_variables = solver_variables->n_sol_variables;
     int n_domain_cells = cells->n_domain_cells;
 
     double tmp[n_sol_variables];

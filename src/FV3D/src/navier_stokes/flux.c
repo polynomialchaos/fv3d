@@ -9,7 +9,6 @@
 #include <math.h>
 #include "navier_stokes_module.h"
 #include "mesh/mesh_module.h"
-#include "equation/equation_module.h"
 #include "fv/fv_module.h"
 
 string_t flux_scheme_name = NULL;
@@ -27,8 +26,8 @@ void calc_flux()
     Regions_t *regions = solver_mesh->regions;
     int n_internal_faces = faces->n_internal_faces;
     int n_boundary_faces = faces->n_boundary_faces;
-    int n_tot_variables = all_variables->n_tot_variables;
-    int n_sol_variables = all_variables->n_sol_variables;
+    int n_tot_variables = solver_variables->n_tot_variables;
+    int n_sol_variables = solver_variables->n_sol_variables;
 
     double phi_total_left_r[n_tot_variables];
     double phi_total_right_r[n_tot_variables];
@@ -264,7 +263,7 @@ void flux_initialize()
  ******************************************************************************/
 void riemann_rusanonv(double *phi_l, double *phi_r, double *f)
 {
-    int n_sol_variables = all_variables->n_sol_variables;
+    int n_sol_variables = solver_variables->n_sol_variables;
 
     double c_l = sqrt(kappa * phi_l[ip_p] / phi_l[ic_rho]);
     double c_r = sqrt(kappa * phi_r[ip_p] / phi_r[ic_rho]);
@@ -364,7 +363,7 @@ void riemann_ausm(double *phi_l, double *phi_r, double *f)
 void viscous_flux(double *phi_l, double *grad_phi_x_l, double *grad_phi_y_l, double *grad_phi_z_l,
                   double *phi_r, double *grad_phi_x_r, double *grad_phi_y_r, double *grad_phi_z_r, double *f, double *g, double *h)
 {
-    int n_sol_variables = all_variables->n_sol_variables;
+    int n_sol_variables = solver_variables->n_sol_variables;
 
     double f_l[n_sol_variables], g_l[n_sol_variables], h_l[n_sol_variables];
     double f_r[n_sol_variables], g_r[n_sol_variables], h_r[n_sol_variables];

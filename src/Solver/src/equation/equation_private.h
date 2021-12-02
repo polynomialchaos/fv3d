@@ -1,29 +1,30 @@
 /*******************************************************************************
- * @file output_module.h
+ * @file equation_private.h
  * @author Florian Eigentler
  * @brief
  * @version 1.0.0
  * @date 2021-11-15
  * @copyright Copyright (c) 2021
  ******************************************************************************/
-#ifndef OUTPUT_MODULE_H
-#define OUTPUT_MODULE_H
+#ifndef EQUATION_PRIVATE_H
+#define EQUATION_PRIVATE_H
 
-#include "fv3d/fv3d_module.h"
-
-/*******************************************************************************
- * @brief Define output
- ******************************************************************************/
-void output_define();
+#include "solver/solver_module.h"
 
 /*******************************************************************************
- * @brief Finalize output
+ * @brief Allocate the variables
  ******************************************************************************/
-void output_finalize();
+Variables_t *allocate_variables();
 
 /*******************************************************************************
- * @brief Initialize output
+ * @brief Deallocate the variables
+ * @param variables
  ******************************************************************************/
-void output_initialize();
+void deallocate_variables(Variables_t *variables);
 
-#endif /* OUTPUT_MODULE_H */
+/*******************************************************************************
+ * @brief Set the total variables
+ ******************************************************************************/
+void set_tot_variables();
+
+#endif /* EQUATION_PRIVATE_H */

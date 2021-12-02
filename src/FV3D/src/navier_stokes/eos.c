@@ -9,7 +9,6 @@
 #include <math.h>
 #include "navier_stokes_module.h"
 #include "mesh/mesh_module.h"
-#include "equation/equation_module.h"
 
 /*******************************************************************************
  * @brief Calculate pressure (ideal gas)
@@ -91,7 +90,7 @@ void con_to_prim(double *phi)
  ******************************************************************************/
 void copy_con_to_prim(double *phi_i, double *phi_j)
 {
-    copy_n(phi_i, all_variables->n_tot_variables, phi_j);
+    copy_n(phi_i, solver_variables->n_tot_variables, phi_j);
     con_to_prim(phi_j);
 }
 
@@ -102,7 +101,7 @@ void copy_con_to_prim(double *phi_i, double *phi_j)
  ******************************************************************************/
 void copy_prim_to_con(double *phi_i, double *phi_j)
 {
-    copy_n(phi_i, all_variables->n_tot_variables, phi_j);
+    copy_n(phi_i, solver_variables->n_tot_variables, phi_j);
     prim_to_con(phi_j);
 }
 

@@ -10,7 +10,6 @@
 #include "timedisc_module.h"
 #include "explicit/explicit_module.h"
 #include "implicit/implicit_module.h"
-#include "equation/equation_module.h"
 #include "restart/restart_module.h"
 #include "analyze/analyze_module.h"
 #include "output/output_module.h"
@@ -49,7 +48,7 @@ void print_residual(int iter, double t, double dt, int do_output)
         PRINTF("%09d %12.5e %12.5e %c %c %6d %6d:", iter, t, dt, viscous_str, output_str, n_iter_inner, n_iter_lsoe);
     }
 
-    for (int i = 0; i < all_variables->n_sol_variables; ++i)
+    for (int i = 0; i < solver_variables->n_sol_variables; ++i)
         PRINTF(" %12.5e", residual[i]);
 
     PRINTF("\n");
@@ -69,8 +68,8 @@ void print_residual_header()
         PRINTF("%9s %12s %12s %1s %1s %6s %6s:", "iter", "time", "dt", "V", "O", "inner", "lsoe");
     }
 
-    for (int i = 0; i < all_variables->n_sol_variables; ++i)
-        PRINTF(" %12s", (&all_variables->sol_variables[i])->name);
+    for (int i = 0; i < solver_variables->n_sol_variables; ++i)
+        PRINTF(" %12s", (&solver_variables->sol_variables[i])->name);
 
     PRINTF("\n");
 }
@@ -87,19 +86,19 @@ void timedisc()
     int do_finalize = 0;
 
     int iter = 0;
-    if (use_restart == 1)
-        iter = iter_restart;
+    if (solver_use_restart == 1)
+        iter = solver_iter_restart;
 
     double t = t_start;
-    if (use_restart == 1)
-        t = t_restart;
+    if (solver_use_restart == 1)
+        t = solver_t_restart;
 
     double dt;
 
     print_residual_header();
     if (iter == 0)
         fv_time_derivative(t);
-    if ((do_output_data == 1) && (use_restart == 0))
+    if ((solver_do_output_data == 1) && (solver_use_restart == 0))
         write_output(iter, t);
 
     while (1)
@@ -123,28 +122,28 @@ void timedisc()
         calc_global_residual(dt);
 
         /* check for NAN and INF */
-        if (is_nan_n(residual, all_variables->n_sol_variables) ||
-            is_inf_n(residual, all_variables->n_sol_variables))
+        if (is_nan_n(residual, solver_variables->n_sol_variables) ||
+            is_inf_n(residual, solver_variables->n_sol_variables))
             CHECK_EXPRESSION(0);
 
         t = t + dt;
         iter = iter + 1;
 
         /* steady-state simulation */
-        if ((is_transient == 0) && (min_n(residual, all_variables->n_sol_variables) < abort_residual))
+        if ((is_transient == 0) && (min_n(residual, solver_variables->n_sol_variables) < abort_residual))
         {
             t_end = t;
             do_output = 1;
             do_finalize = 1;
         }
 
-        if ((i_output_data > 0) && (iter % i_output_data == 0))
+        if ((solver_i_output_data > 0) && (iter % solver_i_output_data == 0))
         {
             do_output = 1;
         }
 
         /* maximum iteration number reacher */
-        if (iter >= iter_restart + max_iter)
+        if (iter >= solver_iter_restart + max_iter)
         {
             t_end = t;
             do_output = 1;
@@ -154,7 +153,7 @@ void timedisc()
         print_residual(iter, t, dt, do_output);
 
         /* output */
-        if ((do_output_data == 1) && (do_output == 1))
+        if ((solver_do_output_data == 1) && (do_output == 1))
         {
             write_output(iter, t);
             do_output = 0;
