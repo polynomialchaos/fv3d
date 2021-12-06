@@ -7,6 +7,9 @@
  * @date 2021-11-15
  * @copyright Copyright (c) 2021
  ******************************************************************************/
+#include "analyze/analyze_private.h"
+#include "output/output_private.h"
+#include "restart/restart_private.h"
 #include "timedisc_private.h"
 
 void_timestep_ft time_step_function_pointer = NULL;

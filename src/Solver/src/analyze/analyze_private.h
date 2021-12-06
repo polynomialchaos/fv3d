@@ -11,4 +11,6 @@
 
 #include "solver/solver_module.h"
 
+extern double *solver_residual;
+
 #endif /* ANALYZE_PRIVATE_H */

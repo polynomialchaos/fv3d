@@ -11,4 +11,8 @@
 
 #include "solver/solver_module.h"
 
+extern int solver_use_restart;
+extern int solver_iter_restart;
+extern double solver_t_restart;
+
 #endif /* RESTART_PRIVATE_H */

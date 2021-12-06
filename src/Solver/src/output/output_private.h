@@ -11,4 +11,7 @@
 
 #include "solver/solver_module.h"
 
+extern int solver_i_output_data;
+extern bool_t solver_do_output_data;
+
 #endif /* OUTPUT_PRIVATE_H */

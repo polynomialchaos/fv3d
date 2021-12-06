@@ -12,16 +12,14 @@ void_update_ft update_function_pointer = NULL;
 void_calc_flux_ft calc_flux_function_pointer = NULL;
 void_calc_exact_ft calc_exact_function_pointer = NULL;
 
-double *solver_phi_total = NULL;
+double *solver_flux = NULL;
 double *solver_grad_phi_total_x = NULL;
 double *solver_grad_phi_total_y = NULL;
 double *solver_grad_phi_total_z = NULL;
-
+double *solver_phi_dt = NULL;
+double *solver_phi_total = NULL;
 double *solver_phi_total_left = NULL;
 double *solver_phi_total_right = NULL;
-
-double *solver_phi_dt = NULL;
-double *solver_flux = NULL;
 
 /*******************************************************************************
  * @brief The finite volume time derivative
@@ -105,17 +103,14 @@ void init_finite_volume()
     int n_tot_variables = solver_variables->n_tot_variables;
     int n_sol_variables = solver_variables->n_sol_variables;
 
-    solver_phi_total = ALLOCATE(sizeof(double) * n_tot_variables * (n_local_cells + n_boundaries));
+    solver_flux = ALLOCATE(sizeof(double) * n_sol_variables * n_faces);
     solver_grad_phi_total_x = ALLOCATE(sizeof(double) * n_tot_variables * (n_local_cells + n_boundaries));
     solver_grad_phi_total_y = ALLOCATE(sizeof(double) * n_tot_variables * (n_local_cells + n_boundaries));
     solver_grad_phi_total_z = ALLOCATE(sizeof(double) * n_tot_variables * (n_local_cells + n_boundaries));
-
+    solver_phi_dt = ALLOCATE(sizeof(double) * n_sol_variables * (n_local_cells + n_boundaries));
+    solver_phi_total = ALLOCATE(sizeof(double) * n_tot_variables * (n_local_cells + n_boundaries));
     solver_phi_total_left = ALLOCATE(sizeof(double) * n_tot_variables * n_faces);
     solver_phi_total_right = ALLOCATE(sizeof(double) * n_tot_variables * n_faces);
-
-    solver_phi_dt = ALLOCATE(sizeof(double) * n_sol_variables * (n_local_cells + n_boundaries));
-    solver_flux = ALLOCATE(sizeof(double) * n_sol_variables * n_faces);
-
     set_solution();
 }
 

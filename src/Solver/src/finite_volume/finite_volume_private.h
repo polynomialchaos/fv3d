@@ -11,6 +11,12 @@
 
 #include "solver/solver_module.h"
 
+typedef double (*double_limiter_ft)(int i_cell, int i_var, double slope);
+extern double_limiter_ft limiter_function_pointer;
+
+typedef void (*void_reconstruction_ft)();
+extern void_reconstruction_ft reconstruction_function_pointer;
+
 /*******************************************************************************
  * @brief Calculate (reconstruct) gradients
  ******************************************************************************/
