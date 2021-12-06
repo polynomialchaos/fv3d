@@ -54,7 +54,7 @@ void free_explicit()
  ******************************************************************************/
 void init_explicit(explicit_scheme_t explicit_scheme)
 {
-    time_step_function_pointer = time_step_lserkw2;
+    timestep_function_pointer = timestep_lserkw2;
 
     switch (explicit_scheme)
     {
@@ -88,7 +88,7 @@ void init_explicit(explicit_scheme_t explicit_scheme)
  * @param t
  * @param dt
  ******************************************************************************/
-void time_step_lserkw2(int iter, double t, double dt)
+void timestep_lserkw2(int iter, double t, double dt)
 {
 #if DEBUG
     UNUSED(iter);

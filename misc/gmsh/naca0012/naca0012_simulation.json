@@ -112,7 +112,7 @@
         }
     },
     "TimeDisc": {
-        "time_step": {
+        "timestep": {
             "value": "Explicit",
             "The timestep mehtod": [
                 "Explicit",

@@ -19,7 +19,7 @@ void_calc_conv_flux_ft calc_convective_flux_function_pointer = NULL;
 /*******************************************************************************
  * @brief Calculate the solver_flux
  ******************************************************************************/
-void calc_flux()
+void calc_ns_flux()
 {
     Faces_t *faces = solver_mesh->faces;
     Boundaries_t *boundaries = solver_mesh->boundaries;

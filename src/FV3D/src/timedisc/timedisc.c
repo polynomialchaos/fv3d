@@ -9,7 +9,7 @@
  ******************************************************************************/
 #include "timedisc_module.h"
 
-string_t time_step_name = NULL;
+string_t timestep_name = NULL;
 int max_iter = 1000;
 bool_t is_transient = BFLS;
 double abort_residual = 1e-10;
@@ -28,7 +28,7 @@ void timedisc_define()
     int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
     string_t tmp = tmp_opt[0];
 
-    SET_PARAMETER("TimeDisc/time_step", StringParameter, &tmp, "The timestep mehtod", &tmp_opt, tmp_opt_n);
+    SET_PARAMETER("TimeDisc/timestep", StringParameter, &tmp, "The timestep mehtod", &tmp_opt, tmp_opt_n);
     SET_PARAMETER("TimeDisc/max_iter", DigitParameter, &max_iter, "The maximum number of iterations", NULL, 0);
     SET_PARAMETER("TimeDisc/transient", LogicalParameter, &is_transient, "The flag wheter to be transient or steady-state", NULL, 0);
     SET_PARAMETER("TimeDisc/abort_residual", NumberParameter, &abort_residual, "The abort residual", NULL, 0);
@@ -44,7 +44,7 @@ void timedisc_define()
  ******************************************************************************/
 void timedisc_finalize()
 {
-    DEALLOCATE(time_step_name);
+    DEALLOCATE(timestep_name);
     free_timedisc();
 }
 
@@ -53,19 +53,19 @@ void timedisc_finalize()
  ******************************************************************************/
 void timedisc_initialize()
 {
-    GET_PARAMETER("TimeDisc/time_step", StringParameter, &time_step_name);
+    GET_PARAMETER("TimeDisc/timestep", StringParameter, &timestep_name);
     GET_PARAMETER("TimeDisc/max_iter", DigitParameter, &max_iter);
     GET_PARAMETER("TimeDisc/transient", LogicalParameter, &is_transient);
     GET_PARAMETER("TimeDisc/abort_residual", NumberParameter, &abort_residual);
     GET_PARAMETER("TimeDisc/t_start", NumberParameter, &t_start);
     GET_PARAMETER("TimeDisc/t_end", NumberParameter, &t_end);
 
-    if (is_equal(time_step_name, "Explicit"))
+    if (is_equal(timestep_name, "Explicit"))
     {
         init_timedisc(Explicit, max_iter, is_transient,
                       abort_residual, t_start, t_end);
     }
-    else if (is_equal(time_step_name, "Implicit"))
+    else if (is_equal(timestep_name, "Implicit"))
     {
         init_timedisc(Implicit, max_iter, is_transient,
                       abort_residual, t_start, t_end);

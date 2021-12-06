@@ -12,11 +12,6 @@
 #include "fv/fv_module.h"
 #include "timedisc/timedisc_module.h"
 
-void update(double t);
-void update_gradients();
-void calc_exact_func(int id, double t, double *x, double *phi);
-double calc_time_step();
-
 const double RM = 8.31446261815324;
 const double molar_mass_air = 28.96e-3;
 
@@ -110,28 +105,11 @@ void navier_stokes_initialize()
     ip_p = add_dep_variable("p");
     ip_T = add_dep_variable("T");
 
-    set_calc_flux(calc_flux);
-    set_calc_timestep(calc_time_step);
-    set_exact_function(calc_exact_func);
-    set_update(update);
-    set_update_gradients(update_gradients);
-}
-
-void update(double t)
-{
-    Cells_t *cells = solver_mesh->cells;
-    int n_domain_cells = cells->n_domain_cells;
-    int n_tot_variables = solver_variables->n_tot_variables;
-
-    for (int i = 0; i < n_domain_cells; ++i)
-        con_to_prim(&solver_phi_total[i * n_tot_variables]);
-
-    update_boundaries(t);
-}
-
-void update_gradients()
-{
-    update_gradients_boundaries();
+    set_calc_flux(calc_ns_flux);
+    set_calc_timestep(calc_ns_timestep);
+    set_exact_function(calc_ns_exact_function);
+    set_update(ns_update);
+    set_update_gradients(ns_update_gradients);
 }
 
 /*******************************************************************************
@@ -141,7 +119,7 @@ void update_gradients()
  * @param x
  * @param phi
  ******************************************************************************/
-void calc_exact_func(int id, double t, double *x, double *phi)
+void calc_ns_exact_function(int id, double t, double *x, double *phi)
 {
 #ifdef DEBUG
     UNUSED(t);
@@ -165,7 +143,7 @@ void calc_exact_func(int id, double t, double *x, double *phi)
  * @brief Calculate the timestep
  * @return double
  ******************************************************************************/
-double calc_time_step()
+double calc_ns_timestep()
 {
     Cells_t *cells = solver_mesh->cells;
     int n_cells = cells->n_domain_cells;
@@ -195,4 +173,29 @@ double calc_time_step()
     set_viscous_dt(lambda_visc < lambda_conv);
 
     return MIN(lambda_conv, lambda_visc);
+}
+
+/*******************************************************************************
+ * @brief Update solution for internal data and boundaries
+ * @param t
+ ******************************************************************************/
+void ns_update(double t)
+{
+    Cells_t *cells = solver_mesh->cells;
+    int n_domain_cells = cells->n_domain_cells;
+    int n_tot_variables = solver_variables->n_tot_variables;
+
+    for (int i = 0; i < n_domain_cells; ++i)
+        con_to_prim(&solver_phi_total[i * n_tot_variables]);
+
+    update_boundaries(t);
+}
+
+/*******************************************************************************
+ * @brief Update gradeints for internal data and boundaries
+ * @param t
+ ******************************************************************************/
+void ns_update_gradients()
+{
+    update_gradients_boundaries();
 }

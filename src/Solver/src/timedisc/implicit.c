@@ -155,7 +155,7 @@ void init_implicit(implicit_scheme_t implicit_scheme,
     int n_domain_cells = cells->n_domain_cells;
     int n_sol_variables = solver_variables->n_sol_variables;
 
-    time_step_function_pointer = time_step_newton;
+    timestep_function_pointer = timestep_newton;
 
     solver_max_iter_inner = max_iter_inner;
     solver_tolerance_lsoe = tolerance_lsoe;
@@ -214,7 +214,7 @@ void init_implicit(implicit_scheme_t implicit_scheme,
  * @param t
  * @param dt
  ******************************************************************************/
-void time_step_newton(int iter, double t, double dt)
+void timestep_newton(int iter, double t, double dt)
 {
     Cells_t *cells = solver_mesh->cells;
     int n_domain_cells = cells->n_domain_cells;

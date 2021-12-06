@@ -79,7 +79,7 @@ void boundary_initialize();
  * @param x
  * @param phi
  ******************************************************************************/
-void calc_exact_func(int id, double t, double *x, double *phi);
+void calc_ns_exact_function(int id, double t, double *x, double *phi);
 
 /*******************************************************************************
  * @brief Calculate pressure (ideal gas)
@@ -118,7 +118,13 @@ double calc_riemann_p(double *phi);
 /*******************************************************************************
  * @brief Calculate the flux
  ******************************************************************************/
-void calc_flux();
+void calc_ns_flux();
+
+/*******************************************************************************
+ * @brief Calculate the timestep
+ * @return double
+ ******************************************************************************/
+double calc_ns_timestep();
 
 /*******************************************************************************
  * @brief Convert conservative to primitive variables
@@ -217,6 +223,17 @@ void update_boundaries(double t);
  * @brief Update gradient boundaries
  ******************************************************************************/
 void update_gradients_boundaries();
+
+/*******************************************************************************
+ * @brief Update solution for internal data and boundaries
+ * @param t
+ ******************************************************************************/
+void ns_update(double t);
+
+/*******************************************************************************
+ * @brief Update gradeints for internal data and boundaries
+ ******************************************************************************/
+void ns_update_gradients();
 
 /*******************************************************************************
  * @brief Viscous flux

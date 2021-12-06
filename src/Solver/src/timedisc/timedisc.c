@@ -12,8 +12,8 @@
 #include "restart/restart_private.h"
 #include "timedisc_private.h"
 
-void_timestep_ft time_step_function_pointer = NULL;
-double_calc_timestep_ft calc_time_step_function_pointer = NULL;
+void_timestep_ft timestep_function_pointer = NULL;
+double_calc_timestep_ft calc_timestep_function_pointer = NULL;
 
 bool_t solver_is_explicit = BTRU;
 
@@ -29,8 +29,8 @@ double solver_t_end = 0.2;
  ******************************************************************************/
 void free_timedisc()
 {
-    time_step_function_pointer = NULL;
-    calc_time_step_function_pointer = NULL;
+    timestep_function_pointer = NULL;
+    calc_timestep_function_pointer = NULL;
 }
 
 /*******************************************************************************
@@ -156,7 +156,7 @@ void timedisc()
         check_abort(0);
 
         /* calculate time step dt */
-        double dt_local = calc_time_step_function_pointer();
+        double dt_local = calc_timestep_function_pointer();
         MPI_ALL_REDUCE(MPIDouble, MPIMin, &dt_local, &dt);
 
         if (t + dt > solver_t_end)
@@ -167,7 +167,7 @@ void timedisc()
         }
 
         /* the timestep to be called */
-        time_step_function_pointer(iter, t, dt);
+        timestep_function_pointer(iter, t, dt);
         calc_global_residual(dt);
 
         /* check for NAN and INF */
@@ -220,7 +220,7 @@ void timedisc()
  ******************************************************************************/
 void set_calc_timestep(double_calc_timestep_ft fun_ptr)
 {
-    calc_time_step_function_pointer = fun_ptr;
+    calc_timestep_function_pointer = fun_ptr;
 }
 
 /*******************************************************************************
