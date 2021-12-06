@@ -291,8 +291,11 @@ void update_boundaries(double t)
 /*******************************************************************************
  * @brief Update gradient boundaries
  ******************************************************************************/
-void update_gradients_boundaries()
+void update_gradients_boundaries(double time)
 {
+#ifdef DEBUG
+    UNUSED(time);
+#endif /* DEBUG */
     Cells_t *cells = solver_mesh->cells;
     Boundaries_t *boundaries = solver_mesh->boundaries;
     Faces_t *faces = solver_mesh->faces;

@@ -261,9 +261,9 @@ typedef enum ImplicitSolver
 } implicit_solver_t;
 
 typedef void (*void_calc_exact_ft)(int id, double t, double *x, double *phi);
-typedef void (*void_calc_flux_ft)();
-typedef double (*double_calc_timestep_ft)();
-typedef void (*void_update_ft)(double t);
-typedef void (*void_update_gradients_ft)();
+typedef void (*void_calc_flux_ft)(double time);
+typedef double (*double_calc_timestep_ft)(double time);
+typedef void (*void_update_ft)(double time);
+typedef void (*void_update_gradients_ft)(double time);
 
 #endif /* SOVLER_VARIABLE_H */

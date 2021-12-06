@@ -44,9 +44,9 @@ void create_file_header(cstring_t file_name);
 
 /*******************************************************************************
  * @brief The finite volume time derivative
- * @param t
+ * @param time
  ******************************************************************************/
-void finite_volume_time_derivative(double t);
+void finite_volume_time_derivative(double time);
 
 /*******************************************************************************
  * @brief Free analyze

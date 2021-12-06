@@ -14,9 +14,10 @@
 typedef double (*double_limiter_ft)(int i_cell, int i_var, double slope);
 extern double_limiter_ft limiter_function_pointer;
 
-typedef void (*void_reconstruction_ft)();
+typedef void (*void_reconstruction_ft)(double t);
 extern void_reconstruction_ft reconstruction_function_pointer;
 
+extern void_update_ft update_function_pointer;
 extern void_update_gradients_ft update_gradients_function_pointer;
 
 /*******************************************************************************

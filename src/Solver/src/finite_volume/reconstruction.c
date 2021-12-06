@@ -16,7 +16,7 @@ double *receive_buffer = NULL;
 /*******************************************************************************
  * @brief Calculate (reconstruct) gradients
  ******************************************************************************/
-void calc_gradients()
+void calc_gradients(double time)
 {
     Cells_t *cells = solver_mesh->cells;
     Boundaries_t *boundaries = solver_mesh->boundaries;
@@ -73,7 +73,7 @@ void calc_gradients()
         }
     }
 
-    update_gradients_function_pointer();
+    update_gradients_function_pointer(time);
 }
 
 /*******************************************************************************
@@ -121,13 +121,14 @@ void init_reconstruction(reconstruction_type_t reconstruction_type)
 /*******************************************************************************
  * @brief First-order reconstruction
  ******************************************************************************/
-void reconstruction_first_order()
+void reconstruction_first_order(double time)
 {
     Faces_t *faces = solver_mesh->faces;
     int n_faces = faces->n_faces;
     int n_tot_variables = solver_variables->n_tot_variables;
 
-    calc_gradients();
+    update_function_pointer(time);
+    calc_gradients(time);
 
     for (int i = 0; i < n_faces; ++i)
     {
@@ -144,14 +145,15 @@ void reconstruction_first_order()
 /*******************************************************************************
  * @brief Second-order (linear) reconstruction
  ******************************************************************************/
-void reconstruction_linear()
+void reconstruction_linear(double time)
 {
     Faces_t *faces = solver_mesh->faces;
     int n_internal_faces = faces->n_internal_faces;
     int n_boundary_faces = faces->n_boundary_faces;
     int n_tot_variables = solver_variables->n_tot_variables;
 
-    calc_gradients();
+    update_function_pointer(time);
+    calc_gradients(time);
 
     for (int ii = 0; ii < n_internal_faces; ++ii)
     {

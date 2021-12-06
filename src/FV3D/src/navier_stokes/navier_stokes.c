@@ -151,10 +151,14 @@ void calc_ns_exact_function(int id, double t, double *x, double *phi)
 
 /*******************************************************************************
  * @brief Calculate the timestep
+ * @param time
  * @return double
  ******************************************************************************/
-double calc_ns_timestep()
+double calc_ns_timestep(double time)
 {
+#ifdef DEBUG
+    UNUSED(time);
+#endif /* DEBUG */
     Cells_t *cells = solver_mesh->cells;
     int n_cells = cells->n_domain_cells;
     int n_tot_variables = solver_variables->n_tot_variables;
@@ -187,9 +191,9 @@ double calc_ns_timestep()
 
 /*******************************************************************************
  * @brief Update solution for internal data and boundaries
- * @param t
+ * @param time
  ******************************************************************************/
-void ns_update(double t)
+void ns_update(double time)
 {
     Cells_t *cells = solver_mesh->cells;
     int n_domain_cells = cells->n_domain_cells;
@@ -198,14 +202,14 @@ void ns_update(double t)
     for (int i = 0; i < n_domain_cells; ++i)
         con_to_prim(&solver_data->phi_total[i * n_tot_variables]);
 
-    update_boundaries(t);
+    update_boundaries(time);
 }
 
 /*******************************************************************************
  * @brief Update gradeints for internal data and boundaries
- * @param t
+ * @param time
  ******************************************************************************/
-void ns_update_gradients()
+void ns_update_gradients(double time)
 {
-    update_gradients_boundaries();
+    update_gradients_boundaries(time);
 }

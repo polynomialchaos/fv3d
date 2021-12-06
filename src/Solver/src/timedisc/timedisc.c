@@ -156,7 +156,7 @@ void timedisc()
         check_abort(0);
 
         /* calculate time step dt */
-        double dt_local = calc_timestep_function_pointer();
+        double dt_local = calc_timestep_function_pointer(t);
         MPI_ALL_REDUCE(MPIDouble, MPIMin, &dt_local, &dt);
 
         if (t + dt > solver_t_end)

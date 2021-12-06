@@ -117,14 +117,16 @@ double calc_riemann_p(double *phi);
 
 /*******************************************************************************
  * @brief Calculate the flux
+ * @param time
  ******************************************************************************/
-void calc_ns_flux();
+void calc_ns_flux(double time);
 
 /*******************************************************************************
  * @brief Calculate the timestep
+ * @param time
  * @return double
  ******************************************************************************/
-double calc_ns_timestep();
+double calc_ns_timestep(double time);
 
 /*******************************************************************************
  * @brief Convert conservative to primitive variables
@@ -221,19 +223,21 @@ void update_boundaries(double t);
 
 /*******************************************************************************
  * @brief Update gradient boundaries
+ * @param time
  ******************************************************************************/
-void update_gradients_boundaries();
+void update_gradients_boundaries(double time);
 
 /*******************************************************************************
  * @brief Update solution for internal data and boundaries
- * @param t
+ * @param time
  ******************************************************************************/
-void ns_update(double t);
+void ns_update(double time);
 
 /*******************************************************************************
  * @brief Update gradeints for internal data and boundaries
+ * @param time
  ******************************************************************************/
-void ns_update_gradients();
+void ns_update_gradients(double time);
 
 /*******************************************************************************
  * @brief Viscous flux

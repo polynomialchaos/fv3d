@@ -69,9 +69,9 @@ void deallocate_data(data_t *this)
 
 /*******************************************************************************
  * @brief The finite volume time derivative
- * @param t
+ * @param time
  ******************************************************************************/
-void finite_volume_time_derivative(double t)
+void finite_volume_time_derivative(double time)
 {
     Cells_t *cells = solver_mesh->cells;
     Boundaries_t *boundaries = solver_mesh->boundaries;
@@ -82,10 +82,9 @@ void finite_volume_time_derivative(double t)
     int n_faces = faces->n_faces;
     int n_sol_variables = solver_variables->n_sol_variables;
 
-    update_function_pointer(t);
-    reconstruction_function_pointer();
 
-    calc_flux_function_pointer();
+    reconstruction_function_pointer(time);
+    calc_flux_function_pointer(time);
 
     /* the temporal derivative */
     set_value_n(0.0, n_sol_variables * (n_local_cells + n_boundaries), solver_data->phi_dt);
