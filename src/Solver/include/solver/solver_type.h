@@ -256,8 +256,8 @@ typedef enum ImplicitScheme
  ******************************************************************************/
 typedef enum ImplicitSolver
 {
-    GMRes,    /** GMRes solver */
     BiCGStab, /** BiCGStab solver */
+    GMRes,    /** GMRes solver */
 } implicit_solver_t;
 
 typedef void (*void_calc_exact_ft)(int id, double t, double *x, double *phi);
