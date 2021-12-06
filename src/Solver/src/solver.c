@@ -28,6 +28,7 @@ cstring_t get_simulation_title()
 
 /*******************************************************************************
  * @brief Initialize solver
+ * @param title
  ******************************************************************************/
 void init_solver(cstring_t title)
 {

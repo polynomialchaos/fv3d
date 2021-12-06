@@ -9,6 +9,8 @@
 #include <string.h>
 #include "mesh_module.h"
 
+string_t mesh_file = NULL;
+
 /*******************************************************************************
  * @brief Define mesh
  ******************************************************************************/
@@ -28,6 +30,7 @@ void mesh_define()
 void mesh_finalize()
 {
     free_mesh();
+    DEALLOCATE(mesh_file);
 }
 
 /*******************************************************************************
@@ -35,8 +38,6 @@ void mesh_finalize()
  ******************************************************************************/
 void mesh_initialize()
 {
-    string_t mesh_file = NULL;
     GET_PARAMETER("Mesh/mesh_file", StringParameter, &mesh_file);
     init_mesh(mesh_file);
-    DEALLOCATE(mesh_file);
 }

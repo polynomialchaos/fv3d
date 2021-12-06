@@ -173,6 +173,98 @@ extern int solver_use_restart;
 extern int solver_iter_restart;
 extern double solver_t_restart;
 
+extern double *solver_residual;
+
+/*******************************************************************************
+ * @brief Limiter type enumeration
+ ******************************************************************************/
+typedef enum LimiterType
+{
+    BarthJespersenn, /** Barth-Jeprsenn's limiter */
+    NoLimter         /** No limiter (=1) */
+} limiter_type_t;
+
+/*******************************************************************************
+ * @brief Reconstruction type enumeration
+ ******************************************************************************/
+typedef enum ReconstructionType
+{
+    FirstOrder, /** First-order reconstruction */
+    Linear      /** Second-order (linear) reconstruction */
+} reconstruction_type_t;
+
+typedef void (*void_calc_flux_ft)();
+extern void_calc_flux_ft calc_flux_function_pointer;
+
+typedef void (*void_calc_exact_ft)(int id, double t, double *x, double *phi);
+extern void_calc_exact_ft calc_exact_function_pointer;
+
+typedef double (*double_limiter_ft)(int i_cell, int i_var, double slope);
+extern double_limiter_ft limiter_function_pointer;
+
+typedef void (*void_reconstruction_ft)();
+extern void_reconstruction_ft reconstruction_function_pointer;
+
+typedef void (*void_update_ft)(double t);
+extern void_update_ft update_function_pointer;
+
+typedef void (*void_update_gradients_ft)();
+extern void_update_gradients_ft update_gradients_function_pointer;
+
+extern double *solver_phi_total;
+extern double *solver_grad_phi_total_x;
+extern double *solver_grad_phi_total_y;
+extern double *solver_grad_phi_total_z;
+
+extern double *solver_phi_total_left;
+extern double *solver_phi_total_right;
+
+extern double *solver_phi_dt;
+extern double *solver_flux;
+
+/*******************************************************************************
+ * @brief Limiter type enumeration
+ ******************************************************************************/
+typedef enum TimediscType
+{
+    Explicit, /** Explicit timestep */
+    Implicit  /** Implicit timestep */
+} timedisc_type_t;
+
+/*******************************************************************************
+ * @brief Explicit scheme enumeration
+ ******************************************************************************/
+typedef enum ExplicitScheme
+{
+    EulerExplicit, /** Euler explicit scheme */
+    RungeKutta33,  /** Runge-Kutta 3rd order scheme */
+    RungeKutta45   /** Runge-Kutta 4th order scheme */
+} explicit_scheme_t;
+
+/*******************************************************************************
+ * @brief Implicit scheme enumeration
+ ******************************************************************************/
+typedef enum ImplicitScheme
+{
+    EulerImplicit, /** Euler implicit scheme */
+    BDF2,          /** Backward Differentiation  Bashforth secon oder scheme */
+} implicit_scheme_t;
+
+/*******************************************************************************
+ * @brief Implicit solver enumeration
+ ******************************************************************************/
+typedef enum ImplicitSolver
+{
+    GMRes,    /** GMRes solver */
+    BiCGStab, /** BiCGStab solver */
+} implicit_solver_t;
+
+typedef double (*double_calc_timestep_ft)();
+extern double_calc_timestep_ft calc_time_step_function_pointer;
+
+extern int solver_explicit_active;
+extern int solver_implicit_active;
+
 /*******************************************************************************
  * @brief Add a solution variable
  * @param name
@@ -188,10 +280,27 @@ int add_sol_variable(string_t name);
 int add_dep_variable(string_t name);
 
 /*******************************************************************************
+ * @brief Calculate the global residual
+ * @param dt
+ ******************************************************************************/
+void calc_global_residual(double dt);
+
+/*******************************************************************************
  * @brief Create a file header
  * @param file_name
  ******************************************************************************/
 void create_file_header(cstring_t file_name);
+
+/*******************************************************************************
+ * @brief The finite volume time derivative
+ * @param t
+ ******************************************************************************/
+void finite_volume_time_derivative(double t);
+
+/*******************************************************************************
+ * @brief Finalize analyze
+ ******************************************************************************/
+void free_analyze();
 
 /*******************************************************************************
  * @brief Free equation
@@ -199,9 +308,34 @@ void create_file_header(cstring_t file_name);
 void free_equation();
 
 /*******************************************************************************
+ * @brief Free explicit
+ ******************************************************************************/
+void free_explicit();
+
+/*******************************************************************************
+ * @brief Free finite_volume
+ ******************************************************************************/
+void free_finite_volume();
+
+/*******************************************************************************
+ * @brief Free implicit timedisc
+ ******************************************************************************/
+void free_implicit();
+
+/*******************************************************************************
+ * @brief Free limiter
+ ******************************************************************************/
+void free_limiter();
+
+/*******************************************************************************
  * @brief Free mesh
  ******************************************************************************/
 void free_mesh();
+
+/*******************************************************************************
+ * @brief Free reconstruction
+ ******************************************************************************/
+void free_reconstruction();
 
 /*******************************************************************************
  * @brief Free output
@@ -219,9 +353,19 @@ void free_restart();
 void free_solver();
 
 /*******************************************************************************
+ * @brief Free timedisc
+ ******************************************************************************/
+void free_timedisc();
+
+/*******************************************************************************
  * @brief Return the simulation title
  ******************************************************************************/
 cstring_t get_simulation_title();
+
+/*******************************************************************************
+ * @brief Initialize analyze
+ ******************************************************************************/
+void init_analyze();
 
 /*******************************************************************************
  * @brief Initialize equation
@@ -229,9 +373,49 @@ cstring_t get_simulation_title();
 void init_equation();
 
 /*******************************************************************************
+ * @brief Initialize explicit
+ * @param explicit_scheme
+ ******************************************************************************/
+void init_explicit(explicit_scheme_t explicit_scheme);
+
+/*******************************************************************************
+ * @brief Initialize finite_volume
+ ******************************************************************************/
+void init_finite_volume();
+
+/*******************************************************************************
+ * @brief Initialize implicit timedisc
+ * @param implicit_scheme
+ * @param implicit_solver
+ * @param max_iter_inner
+ * @param tolerance_lsoe
+ * @param max_iter_lsoe
+ * @param max_krylov_dims
+ * @param max_krylov_restarts
+ ******************************************************************************/
+void init_implicit(implicit_scheme_t implicit_scheme,
+                   implicit_solver_t implicit_solver,
+                   int max_iter_inner,
+                   double tolerance_lsoe, int max_iter_lsoe,
+                   int max_krylov_dims, int max_krylov_restarts);
+
+/*******************************************************************************
+ * @brief Initialize limiter
+ * @param limiter_type
+ ******************************************************************************/
+void init_limiter(limiter_type_t limiter_type);
+
+/*******************************************************************************
  * @brief Initialize mesh
+ * @param mesh_file
  ******************************************************************************/
 void init_mesh(cstring_t mesh_file);
+
+/*******************************************************************************
+ * @brief Initialize reconstruction
+ * @param reconstruction_type
+ ******************************************************************************/
+void init_reconstruction(reconstruction_type_t reconstruction_type);
 
 /*******************************************************************************
  * @brief Initialize output
@@ -241,13 +425,29 @@ void init_output(int i_output_data);
 
 /*******************************************************************************
  * @brief Initialize restart
+ * @param use_restart
+ * @param restart_file
  ******************************************************************************/
 void init_restart(bool_t use_restart, cstring_t restart_file);
 
 /*******************************************************************************
  * @brief Initialize solver
+ * @param title
  ******************************************************************************/
 void init_solver(cstring_t title);
+
+/*******************************************************************************
+ * @brief Initialize timedisc
+ * @param timedisc_type
+ * @param max_iter
+ * @param is_transient
+ * @param abort_residual
+ * @param t_start
+ * @param t_end
+ ******************************************************************************/
+void init_timedisc(timedisc_type_t timedisc_type, int max_iter,
+                   bool_t is_transient, double abort_residual,
+                   double t_start, double t_end);
 
 /*******************************************************************************
  * @brief Print mesh information
@@ -259,6 +459,23 @@ void print_mesh_info();
  * @brief Print the variables
  ******************************************************************************/
 void print_variables();
+
+/*******************************************************************************
+ * @brief Read restart data
+ * @param restart_file
+ ******************************************************************************/
+void read_restart_data(cstring_t restart_file);
+
+/*******************************************************************************
+ * @brief Set the viscous timestep flag
+ * @param is_viscous_dt
+ ******************************************************************************/
+void set_viscous_dt(bool_t is_viscous_dt);
+
+/*******************************************************************************
+ * @brief Time discretizazion routine
+ ******************************************************************************/
+void timedisc();
 
 /*******************************************************************************
  * @brief Write data to file

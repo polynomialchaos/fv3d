@@ -1,5 +1,5 @@
 /*******************************************************************************
- * @file output_module.h
+ * @file output_private.h
  * @author Florian Eigentler
  * @brief
  * @version 1.0.0

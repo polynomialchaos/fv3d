@@ -11,8 +11,6 @@
 
 #include "fv3d/fv3d_module.h"
 
-extern double *residual;
-
 /*******************************************************************************
  * @brief Define analyze
  ******************************************************************************/
@@ -27,11 +25,5 @@ void analyze_finalize();
  * @brief Initialize analyze
  ******************************************************************************/
 void analyze_initialize();
-
-/*******************************************************************************
- * @brief Calculate the global residual
- * @param dt
- ******************************************************************************/
-void calc_global_residual(double dt);
 
 #endif /* ANALYZE_MODULE_H */

@@ -7,13 +7,6 @@
  * @copyright Copyright (c) 2021
  ******************************************************************************/
 #include "output_module.h"
-// #include "fv3d_private.h"
-// #include "mesh/mesh_module.h"
-//
-// #include "fv/fv_module.h"
-// #include "timedisc/implicit/implicit_module.h"
-
-
 
 /*******************************************************************************
  * @brief Define output

@@ -8,11 +8,6 @@
  ******************************************************************************/
 #include <string.h>
 #include "output_private.h"
-// #include "fv3d_private.h"
-// #include "mesh/mesh_module.h"
-//
-// #include "fv/fv_module.h"
-// #include "timedisc/implicit/implicit_module.h"
 
 int solver_i_output_data = -1;
 bool_t solver_do_output_data = BFLS;
@@ -92,11 +87,11 @@ void init_output(int i_output_data)
  ******************************************************************************/
 void write_output(int iter, double t)
 {
-    // Cells_t *cells = solver_mesh->cells;
-    // int n_domain_cells = cells->n_domain_cells;
-    // int n_global_cells = cells->n_global_cells;
-    // int n_tot_variables = solver_variables->n_tot_variables;
-    // int n_sol_variables = solver_variables->n_sol_variables;
+    Cells_t *cells = solver_mesh->cells;
+    int n_domain_cells = cells->n_domain_cells;
+    int n_global_cells = cells->n_global_cells;
+    int n_tot_variables = solver_variables->n_tot_variables;
+    int n_sol_variables = solver_variables->n_sol_variables;
 
     char file_prefix[256];
     sprintf(file_prefix, ".%09d.h5", iter);
@@ -109,74 +104,74 @@ void write_output(int iter, double t)
     SET_HDF5_ATTRIBUTE(file_id, "iter", HDF5Int, &iter);
     SET_HDF5_ATTRIBUTE(file_id, "t", HDF5Double, &t);
 
-    // if (is_parallel())
-    // {
-    //     {
-    //         hsize_t dims[2] = {n_global_cells, n_sol_variables};
-    //         hsize_t offset[2] = {0, 0};
-    //         hsize_t count[2] = {n_domain_cells, n_sol_variables};
-    //         SET_HDF5_DATASET_SELECT_N_M(file_id, "phi_total", HDF5Double, phi_total,
-    //                                     count, dims, offset[0], cells->stride, n_domain_cells);
-    //     }
+    if (is_parallel())
+    {
+        {
+            hsize_t dims[2] = {n_global_cells, n_sol_variables};
+            hsize_t offset[2] = {0, 0};
+            hsize_t count[2] = {n_domain_cells, n_sol_variables};
+            SET_HDF5_DATASET_SELECT_N_M(file_id, "phi_total", HDF5Double, solver_phi_total,
+                                        count, dims, offset[0], cells->stride, n_domain_cells);
+        }
 
-    //     {
-    //         hsize_t dims[2] = {n_global_cells, n_sol_variables};
-    //         hsize_t offset[2] = {0, 0};
-    //         hsize_t count[2] = {n_domain_cells, n_sol_variables};
-    //         SET_HDF5_DATASET_SELECT_N_M(file_id, "phi_dt", HDF5Double, phi_dt,
-    //                                     count, dims, offset[0], cells->stride, n_domain_cells);
-    //     }
+        {
+            hsize_t dims[2] = {n_global_cells, n_sol_variables};
+            hsize_t offset[2] = {0, 0};
+            hsize_t count[2] = {n_domain_cells, n_sol_variables};
+            SET_HDF5_DATASET_SELECT_N_M(file_id, "phi_dt", HDF5Double, solver_phi_dt,
+                                        count, dims, offset[0], cells->stride, n_domain_cells);
+        }
 
-    //     if (n_bdf_stages > 0)
-    //     {
-    //         SET_HDF5_ATTRIBUTE(file_id, "n_stages", HDF5Int, &n_bdf_stages);
+        // if (n_bdf_stages > 0)
+        // {
+        //     SET_HDF5_ATTRIBUTE(file_id, "n_stages", HDF5Int, &n_bdf_stages);
 
-    //         for (int i_stage = 0; i_stage < n_bdf_stages; ++i_stage)
-    //         {
-    //             char stage_string[256];
-    //             sprintf(stage_string, "%d", i_stage);
-    //             string_t tmp = allocate_strcat("phi_old:", stage_string);
+        //     for (int i_stage = 0; i_stage < n_bdf_stages; ++i_stage)
+        //     {
+        //         char stage_string[256];
+        //         sprintf(stage_string, "%d", i_stage);
+        //         string_t tmp = allocate_strcat("phi_old:", stage_string);
 
-    //             hsize_t dims[2] = {n_global_cells, n_sol_variables};
-    //             hsize_t offset[2] = {0, 0};
-    //             hsize_t count[2] = {n_domain_cells, n_sol_variables};
-    //             SET_HDF5_DATASET_SELECT_N_M(file_id, tmp, HDF5Double, phi_old[i_stage],
-    //                                         count, dims, offset[0], cells->stride, n_domain_cells);
+        //         hsize_t dims[2] = {n_global_cells, n_sol_variables};
+        //         hsize_t offset[2] = {0, 0};
+        //         hsize_t count[2] = {n_domain_cells, n_sol_variables};
+        //         SET_HDF5_DATASET_SELECT_N_M(file_id, tmp, HDF5Double, phi_old[i_stage],
+        //                                     count, dims, offset[0], cells->stride, n_domain_cells);
 
-    //             DEALLOCATE(tmp);
-    //         }
-    //     }
-    // }
-    // else
-    // {
-    //     {
-    //         hsize_t dims[2] = {n_domain_cells, n_tot_variables};
-    //         SET_HDF5_DATASET_N_M(file_id, "phi_total", HDF5Double, phi_total, dims);
-    //     }
+        //         DEALLOCATE(tmp);
+        //     }
+        // }
+    }
+    else
+    {
+        {
+            hsize_t dims[2] = {n_domain_cells, n_tot_variables};
+            SET_HDF5_DATASET_N_M(file_id, "phi_total", HDF5Double, solver_phi_total, dims);
+        }
 
-    //     {
-    //         hsize_t dims[2] = {n_domain_cells, n_sol_variables};
-    //         SET_HDF5_DATASET_N_M(file_id, "phi_dt", HDF5Double, phi_dt, dims);
-    //     }
+        {
+            hsize_t dims[2] = {n_domain_cells, n_sol_variables};
+            SET_HDF5_DATASET_N_M(file_id, "phi_dt", HDF5Double, solver_phi_dt, dims);
+        }
 
-    //     if (n_bdf_stages > 0)
-    //     {
-    //         SET_HDF5_ATTRIBUTE(file_id, "n_stages", HDF5Int, &n_bdf_stages);
+        // if (n_bdf_stages > 0)
+        // {
+        //     SET_HDF5_ATTRIBUTE(file_id, "n_stages", HDF5Int, &n_bdf_stages);
 
-    //         for (int i_stage = 0; i_stage < n_bdf_stages; ++i_stage)
-    //         {
-    //             char stage_string[256];
-    //             sprintf(stage_string, "%d", i_stage);
-    //             string_t tmp = allocate_strcat("phi_old:", stage_string);
+        //     for (int i_stage = 0; i_stage < n_bdf_stages; ++i_stage)
+        //     {
+        //         char stage_string[256];
+        //         sprintf(stage_string, "%d", i_stage);
+        //         string_t tmp = allocate_strcat("phi_old:", stage_string);
 
-    //             hsize_t dims[2] = {n_domain_cells, n_sol_variables};
+        //         hsize_t dims[2] = {n_domain_cells, n_sol_variables};
 
-    //             SET_HDF5_DATASET_N_M(file_id, tmp, HDF5Double, phi_old[i_stage], dims);
+        //         SET_HDF5_DATASET_N_M(file_id, tmp, HDF5Double, phi_old[i_stage], dims);
 
-    //             DEALLOCATE(tmp);
-    //         }
-    //     }
-    // }
+        //         DEALLOCATE(tmp);
+        //     }
+        // }
+    }
 
     close_hdf5_file(file_id);
     DEALLOCATE(output_file);

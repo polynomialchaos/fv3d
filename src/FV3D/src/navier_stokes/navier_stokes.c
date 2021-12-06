@@ -12,8 +12,6 @@
 #include "fv/fv_module.h"
 #include "timedisc/timedisc_module.h"
 
-int navier_stokes_active = 0;
-
 void update(double t);
 void update_gradients();
 void calc_exact_func(int id, double t, double *x, double *phi);
@@ -126,7 +124,7 @@ void update(double t)
     int n_tot_variables = solver_variables->n_tot_variables;
 
     for (int i = 0; i < n_domain_cells; ++i)
-        con_to_prim(&phi_total[i * n_tot_variables]);
+        con_to_prim(&solver_phi_total[i * n_tot_variables]);
 
     update_boundaries(t);
 }
@@ -167,7 +165,7 @@ double calc_time_step()
 
     for (int i = 0; i < n_cells; ++i)
     {
-        double *phi_total_i = &phi_total[i * n_tot_variables];
+        double *phi_total_i = &solver_phi_total[i * n_tot_variables];
         double *dx = &cells->dx[i * DIM];
         double s_rho = 1.0 / phi_total_i[ic_rho];
         double c = sqrt(kappa * phi_total_i[ip_p] * s_rho);
@@ -183,7 +181,7 @@ double calc_time_step()
     lambda_conv *= cfl_scale;
     lambda_visc *= dfl_scale * mu_mix * kappa_pr * lambda_visc;
 
-    is_viscous_dt = (lambda_visc < lambda_conv);
+    set_viscous_dt(lambda_visc < lambda_conv);
 
     return MIN(lambda_conv, lambda_visc);
 }
