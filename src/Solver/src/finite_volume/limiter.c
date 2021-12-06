@@ -29,8 +29,11 @@ void init_limiter(limiter_type_t limiter_type)
     case BarthJespersenn:
         limiter_function_pointer = limiter_barth_jespersenn;
         break;
-    default:
+    case NoLimter:
         limiter_function_pointer = limiter_none;
+        break;
+    default:
+        CHECK_EXPRESSION(0);
         break;
     }
 }
@@ -88,9 +91,6 @@ double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
 
     return tmp;
 }
-
-
-
 
 /*******************************************************************************
  * @brief None limiter calculation (return 1)

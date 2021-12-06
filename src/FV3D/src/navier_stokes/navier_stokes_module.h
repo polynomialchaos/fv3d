@@ -73,6 +73,15 @@ void boundary_finalize();
 void boundary_initialize();
 
 /*******************************************************************************
+ * @brief Define solution by region ID
+ * @param id
+ * @param t
+ * @param x
+ * @param phi
+ ******************************************************************************/
+void calc_exact_func(int id, double t, double *x, double *phi);
+
+/*******************************************************************************
  * @brief Calculate pressure (ideal gas)
  * @param rho
  * @param T

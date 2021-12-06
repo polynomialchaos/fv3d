@@ -64,7 +64,7 @@ void implicit_finalize()
  ******************************************************************************/
 void implicit_initialize()
 {
-    if (solver_implicit_active == BFLS)
+    if (is_explicit() == BTRU)
         return;
 
     GET_PARAMETER("TimeDisc/Implicit/scheme", StringParameter, &implicit_scheme_name);

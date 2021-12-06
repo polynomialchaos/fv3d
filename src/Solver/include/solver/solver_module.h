@@ -12,26 +12,8 @@
 #include "basec/basec_module.h"
 #include "solver/solver_type.h"
 
-typedef void (*void_calc_exact_ft)(int id, double t, double *x, double *phi);
-extern void_calc_exact_ft calc_exact_function_pointer;
-
-typedef void (*void_calc_flux_ft)();
-extern void_calc_flux_ft calc_flux_function_pointer;
-
-typedef double (*double_calc_timestep_ft)();
-extern double_calc_timestep_ft calc_time_step_function_pointer;
-
-typedef void (*void_update_ft)(double t);
-extern void_update_ft update_function_pointer;
-
-typedef void (*void_update_gradients_ft)();
-extern void_update_gradients_ft update_gradients_function_pointer;
-
-extern Mesh_t *solver_mesh; /** Global mesh */
+extern Mesh_t *solver_mesh;           /** Global mesh */
 extern Variables_t *solver_variables; /** Global variables */
-
-extern int solver_explicit_active;
-extern int solver_implicit_active;
 
 extern double *solver_flux;
 extern double *solver_grad_phi_total_x;
@@ -75,7 +57,7 @@ void create_file_header(cstring_t file_name);
 void finite_volume_time_derivative(double t);
 
 /*******************************************************************************
- * @brief Finalize analyze
+ * @brief Free analyze
  ******************************************************************************/
 void free_analyze();
 
@@ -227,6 +209,12 @@ void init_timedisc(timedisc_type_t timedisc_type, int max_iter,
                    double t_start, double t_end);
 
 /*******************************************************************************
+ * @brief Return is_explicit flag
+ * bool_t
+ ******************************************************************************/
+bool_t is_explicit();
+
+/*******************************************************************************
  * @brief Print mesh information
  * @param mesh
  ******************************************************************************/
@@ -242,6 +230,36 @@ void print_variables();
  * @param restart_file
  ******************************************************************************/
 void read_restart_data(cstring_t restart_file);
+
+/*******************************************************************************
+ * @brief Set the flux calculation routine
+ * @param fun_ptr
+ ******************************************************************************/
+void set_calc_flux(void_calc_flux_ft fun_ptr);
+
+/*******************************************************************************
+ * @brief Set the timestep calculation routine
+ * @param fun_ptr
+ ******************************************************************************/
+void set_calc_timestep(double_calc_timestep_ft fun_ptr);
+
+/*******************************************************************************
+ * @brief Set the exact function routine
+ * @param fun_ptr
+ ******************************************************************************/
+void set_exact_function(void_calc_exact_ft fun_ptr);
+
+/*******************************************************************************
+ * @brief Set the update routine
+ * @param fun_ptr
+ ******************************************************************************/
+void set_update(void_update_ft fun_ptr);
+
+/*******************************************************************************
+ * @brief Set the update gradients routine
+ * @param fun_ptr
+ ******************************************************************************/
+void set_update_gradients(void_update_gradients_ft fun_ptr);
 
 /*******************************************************************************
  * @brief Set the viscous timestep flag

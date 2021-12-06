@@ -275,7 +275,7 @@ void update_boundaries(double t)
             phi_total_i[ip_w] = tmp_w;
             break;
         case BoundaryFunction:
-            calc_exact_function_pointer(regions->function_id[id], t, &faces->x[bf * DIM], phi_total_i);
+            calc_exact_func(regions->function_id[id], t, &faces->x[bf * DIM], phi_total_i);
             con_to_prim(phi_total_i);
             break;
         default:

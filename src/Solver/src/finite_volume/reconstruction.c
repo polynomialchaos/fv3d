@@ -9,7 +9,6 @@
 #include "finite_volume_private.h"
 
 void_reconstruction_ft reconstruction_function_pointer = NULL;
-void_update_gradients_ft update_gradients_function_pointer = NULL;
 
 double *send_buffer = NULL;
 double *receive_buffer = NULL;
@@ -43,7 +42,7 @@ void calc_gradients()
         for (int j = 0; j < n_tot_variables; ++j)
         {
             double phi_mean = solver_phi_total[fc[0] * n_tot_variables + j] + faces->lambda[i] *
-                                                                           (solver_phi_total[fc[1] * n_tot_variables + j] - solver_phi_total[fc[0] * n_tot_variables + j]);
+                                                                                  (solver_phi_total[fc[1] * n_tot_variables + j] - solver_phi_total[fc[0] * n_tot_variables + j]);
 
             solver_grad_phi_total_x[fc[0] * n_tot_variables + j] += phi_mean * n[0] * area;
             solver_grad_phi_total_y[fc[0] * n_tot_variables + j] += phi_mean * n[1] * area;

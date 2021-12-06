@@ -17,6 +17,8 @@ extern double_limiter_ft limiter_function_pointer;
 typedef void (*void_reconstruction_ft)();
 extern void_reconstruction_ft reconstruction_function_pointer;
 
+extern void_update_gradients_ft update_gradients_function_pointer;
+
 /*******************************************************************************
  * @brief Calculate (reconstruct) gradients
  ******************************************************************************/

@@ -39,7 +39,7 @@ void explicit_finalize()
  ******************************************************************************/
 void explicit_initialize()
 {
-    if (solver_explicit_active == BFLS)
+    if (is_explicit() == BFLS)
         return;
 
     GET_PARAMETER("TimeDisc/Explicit/scheme", StringParameter, &explicit_scheme_name);

@@ -14,6 +14,8 @@
 typedef void (*void_timestep_ft)(int iter, double t, double dt);
 extern void_timestep_ft time_step_function_pointer;
 
+extern double_calc_timestep_ft calc_time_step_function_pointer;
+
 extern int solver_is_viscous_dt;
 extern int solver_is_transient;
 
@@ -30,14 +32,6 @@ extern double **phi_old;
 void calc_jacobian_numerical(int n_var, int n_cells);
 
 /*******************************************************************************
- * @brief Implicit time discretizazion routine (Newton)
- * @param iter
- * @param t
- * @param dt
- ******************************************************************************/
-void time_step_newton(int iter, double t, double dt);
-
-/*******************************************************************************
  * @brief Matrix vector routine (called by solver)
  * @param x
  * @param b
@@ -46,6 +40,14 @@ void time_step_newton(int iter, double t, double dt);
  * @return int
  ******************************************************************************/
 int matrix_vector_numerical(double *x, double *b, size_t n_var, size_t n_cells);
+
+/*******************************************************************************
+ * @brief Implicit time discretizazion routine (Newton)
+ * @param iter
+ * @param t
+ * @param dt
+ ******************************************************************************/
+void time_step_newton(int iter, double t, double dt);
 
 /*******************************************************************************
  * @brief Explicit time discretizazion routine (LSERKW2)

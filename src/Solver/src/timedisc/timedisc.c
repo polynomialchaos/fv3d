@@ -15,8 +15,7 @@
 void_timestep_ft time_step_function_pointer = NULL;
 double_calc_timestep_ft calc_time_step_function_pointer = NULL;
 
-int solver_explicit_active = 0;
-int solver_implicit_active = 0;
+bool_t solver_is_explicit = BTRU;
 
 bool_t solver_is_viscous_dt = 0;
 int solver_max_iter = 1000;
@@ -50,10 +49,10 @@ void init_timedisc(timedisc_type_t timedisc_type, int max_iter,
     switch (timedisc_type)
     {
     case Explicit:
-        solver_explicit_active = 1;
+        solver_is_explicit = BTRU;
         break;
     case Implicit:
-        solver_implicit_active = 1;
+        solver_is_explicit = BFLS;
         break;
     default:
         CHECK_EXPRESSION(0);
@@ -69,6 +68,15 @@ void init_timedisc(timedisc_type_t timedisc_type, int max_iter,
 }
 
 /*******************************************************************************
+ * @brief Return is_explicit flag
+ * bool_t
+ ******************************************************************************/
+bool_t is_explicit()
+{
+    return solver_is_explicit;
+}
+
+/*******************************************************************************
  * @brief Print the residual line
  * @param iter
  * @param t
@@ -80,7 +88,7 @@ void print_residual(int iter, double t, double dt, bool_t do_output)
     char output_str = (do_output == BTRU) ? '*' : ' ';
     char viscous_str = (solver_is_viscous_dt == BTRU) ? 'T' : 'F';
 
-    if (solver_explicit_active)
+    if (solver_is_explicit)
     {
         PRINTF("%09d %12.5e %12.5e %c %c:", iter, t, dt, viscous_str, output_str);
     }
@@ -100,7 +108,7 @@ void print_residual(int iter, double t, double dt, bool_t do_output)
  ******************************************************************************/
 void print_residual_header()
 {
-    if (solver_explicit_active)
+    if (solver_is_explicit)
     {
         PRINTF("%9s %12s %12s %1s %1s:", "iter", "time", "dt", "V", "O");
     }
@@ -204,6 +212,15 @@ void timedisc()
         if (do_finalize)
             break;
     }
+}
+
+/*******************************************************************************
+ * @brief Set the timestep calculation routine
+ * @param fun_ptr
+ ******************************************************************************/
+void set_calc_timestep(double_calc_timestep_ft fun_ptr)
+{
+    calc_time_step_function_pointer = fun_ptr;
 }
 
 /*******************************************************************************

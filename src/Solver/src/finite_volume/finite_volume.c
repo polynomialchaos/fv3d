@@ -8,9 +8,10 @@
  ******************************************************************************/
 #include "finite_volume_private.h"
 
-void_update_ft update_function_pointer = NULL;
 void_calc_flux_ft calc_flux_function_pointer = NULL;
 void_calc_exact_ft calc_exact_function_pointer = NULL;
+void_update_ft update_function_pointer = NULL;
+void_update_gradients_ft update_gradients_function_pointer = NULL;
 
 double *solver_flux = NULL;
 double *solver_grad_phi_total_x = NULL;
@@ -73,6 +74,7 @@ void finite_volume_time_derivative(double t)
 void free_finite_volume()
 {
     update_function_pointer = NULL;
+    update_gradients_function_pointer = NULL;
     calc_flux_function_pointer = NULL;
     calc_exact_function_pointer = NULL;
 
@@ -87,7 +89,6 @@ void free_finite_volume()
     DEALLOCATE(solver_phi_dt);
     DEALLOCATE(solver_flux);
 }
-
 
 /*******************************************************************************
  * @brief Initialize finite_volume
@@ -114,7 +115,41 @@ void init_finite_volume()
     set_solution();
 }
 
+/*******************************************************************************
+ * @brief Set the flux calculation routine
+ * @param fun_ptr
+ ******************************************************************************/
+void set_calc_flux(void_calc_flux_ft fun_ptr)
+{
+    calc_flux_function_pointer = fun_ptr;
+}
 
+/*******************************************************************************
+ * @brief Set the exact function routine
+ * @param fun_ptr
+ ******************************************************************************/
+void set_exact_function(void_calc_exact_ft fun_ptr)
+{
+    calc_exact_function_pointer = fun_ptr;
+}
+
+/*******************************************************************************
+ * @brief Set the update routine
+ * @param fun_ptr
+ ******************************************************************************/
+void set_update(void_update_ft fun_ptr)
+{
+    update_function_pointer = fun_ptr;
+}
+
+/*******************************************************************************
+ * @brief Set the update gradients routine
+ * @param fun_ptr
+ ******************************************************************************/
+void set_update_gradients(void_update_gradients_ft fun_ptr)
+{
+    update_gradients_function_pointer = fun_ptr;
+}
 
 /*******************************************************************************
  * @brief Set/initialize the solution pointer

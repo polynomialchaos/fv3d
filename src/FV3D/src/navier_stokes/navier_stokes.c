@@ -110,11 +110,11 @@ void navier_stokes_initialize()
     ip_p = add_dep_variable("p");
     ip_T = add_dep_variable("T");
 
-    update_function_pointer = update;
-    update_gradients_function_pointer = update_gradients;
-    calc_exact_function_pointer = calc_exact_func;
-    calc_time_step_function_pointer = calc_time_step;
-    calc_flux_function_pointer = calc_flux;
+    set_calc_flux(calc_flux);
+    set_calc_timestep(calc_time_step);
+    set_exact_function(calc_exact_func);
+    set_update(update);
+    set_update_gradients(update_gradients);
 }
 
 void update(double t)
@@ -134,6 +134,13 @@ void update_gradients()
     update_gradients_boundaries();
 }
 
+/*******************************************************************************
+ * @brief Define solution by region ID
+ * @param id
+ * @param t
+ * @param x
+ * @param phi
+ ******************************************************************************/
 void calc_exact_func(int id, double t, double *x, double *phi)
 {
 #ifdef DEBUG
@@ -154,6 +161,10 @@ void calc_exact_func(int id, double t, double *x, double *phi)
     }
 }
 
+/*******************************************************************************
+ * @brief Calculate the timestep
+ * @return double
+ ******************************************************************************/
 double calc_time_step()
 {
     Cells_t *cells = solver_mesh->cells;
