@@ -14,7 +14,7 @@
 
 extern Mesh_t *solver_mesh;           /** Global mesh */
 extern Variables_t *solver_variables; /** Global variables */
-extern data_t *solver_data;    /** Global solver data */
+extern data_t *solver_data;           /** Global solver data */
 
 /*******************************************************************************
  * @brief Add a solution variable
