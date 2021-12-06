@@ -15,6 +15,8 @@
 #include "restart/restart_module.h"
 #include "timedisc/timedisc_module.h"
 
+string_t title = NULL;
+
 /*******************************************************************************
  * @brief Main function
  * @param argc
@@ -78,6 +80,7 @@ void fv3d_define()
 void fv3d_finalize()
 {
     free_solver();
+    DEALLOCATE(title);
 }
 
 /*******************************************************************************
@@ -85,8 +88,6 @@ void fv3d_finalize()
  ******************************************************************************/
 void fv3d_initialize()
 {
-    string_t title = NULL;
     GET_PARAMETER("General/title", StringParameter, &title);
     init_solver(title);
-    DEALLOCATE(title);
 }

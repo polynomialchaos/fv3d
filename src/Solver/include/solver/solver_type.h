@@ -180,13 +180,30 @@ typedef struct Variable
 typedef struct Variables
 {
     int n_sol_variables;
-    int n_dep_variables;
-    int n_tot_variables;
-
     Variable_t *sol_variables;
+
+    int n_dep_variables;
     Variable_t *dep_variables;
+
+    int n_tot_variables;
     Variable_t **tot_variables;
 } Variables_t;
+
+/*******************************************************************************
+ * @brief Data structure
+ ******************************************************************************/
+typedef struct Data
+{
+    double *flux;
+    double *phi_total_left;
+    double *phi_total_right;
+
+    double *grad_phi_total_x;
+    double *grad_phi_total_y;
+    double *grad_phi_total_z;
+    double *phi_dt;
+    double *phi_total;
+} data_t;
 
 /*******************************************************************************
  * @brief Limiter type enumeration

@@ -107,11 +107,11 @@ void timestep_lserkw2(int iter, double t, double dt)
 
     for (int i = 0; i < n_domain_cells; ++i)
         for (int j = 0; j < n_sol_variables; ++j)
-            phi_dt_tmp[i * n_sol_variables + j] = solver_phi_dt[i * n_sol_variables + j]; /* + phi_dt_tmp * rk_a[i_stage] = 0 */
+            phi_dt_tmp[i * n_sol_variables + j] = solver_data->phi_dt[i * n_sol_variables + j]; /* + phi_dt_tmp * rk_a[i_stage] = 0 */
 
     for (int i = 0; i < n_domain_cells; ++i)
         for (int j = 0; j < n_sol_variables; ++j)
-            solver_phi_total[i * n_tot_variables + j] += phi_dt_tmp[i * n_sol_variables + j] * dt * rk_g[0];
+            solver_data->phi_total[i * n_tot_variables + j] += phi_dt_tmp[i * n_sol_variables + j] * dt * rk_g[0];
 
     /* 2nd to n_rk_stages */
     for (int i_stage = 1; i_stage < n_rk_stages; ++i_stage)
@@ -121,10 +121,10 @@ void timestep_lserkw2(int iter, double t, double dt)
 
         for (int i = 0; i < n_domain_cells; ++i)
             for (int j = 0; j < n_sol_variables; ++j)
-                phi_dt_tmp[i * n_sol_variables + j] = solver_phi_dt[i * n_sol_variables + j] + phi_dt_tmp[i * n_sol_variables + j] * rk_a[i_stage];
+                phi_dt_tmp[i * n_sol_variables + j] = solver_data->phi_dt[i * n_sol_variables + j] + phi_dt_tmp[i * n_sol_variables + j] * rk_a[i_stage];
 
         for (int i = 0; i < n_domain_cells; ++i)
             for (int j = 0; j < n_sol_variables; ++j)
-                solver_phi_total[i * n_tot_variables + j] += phi_dt_tmp[i * n_sol_variables + j] * dt * rk_g[i_stage];
+                solver_data->phi_total[i * n_tot_variables + j] += phi_dt_tmp[i * n_sol_variables + j] * dt * rk_g[i_stage];
     }
 }

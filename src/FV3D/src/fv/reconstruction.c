@@ -40,7 +40,8 @@ void reconstruction_finalize()
  ******************************************************************************/
 void reconstruction_initialize()
 {
-    GET_PARAMETER("FV/Reconstruction/reconstruction", StringParameter, &reconstruction_name);
+    GET_PARAMETER("FV/Reconstruction/reconstruction", StringParameter,
+                  &reconstruction_name);
 
     if (is_equal(reconstruction_name, "First-Order"))
     {

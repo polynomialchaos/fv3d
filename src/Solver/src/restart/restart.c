@@ -67,7 +67,7 @@ void read_restart_data(cstring_t restart_file)
             hsize_t offset[2] = {0, 0};
             hsize_t count[2] = {n_domain_cells, n_tot_variables};
 
-            GET_HDF5_DATASET_SELECT_N_M(file_id, "solver_phi_total", HDF5Double,
+            GET_HDF5_DATASET_SELECT_N_M(file_id, "phi_total", HDF5Double,
                                         count, dims, offset[0], cells->stride, n_domain_cells, phi_total_restart);
         }
 
@@ -76,7 +76,7 @@ void read_restart_data(cstring_t restart_file)
             hsize_t offset[2] = {0, 0};
             hsize_t count[2] = {n_domain_cells, n_sol_variables};
 
-            GET_HDF5_DATASET_SELECT_N_M(file_id, "solver_phi_dt", HDF5Double,
+            GET_HDF5_DATASET_SELECT_N_M(file_id, "phi_dt", HDF5Double,
                                         count, dims, offset[0], cells->stride, n_domain_cells, phi_dt_restart);
         }
 
@@ -110,12 +110,12 @@ void read_restart_data(cstring_t restart_file)
     {
         {
             hsize_t dims[2] = {n_domain_cells, n_tot_variables};
-            GET_HDF5_DATASET_N_M(file_id, "solver_phi_total", HDF5Double, dims, phi_total_restart);
+            GET_HDF5_DATASET_N_M(file_id, "solver_data->phi_total", HDF5Double, dims, phi_total_restart);
         }
 
         {
             hsize_t dims[2] = {n_domain_cells, n_sol_variables};
-            GET_HDF5_DATASET_N_M(file_id, "solver_phi_dt", HDF5Double, dims, phi_dt_restart);
+            GET_HDF5_DATASET_N_M(file_id, "solver_data->phi_dt", HDF5Double, dims, phi_dt_restart);
         }
 
         // if (n_bdf_stages > 0)
@@ -144,8 +144,8 @@ void read_restart_data(cstring_t restart_file)
 
     close_hdf5_file(file_id);
 
-    copy_n(phi_total_restart, n_tot_variables * n_domain_cells, solver_phi_total);
-    copy_n(phi_dt_restart, n_sol_variables * n_domain_cells, solver_phi_dt);
+    copy_n(phi_total_restart, n_tot_variables * n_domain_cells, solver_data->phi_total);
+    copy_n(phi_dt_restart, n_sol_variables * n_domain_cells, solver_data->phi_dt);
 
     // for (int i_stage = 0; i_stage < n_stages_restart; ++i_stage)
     // {

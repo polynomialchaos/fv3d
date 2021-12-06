@@ -20,9 +20,19 @@ extern void_reconstruction_ft reconstruction_function_pointer;
 extern void_update_gradients_ft update_gradients_function_pointer;
 
 /*******************************************************************************
+ * @brief Allocate the solver data
+ ******************************************************************************/
+data_t *allocate_data();
+
+/*******************************************************************************
  * @brief Calculate (reconstruct) gradients
  ******************************************************************************/
 void calc_gradients();
+
+/*******************************************************************************
+ * @brief Deallocate the solver data
+ ******************************************************************************/
+void deallocate_data(data_t *this);
 
 /*******************************************************************************
  * @brief Barth-Jespersenn limiter calculation (return 0-1)

@@ -74,9 +74,9 @@ void calc_jacobian_numerical(int n_var, int n_cells)
         for (int i = 0; i < n_cells; ++i)
         {
             for (int j = 0; j < n_var; ++j)
-                solver_phi_total[i * n_tot_variables + j] = Y_n[i * n_var + j];
+                solver_data->phi_total[i * n_tot_variables + j] = Y_n[i * n_var + j];
 
-            solver_phi_total[i * n_tot_variables + i_var] += 0.5 * eps_fd;
+            solver_data->phi_total[i * n_tot_variables + i_var] += 0.5 * eps_fd;
         }
 
         finite_volume_time_derivative(tpdt_loc);
@@ -87,7 +87,7 @@ void calc_jacobian_numerical(int n_var, int n_cells)
 
             for (int j = 0; j < n_var; ++j)
             {
-                jac[idx_i + j] = -solver_phi_dt[i * n_var + j];
+                jac[idx_i + j] = -solver_data->phi_dt[i * n_var + j];
             }
         }
 
@@ -95,9 +95,9 @@ void calc_jacobian_numerical(int n_var, int n_cells)
         for (int i = 0; i < n_cells; ++i)
         {
             for (int j = 0; j < n_var; ++j)
-                solver_phi_total[i * n_tot_variables + j] = Y_n[i * n_var + j];
+                solver_data->phi_total[i * n_tot_variables + j] = Y_n[i * n_var + j];
 
-            solver_phi_total[i * n_tot_variables + i_var] -= 0.5 * eps_fd;
+            solver_data->phi_total[i * n_tot_variables + i_var] -= 0.5 * eps_fd;
         }
 
         finite_volume_time_derivative(tpdt_loc);
@@ -108,7 +108,7 @@ void calc_jacobian_numerical(int n_var, int n_cells)
 
             for (int j = 0; j < n_var; ++j)
             {
-                jac[idx_i + j] += solver_phi_dt[i * n_var + j];
+                jac[idx_i + j] += solver_data->phi_dt[i * n_var + j];
                 jac[idx_i + j] *= bdf_b_loc / (eps_fd + SMALL);
             }
 
@@ -236,11 +236,11 @@ void timestep_newton(int iter, double t, double dt)
 
     for (int i = 0; i < n_domain_cells; ++i)
         for (int j = 0; j < n_sol_variables; ++j)
-            phi_old[0][i * n_sol_variables + j] = solver_phi_total[i * n_tot_variables + j];
+            phi_old[0][i * n_sol_variables + j] = solver_data->phi_total[i * n_tot_variables + j];
 
     /* fill inital values for newton iteration */
     copy_n(phi_old[0], n_sol_variables * n_domain_cells, Y_n);
-    copy_n(solver_phi_dt, n_sol_variables * n_domain_cells, dY_dt_n);
+    copy_n(solver_data->phi_dt, n_sol_variables * n_domain_cells, dY_dt_n);
 
     /* calculate the inital error for newton abort criterion */
     for (int i = 0; i < n_domain_cells; ++i)
@@ -287,11 +287,11 @@ void timestep_newton(int iter, double t, double dt)
                 {
                     int idx = i * n_sol_variables + j;
                     Y_n[idx] += dY_n[idx];
-                    solver_phi_total[i * n_tot_variables + j] = Y_n[idx];
+                    solver_data->phi_total[i * n_tot_variables + j] = Y_n[idx];
                 }
 
             finite_volume_time_derivative(tpdt_loc);
-            copy_n(solver_phi_dt, n_sol_variables * n_domain_cells, dY_dt_n);
+            copy_n(solver_data->phi_dt, n_sol_variables * n_domain_cells, dY_dt_n);
 
             for (int i = 0; i < n_domain_cells; ++i)
                 for (int j = 0; j < n_sol_variables; ++j)

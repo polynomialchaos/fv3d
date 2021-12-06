@@ -1,5 +1,5 @@
 /*******************************************************************************
- * @file solver_flux.c
+ * @file flux.c
  * @author Florian Eigentler
  * @brief
  * @version 1.0.0
@@ -17,7 +17,7 @@ typedef void (*void_calc_conv_flux_ft)(double *phi_l, double *phi_r, double *f);
 void_calc_conv_flux_ft calc_convective_flux_function_pointer = NULL;
 
 /*******************************************************************************
- * @brief Calculate the solver_flux
+ * @brief Calculate the solver_data->flux
  ******************************************************************************/
 void calc_ns_flux()
 {
@@ -38,13 +38,13 @@ void calc_ns_flux()
     {
         int i = faces->internal_faces[ii];
         int *fc = &faces->cells[i * FACE_CELLS];
-        double *flux_i = &solver_flux[i * n_sol_variables];
+        double *flux_i = &solver_data->flux[i * n_sol_variables];
         double *n = &faces->n[i * DIM];
         double *t1 = &faces->t1[i * DIM];
         double *t2 = &faces->t2[i * DIM];
 
-        double *phi_total_left_i = &solver_phi_total_left[i * n_tot_variables];
-        double *phi_total_right_i = &solver_phi_total_right[i * n_tot_variables];
+        double *phi_total_left_i = &solver_data->phi_total_left[i * n_tot_variables];
+        double *phi_total_right_i = &solver_data->phi_total_right[i * n_tot_variables];
 
         phi_total_left_r[ic_rho] = phi_total_left_i[ic_rho];
         phi_total_left_r[ic_rho_u] = dot_n(&phi_total_left_i[ic_rho_u], n, DIM);
@@ -63,19 +63,19 @@ void calc_ns_flux()
         /* calculate convective flux */
         calc_convective_flux_function_pointer(phi_total_left_r, phi_total_right_r, flux_c);
 
-        /* rotate convective solver_flux back to global coordiantes and add to flux */
+        /* rotate convective flux back to global coordiantes and add to flux */
         flux_i[0] = flux_c[0];
         flux_i[1] = flux_c[1] * n[0] + flux_c[2] * t1[0] + flux_c[3] * t2[0];
         flux_i[2] = flux_c[1] * n[1] + flux_c[2] * t1[1] + flux_c[3] * t2[1];
         flux_i[3] = flux_c[1] * n[2] + flux_c[2] * t1[2] + flux_c[3] * t2[2];
         flux_i[4] = flux_c[4];
 
-        double *grad_phi_total_x_i_0 = &solver_grad_phi_total_x[fc[0] * n_tot_variables];
-        double *grad_phi_total_y_i_0 = &solver_grad_phi_total_y[fc[0] * n_tot_variables];
-        double *grad_phi_total_z_i_0 = &solver_grad_phi_total_z[fc[0] * n_tot_variables];
-        double *grad_phi_total_x_i_1 = &solver_grad_phi_total_x[fc[1] * n_tot_variables];
-        double *grad_phi_total_y_i_1 = &solver_grad_phi_total_y[fc[1] * n_tot_variables];
-        double *grad_phi_total_z_i_1 = &solver_grad_phi_total_z[fc[1] * n_tot_variables];
+        double *grad_phi_total_x_i_0 = &solver_data->grad_phi_total_x[fc[0] * n_tot_variables];
+        double *grad_phi_total_y_i_0 = &solver_data->grad_phi_total_y[fc[0] * n_tot_variables];
+        double *grad_phi_total_z_i_0 = &solver_data->grad_phi_total_z[fc[0] * n_tot_variables];
+        double *grad_phi_total_x_i_1 = &solver_data->grad_phi_total_x[fc[1] * n_tot_variables];
+        double *grad_phi_total_y_i_1 = &solver_data->grad_phi_total_y[fc[1] * n_tot_variables];
+        double *grad_phi_total_z_i_1 = &solver_data->grad_phi_total_z[fc[1] * n_tot_variables];
 
         /* calculate diffusive flux */
         viscous_flux(
@@ -83,7 +83,7 @@ void calc_ns_flux()
             phi_total_right_i, grad_phi_total_x_i_1, grad_phi_total_y_i_1, grad_phi_total_z_i_1,
             flux_d_x, flux_d_y, flux_d_z);
 
-        /* add diffusive solver_flux to flux */
+        /* add diffusive solver_data->flux to flux */
         for (int j = 0; j < n_sol_variables; ++j)
             flux_i[j] += flux_d_x[j] * n[0] + flux_d_y[j] * n[1] + flux_d_z[j] * n[2];
     }
@@ -93,13 +93,13 @@ void calc_ns_flux()
         int i = faces->boundary_faces[ii];
         int *fc = &faces->cells[i * FACE_CELLS];
         int id = boundaries->id[faces->boundary[i]];
-        double *flux_i = &solver_flux[i * n_sol_variables];
+        double *flux_i = &solver_data->flux[i * n_sol_variables];
         double *n = &faces->n[i * DIM];
         double *t1 = &faces->t1[i * DIM];
         double *t2 = &faces->t2[i * DIM];
 
-        double *phi_total_left_i = &solver_phi_total_left[i * n_tot_variables];
-        double *phi_total_right_i = &solver_phi_total_right[i * n_tot_variables];
+        double *phi_total_left_i = &solver_data->phi_total_left[i * n_tot_variables];
+        double *phi_total_right_i = &solver_data->phi_total_right[i * n_tot_variables];
 
         phi_total_left_r[ic_rho] = phi_total_left_i[ic_rho];
         phi_total_left_r[ic_rho_u] = dot_n(&phi_total_left_i[ic_rho_u], n, DIM);
@@ -123,19 +123,19 @@ void calc_ns_flux()
             break;
         }
 
-        /* rotate convective solver_flux back to global coordiantes and add to flux */
+        /* rotate convective solver_data->flux back to global coordiantes and add to flux */
         flux_i[0] = flux_c[0];
         flux_i[1] = flux_c[1] * n[0] + flux_c[2] * t1[0] + flux_c[3] * t2[0];
         flux_i[2] = flux_c[1] * n[1] + flux_c[2] * t1[1] + flux_c[3] * t2[1];
         flux_i[3] = flux_c[1] * n[2] + flux_c[2] * t1[2] + flux_c[3] * t2[2];
         flux_i[4] = flux_c[4];
 
-        double *grad_phi_total_x_i_0 = &solver_grad_phi_total_x[fc[0] * n_tot_variables];
-        double *grad_phi_total_y_i_0 = &solver_grad_phi_total_y[fc[0] * n_tot_variables];
-        double *grad_phi_total_z_i_0 = &solver_grad_phi_total_z[fc[0] * n_tot_variables];
-        double *grad_phi_total_x_i_1 = &solver_grad_phi_total_x[fc[1] * n_tot_variables];
-        double *grad_phi_total_y_i_1 = &solver_grad_phi_total_y[fc[1] * n_tot_variables];
-        double *grad_phi_total_z_i_1 = &solver_grad_phi_total_z[fc[1] * n_tot_variables];
+        double *grad_phi_total_x_i_0 = &solver_data->grad_phi_total_x[fc[0] * n_tot_variables];
+        double *grad_phi_total_y_i_0 = &solver_data->grad_phi_total_y[fc[0] * n_tot_variables];
+        double *grad_phi_total_z_i_0 = &solver_data->grad_phi_total_z[fc[0] * n_tot_variables];
+        double *grad_phi_total_x_i_1 = &solver_data->grad_phi_total_x[fc[1] * n_tot_variables];
+        double *grad_phi_total_y_i_1 = &solver_data->grad_phi_total_y[fc[1] * n_tot_variables];
+        double *grad_phi_total_z_i_1 = &solver_data->grad_phi_total_z[fc[1] * n_tot_variables];
 
         /* calculate diffusive flux */
         switch (regions->type[id])
@@ -148,14 +148,14 @@ void calc_ns_flux()
             break;
         }
 
-        /* add diffusive solver_flux to flux */
+        /* add diffusive solver_data->flux to flux */
         for (int j = 0; j < n_sol_variables; ++j)
             flux_i[j] += flux_d_x[j] * n[0] + flux_d_y[j] * n[1] + flux_d_z[j] * n[2];
     }
 }
 
 /*******************************************************************************
- * @brief Calculate the Euler 1D convective solver_flux
+ * @brief Calculate the Euler 1D convective solver_data->flux
  ******************************************************************************/
 void eval_euler_flux_1d(double *phi, double *f)
 {
@@ -167,7 +167,7 @@ void eval_euler_flux_1d(double *phi, double *f)
 }
 
 /*******************************************************************************
- * @brief Calculate the Euler 1D viscous solver_flux
+ * @brief Calculate the Euler 1D viscous solver_data->flux
  ******************************************************************************/
 void eval_viscous_flux_1d(double *phi, double *grad_phi_x, double *grad_phi_y, double *grad_phi_z,
                           double *f, double *g, double *h)
@@ -209,7 +209,7 @@ void eval_viscous_flux_1d(double *phi, double *grad_phi_x, double *grad_phi_y, d
 }
 
 /*******************************************************************************
- * @brief Define solver_flux
+ * @brief Define solver_data->flux
  ******************************************************************************/
 void flux_define()
 {
@@ -220,12 +220,13 @@ void flux_define()
     int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
     string_t tmp = tmp_opt[0];
 
-    SET_PARAMETER("Equation/Navier-Stokes/Flux/flux_scheme", StringParameter, &tmp,
+    SET_PARAMETER("Equation/Navier-Stokes/Flux/flux_scheme", StringParameter,
+                  &tmp,
                   "The Riemann solver", &tmp_opt, tmp_opt_n);
 }
 
 /*******************************************************************************
- * @brief Finalize solver_flux
+ * @brief Finalize solver_data->flux
  ******************************************************************************/
 void flux_finalize()
 {
@@ -235,11 +236,12 @@ void flux_finalize()
 }
 
 /*******************************************************************************
- * @brief Initialize solver_flux
+ * @brief Initialize solver_data->flux
  ******************************************************************************/
 void flux_initialize()
 {
-    GET_PARAMETER("Equation/Navier-Stokes/Flux/flux_scheme", StringParameter, &flux_scheme_name);
+    GET_PARAMETER("Equation/Navier-Stokes/Flux/flux_scheme", StringParameter,
+                  &flux_scheme_name);
 
     if (is_equal(flux_scheme_name, "Rusanov"))
     {
@@ -347,7 +349,7 @@ void riemann_ausm(double *phi_l, double *phi_r, double *f)
 }
 
 /*******************************************************************************
- * @brief Viscous solver_flux
+ * @brief Viscous solver_data->flux
  * @param phi_l
  * @param grad_phi_x_l
  * @param grad_phi_y_l

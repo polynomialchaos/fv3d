@@ -22,7 +22,8 @@ void explicit_define()
     int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
     string_t tmp = tmp_opt[0];
 
-    SET_PARAMETER("TimeDisc/Explicit/scheme", StringParameter, &tmp, "The explicit timestep scheme", &tmp_opt, tmp_opt_n);
+    SET_PARAMETER("TimeDisc/Explicit/scheme", StringParameter, &tmp,
+                  "The explicit timestep scheme", &tmp_opt, tmp_opt_n);
 }
 
 /*******************************************************************************
@@ -42,7 +43,8 @@ void explicit_initialize()
     if (is_explicit() == BFLS)
         return;
 
-    GET_PARAMETER("TimeDisc/Explicit/scheme", StringParameter, &explicit_scheme_name);
+    GET_PARAMETER("TimeDisc/Explicit/scheme", StringParameter,
+                  &explicit_scheme_name);
 
     if (is_equal(explicit_scheme_name, "Euler"))
     {

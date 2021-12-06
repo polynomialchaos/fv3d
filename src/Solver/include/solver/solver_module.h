@@ -14,15 +14,7 @@
 
 extern Mesh_t *solver_mesh;           /** Global mesh */
 extern Variables_t *solver_variables; /** Global variables */
-
-extern double *solver_flux;
-extern double *solver_grad_phi_total_x;
-extern double *solver_grad_phi_total_y;
-extern double *solver_grad_phi_total_z;
-extern double *solver_phi_dt;
-extern double *solver_phi_total;
-extern double *solver_phi_total_left;
-extern double *solver_phi_total_right;
+extern data_t *solver_data;    /** Global solver data */
 
 /*******************************************************************************
  * @brief Add a solution variable

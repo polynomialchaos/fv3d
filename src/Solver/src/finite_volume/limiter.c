@@ -53,8 +53,8 @@ double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
     int n_tot_variables = solver_variables->n_tot_variables;
     int *cf = &cells->faces[i_cell * max_cell_faces];
 
-    double phi_min = solver_phi_total[i_cell * n_tot_variables + i_var];
-    double phi_max = solver_phi_total[i_cell * n_tot_variables + i_var];
+    double phi_min = solver_data->phi_total[i_cell * n_tot_variables + i_var];
+    double phi_max = solver_data->phi_total[i_cell * n_tot_variables + i_var];
 
     for (int i = 0; i < cells->n_faces[i_cell]; ++i)
     {
@@ -62,13 +62,13 @@ double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
 
         if (fc[0] == i_cell)
         {
-            phi_min = MIN(phi_min, solver_phi_total[fc[1] * n_tot_variables + i_var]);
-            phi_max = MAX(phi_max, solver_phi_total[fc[1] * n_tot_variables + i_var]);
+            phi_min = MIN(phi_min, solver_data->phi_total[fc[1] * n_tot_variables + i_var]);
+            phi_max = MAX(phi_max, solver_data->phi_total[fc[1] * n_tot_variables + i_var]);
         }
         else
         {
-            phi_min = MIN(phi_min, solver_phi_total[fc[0] * n_tot_variables + i_var]);
-            phi_max = MAX(phi_max, solver_phi_total[fc[0] * n_tot_variables + i_var]);
+            phi_min = MIN(phi_min, solver_data->phi_total[fc[0] * n_tot_variables + i_var]);
+            phi_max = MAX(phi_max, solver_data->phi_total[fc[0] * n_tot_variables + i_var]);
         }
     }
 
@@ -79,11 +79,11 @@ double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
         double y = 1.0;
         if (slope > 0)
         {
-            y = (phi_max - solver_phi_total[i_cell * n_tot_variables + i_var]) / slope;
+            y = (phi_max - solver_data->phi_total[i_cell * n_tot_variables + i_var]) / slope;
         }
         else if (slope < 0)
         {
-            y = (phi_min - solver_phi_total[i_cell * n_tot_variables + i_var]) / slope;
+            y = (phi_min - solver_data->phi_total[i_cell * n_tot_variables + i_var]) / slope;
         }
 
         tmp = MIN(tmp, y);

@@ -35,17 +35,24 @@ void implicit_define()
 
     SET_PARAMETER("TimeDisc/Implicit/scheme", StringParameter, &tmp,
                   "The implicit timestep scheme", &tmp_opt, tmp_opt_n);
-    SET_PARAMETER("TimeDisc/Implicit/max_iter_inner", DigitParameter, &max_iter_inner,
+    SET_PARAMETER("TimeDisc/Implicit/max_iter_inner", DigitParameter,
+                  &max_iter_inner,
                   "The maximum number of inner iterations", NULL, 0);
     SET_PARAMETER("TimeDisc/Implicit/solver", StringParameter, &tmp2,
-                  "The linear system of equations solver", &tmp2_opt, tmp2_opt_n);
-    SET_PARAMETER("TimeDisc/Implicit/tolerance_lsoe", NumberParameter, &tolerance_lsoe,
+                  "The linear system of equations solver",
+                  &tmp2_opt, tmp2_opt_n);
+    SET_PARAMETER("TimeDisc/Implicit/tolerance_lsoe", NumberParameter,
+                  &tolerance_lsoe,
                   "The linear solver tolerance", NULL, 0);
-    SET_PARAMETER("TimeDisc/Implicit/max_iter_lsoe", DigitParameter, &max_iter_lsoe,
+    SET_PARAMETER("TimeDisc/Implicit/max_iter_lsoe", DigitParameter,
+                  &max_iter_lsoe,
                   "The linear solver maximum number of iterations", NULL, 0);
-    SET_PARAMETER("TimeDisc/Implicit/max_krylov_dims", DigitParameter, &max_krylov_dims,
-                  "The maximum Krylov space dimension in GMRes solver", NULL, 0);
-    SET_PARAMETER("TimeDisc/Implicit/max_krylov_restarts", DigitParameter, &max_krylov_restarts,
+    SET_PARAMETER("TimeDisc/Implicit/max_krylov_dims", DigitParameter,
+                  &max_krylov_dims,
+                  "The maximum Krylov space dimension in GMRes solver",
+                  NULL, 0);
+    SET_PARAMETER("TimeDisc/Implicit/max_krylov_restarts", DigitParameter,
+                  &max_krylov_restarts,
                   "The maximum restarts performed in GMRes solver", NULL, 0);
 }
 
@@ -67,13 +74,19 @@ void implicit_initialize()
     if (is_explicit() == BTRU)
         return;
 
-    GET_PARAMETER("TimeDisc/Implicit/scheme", StringParameter, &implicit_scheme_name);
-    GET_PARAMETER("TimeDisc/Implicit/max_iter_inner", DigitParameter, &max_iter_inner);
+    GET_PARAMETER("TimeDisc/Implicit/scheme", StringParameter,
+                  &implicit_scheme_name);
+    GET_PARAMETER("TimeDisc/Implicit/max_iter_inner", DigitParameter,
+                  &max_iter_inner);
     GET_PARAMETER("TimeDisc/Implicit/solver", StringParameter, &solver_name);
-    GET_PARAMETER("TimeDisc/Implicit/tolerance_lsoe", NumberParameter, &tolerance_lsoe);
-    GET_PARAMETER("TimeDisc/Implicit/max_iter_lsoe", DigitParameter, &max_iter_lsoe);
-    GET_PARAMETER("TimeDisc/Implicit/max_krylov_dims", DigitParameter, &max_krylov_dims);
-    GET_PARAMETER("TimeDisc/Implicit/max_krylov_restarts", DigitParameter, &max_krylov_restarts);
+    GET_PARAMETER("TimeDisc/Implicit/tolerance_lsoe", NumberParameter,
+                  &tolerance_lsoe);
+    GET_PARAMETER("TimeDisc/Implicit/max_iter_lsoe", DigitParameter,
+                  &max_iter_lsoe);
+    GET_PARAMETER("TimeDisc/Implicit/max_krylov_dims", DigitParameter,
+                  &max_krylov_dims);
+    GET_PARAMETER("TimeDisc/Implicit/max_krylov_restarts", DigitParameter,
+                  &max_krylov_restarts);
 
     implicit_scheme_t implicit_scheme = -1;
     if (is_equal(implicit_scheme_name, "Euler"))

@@ -28,12 +28,18 @@ void timedisc_define()
     int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
     string_t tmp = tmp_opt[0];
 
-    SET_PARAMETER("TimeDisc/timestep", StringParameter, &tmp, "The timestep mehtod", &tmp_opt, tmp_opt_n);
-    SET_PARAMETER("TimeDisc/max_iter", DigitParameter, &max_iter, "The maximum number of iterations", NULL, 0);
-    SET_PARAMETER("TimeDisc/transient", LogicalParameter, &is_transient, "The flag wheter to be transient or steady-state", NULL, 0);
-    SET_PARAMETER("TimeDisc/abort_residual", NumberParameter, &abort_residual, "The abort residual", NULL, 0);
-    SET_PARAMETER("TimeDisc/t_start", NumberParameter, &t_start, "The start time", NULL, 0);
-    SET_PARAMETER("TimeDisc/t_end", NumberParameter, &t_end, "The end time", NULL, 0);
+    SET_PARAMETER("TimeDisc/timestep", StringParameter, &tmp,
+                  "The timestep mehtod", &tmp_opt, tmp_opt_n);
+    SET_PARAMETER("TimeDisc/max_iter", DigitParameter, &max_iter,
+                  "The maximum number of iterations", NULL, 0);
+    SET_PARAMETER("TimeDisc/transient", LogicalParameter, &is_transient,
+                  "The flag wheter to be transient or steady-state", NULL, 0);
+    SET_PARAMETER("TimeDisc/abort_residual", NumberParameter, &abort_residual,
+                  "The abort residual", NULL, 0);
+    SET_PARAMETER("TimeDisc/t_start", NumberParameter, &t_start,
+                  "The start time", NULL, 0);
+    SET_PARAMETER("TimeDisc/t_end", NumberParameter, &t_end,
+                  "The end time", NULL, 0);
 
     explicit_define();
     implicit_define();

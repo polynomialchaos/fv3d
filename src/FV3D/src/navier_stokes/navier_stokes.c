@@ -51,12 +51,20 @@ void navier_stokes_define()
     REGISTER_INITIALIZE_ROUTINE(navier_stokes_initialize);
     REGISTER_FINALIZE_ROUTINE(navier_stokes_finalize);
 
-    SET_PARAMETER("Equation/Navier-Stokes/cfl_scale", NumberParameter, &cfl_scale, "The cfl_loc scale factor (0 ... 1)", NULL, 0);
-    SET_PARAMETER("Equation/Navier-Stokes/dfl_scale", NumberParameter, &dfl_scale, "The DFL scale factor (0 ... 1)", NULL, 0);
-    SET_PARAMETER("Equation/Navier-Stokes/mu_mix", NumberParameter, &mu_mix, "The dynamic viscosity, N s m-2", NULL, 0);
-    SET_PARAMETER("Equation/Navier-Stokes/R_mix", NumberParameter, &R_mix, "The specific gas constant, J kg-1 K-1", NULL, 0);
-    SET_PARAMETER("Equation/Navier-Stokes/Pr", NumberParameter, &Pr, "The Prandtl number", NULL, 0);
-    SET_PARAMETER("Equation/Navier-Stokes/kappa", NumberParameter, &kappa, "The isentropic exponent", NULL, 0);
+    SET_PARAMETER("Equation/Navier-Stokes/cfl_scale", NumberParameter,
+                  &cfl_scale,
+                  "The cfl_loc scale factor (0 ... 1)", NULL, 0);
+    SET_PARAMETER("Equation/Navier-Stokes/dfl_scale", NumberParameter,
+                  &dfl_scale,
+                  "The DFL scale factor (0 ... 1)", NULL, 0);
+    SET_PARAMETER("Equation/Navier-Stokes/mu_mix", NumberParameter, &mu_mix,
+                  "The dynamic viscosity, N s m-2", NULL, 0);
+    SET_PARAMETER("Equation/Navier-Stokes/R_mix", NumberParameter, &R_mix,
+                  "The specific gas constant, J kg-1 K-1", NULL, 0);
+    SET_PARAMETER("Equation/Navier-Stokes/Pr", NumberParameter, &Pr,
+                  "The Prandtl number", NULL, 0);
+    SET_PARAMETER("Equation/Navier-Stokes/kappa", NumberParameter, &kappa,
+                  "The isentropic exponent", NULL, 0);
 
     boundary_define();
     flux_define();
@@ -75,8 +83,10 @@ void navier_stokes_finalize()
  ******************************************************************************/
 void navier_stokes_initialize()
 {
-    GET_PARAMETER("Equation/Navier-Stokes/cfl_scale", NumberParameter, &cfl_scale);
-    GET_PARAMETER("Equation/Navier-Stokes/dfl_scale", NumberParameter, &dfl_scale);
+    GET_PARAMETER("Equation/Navier-Stokes/cfl_scale", NumberParameter,
+                  &cfl_scale);
+    GET_PARAMETER("Equation/Navier-Stokes/dfl_scale", NumberParameter,
+                  &dfl_scale);
     GET_PARAMETER("Equation/Navier-Stokes/mu_mix", NumberParameter, &mu_mix);
     GET_PARAMETER("Equation/Navier-Stokes/R_mix", NumberParameter, &R_mix);
     GET_PARAMETER("Equation/Navier-Stokes/Pr", NumberParameter, &Pr);
@@ -154,7 +164,7 @@ double calc_ns_timestep()
 
     for (int i = 0; i < n_cells; ++i)
     {
-        double *phi_total_i = &solver_phi_total[i * n_tot_variables];
+        double *phi_total_i = &solver_data->phi_total[i * n_tot_variables];
         double *dx = &cells->dx[i * DIM];
         double s_rho = 1.0 / phi_total_i[ic_rho];
         double c = sqrt(kappa * phi_total_i[ip_p] * s_rho);
@@ -186,7 +196,7 @@ void ns_update(double t)
     int n_tot_variables = solver_variables->n_tot_variables;
 
     for (int i = 0; i < n_domain_cells; ++i)
-        con_to_prim(&solver_phi_total[i * n_tot_variables]);
+        con_to_prim(&solver_data->phi_total[i * n_tot_variables]);
 
     update_boundaries(t);
 }

@@ -118,7 +118,7 @@ void print_residual_header()
     }
 
     for (int i = 0; i < solver_variables->n_sol_variables; ++i)
-        PRINTF(" %12s", (&solver_variables->sol_variables[i])->name);
+        PRINTF(" %12s", solver_variables->sol_variables[i].name);
 
     PRINTF("\n");
 }

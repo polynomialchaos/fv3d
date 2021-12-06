@@ -48,7 +48,7 @@ void calc_global_residual(double dt)
 
         for (int j = 0; j < n_sol_variables; ++j)
         {
-            tmp[j] += ABS(solver_phi_dt[i * n_sol_variables + j]) * volume;
+            tmp[j] += ABS(solver_data->phi_dt[i * n_sol_variables + j]) * volume;
         }
     }
 

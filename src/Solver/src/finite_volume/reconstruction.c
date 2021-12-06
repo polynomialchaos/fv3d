@@ -27,11 +27,11 @@ void calc_gradients()
     int n_tot_variables = solver_variables->n_tot_variables;
 
     if (is_parallel())
-        update_parallel(solver_phi_total);
+        update_parallel(solver_data->phi_total);
 
-    set_value_n(0.0, n_tot_variables * (n_local_cells + n_boundaries), solver_grad_phi_total_x);
-    set_value_n(0.0, n_tot_variables * (n_local_cells + n_boundaries), solver_grad_phi_total_y);
-    set_value_n(0.0, n_tot_variables * (n_local_cells + n_boundaries), solver_grad_phi_total_z);
+    set_value_n(0.0, n_tot_variables * (n_local_cells + n_boundaries), solver_data->grad_phi_total_x);
+    set_value_n(0.0, n_tot_variables * (n_local_cells + n_boundaries), solver_data->grad_phi_total_y);
+    set_value_n(0.0, n_tot_variables * (n_local_cells + n_boundaries), solver_data->grad_phi_total_z);
 
     for (int i = 0; i < n_faces; ++i)
     {
@@ -41,25 +41,25 @@ void calc_gradients()
 
         for (int j = 0; j < n_tot_variables; ++j)
         {
-            double phi_mean = solver_phi_total[fc[0] * n_tot_variables + j] + faces->lambda[i] *
-                                                                                  (solver_phi_total[fc[1] * n_tot_variables + j] - solver_phi_total[fc[0] * n_tot_variables + j]);
+            double phi_mean = solver_data->phi_total[fc[0] * n_tot_variables + j] + faces->lambda[i] *
+                                                                                  (solver_data->phi_total[fc[1] * n_tot_variables + j] - solver_data->phi_total[fc[0] * n_tot_variables + j]);
 
-            solver_grad_phi_total_x[fc[0] * n_tot_variables + j] += phi_mean * n[0] * area;
-            solver_grad_phi_total_y[fc[0] * n_tot_variables + j] += phi_mean * n[1] * area;
-            solver_grad_phi_total_z[fc[0] * n_tot_variables + j] += phi_mean * n[2] * area;
+            solver_data->grad_phi_total_x[fc[0] * n_tot_variables + j] += phi_mean * n[0] * area;
+            solver_data->grad_phi_total_y[fc[0] * n_tot_variables + j] += phi_mean * n[1] * area;
+            solver_data->grad_phi_total_z[fc[0] * n_tot_variables + j] += phi_mean * n[2] * area;
 
-            solver_grad_phi_total_x[fc[1] * n_tot_variables + j] -= phi_mean * n[0] * area;
-            solver_grad_phi_total_y[fc[1] * n_tot_variables + j] -= phi_mean * n[1] * area;
-            solver_grad_phi_total_z[fc[1] * n_tot_variables + j] -= phi_mean * n[2] * area;
+            solver_data->grad_phi_total_x[fc[1] * n_tot_variables + j] -= phi_mean * n[0] * area;
+            solver_data->grad_phi_total_y[fc[1] * n_tot_variables + j] -= phi_mean * n[1] * area;
+            solver_data->grad_phi_total_z[fc[1] * n_tot_variables + j] -= phi_mean * n[2] * area;
         }
     }
 
     if (is_parallel())
-        update_parallel(solver_grad_phi_total_x);
+        update_parallel(solver_data->grad_phi_total_x);
     if (is_parallel())
-        update_parallel(solver_grad_phi_total_y);
+        update_parallel(solver_data->grad_phi_total_y);
     if (is_parallel())
-        update_parallel(solver_grad_phi_total_z);
+        update_parallel(solver_data->grad_phi_total_z);
 
     for (int i = 0; i < n_local_cells; ++i)
     {
@@ -67,9 +67,9 @@ void calc_gradients()
 
         for (int j = 0; j < n_tot_variables; ++j)
         {
-            solver_grad_phi_total_x[i * n_tot_variables + j] *= s_volume;
-            solver_grad_phi_total_y[i * n_tot_variables + j] *= s_volume;
-            solver_grad_phi_total_z[i * n_tot_variables + j] *= s_volume;
+            solver_data->grad_phi_total_x[i * n_tot_variables + j] *= s_volume;
+            solver_data->grad_phi_total_y[i * n_tot_variables + j] *= s_volume;
+            solver_data->grad_phi_total_z[i * n_tot_variables + j] *= s_volume;
         }
     }
 
@@ -135,8 +135,8 @@ void reconstruction_first_order()
 
         for (int j = 0; j < n_tot_variables; ++j)
         {
-            solver_phi_total_left[i * n_tot_variables + j] = solver_phi_total[fc[0] * n_tot_variables + j];
-            solver_phi_total_right[i * n_tot_variables + j] = solver_phi_total[fc[1] * n_tot_variables + j];
+            solver_data->phi_total_left[i * n_tot_variables + j] = solver_data->phi_total[fc[0] * n_tot_variables + j];
+            solver_data->phi_total_right[i * n_tot_variables + j] = solver_data->phi_total[fc[1] * n_tot_variables + j];
         }
     }
 }
@@ -159,29 +159,29 @@ void reconstruction_linear()
         int *fc = &faces->cells[i * FACE_CELLS];
 
         double *r = &faces->dist_cell_1[i * DIM];
-        double *grad_phi_total_x_i = &solver_grad_phi_total_x[fc[0] * n_tot_variables];
-        double *grad_phi_total_y_i = &solver_grad_phi_total_y[fc[0] * n_tot_variables];
-        double *grad_phi_total_z_i = &solver_grad_phi_total_z[fc[0] * n_tot_variables];
+        double *grad_phi_total_x_i = &solver_data->grad_phi_total_x[fc[0] * n_tot_variables];
+        double *grad_phi_total_y_i = &solver_data->grad_phi_total_y[fc[0] * n_tot_variables];
+        double *grad_phi_total_z_i = &solver_data->grad_phi_total_z[fc[0] * n_tot_variables];
 
         for (int j = 0; j < n_tot_variables; ++j)
         {
             double slope = r[0] * grad_phi_total_x_i[j] + r[1] * grad_phi_total_y_i[j] + r[2] * grad_phi_total_z_i[j];
             double lim = limiter_function_pointer(fc[0], j, slope);
 
-            solver_phi_total_left[i * n_tot_variables + j] = solver_phi_total[fc[0] * n_tot_variables + j] + lim * slope;
+            solver_data->phi_total_left[i * n_tot_variables + j] = solver_data->phi_total[fc[0] * n_tot_variables + j] + lim * slope;
         }
 
         r = &faces->dist_cell_2[i * DIM];
-        grad_phi_total_x_i = &solver_grad_phi_total_x[fc[1] * n_tot_variables];
-        grad_phi_total_y_i = &solver_grad_phi_total_y[fc[1] * n_tot_variables];
-        grad_phi_total_z_i = &solver_grad_phi_total_z[fc[1] * n_tot_variables];
+        grad_phi_total_x_i = &solver_data->grad_phi_total_x[fc[1] * n_tot_variables];
+        grad_phi_total_y_i = &solver_data->grad_phi_total_y[fc[1] * n_tot_variables];
+        grad_phi_total_z_i = &solver_data->grad_phi_total_z[fc[1] * n_tot_variables];
 
         for (int j = 0; j < n_tot_variables; ++j)
         {
             double slope = r[0] * grad_phi_total_x_i[j] + r[1] * grad_phi_total_y_i[j] + r[2] * grad_phi_total_z_i[j];
             double lim = limiter_function_pointer(fc[1], j, slope);
 
-            solver_phi_total_right[i * n_tot_variables + j] = solver_phi_total[fc[1] * n_tot_variables + j] + lim * slope;
+            solver_data->phi_total_right[i * n_tot_variables + j] = solver_data->phi_total[fc[1] * n_tot_variables + j] + lim * slope;
         }
     }
 
@@ -191,21 +191,21 @@ void reconstruction_linear()
         int *fc = &faces->cells[i * FACE_CELLS];
 
         double *r = &faces->dist_cell_1[i * DIM];
-        double *grad_phi_total_x_i = &solver_grad_phi_total_x[fc[0] * n_tot_variables];
-        double *grad_phi_total_y_i = &solver_grad_phi_total_y[fc[0] * n_tot_variables];
-        double *grad_phi_total_z_i = &solver_grad_phi_total_z[fc[0] * n_tot_variables];
+        double *grad_phi_total_x_i = &solver_data->grad_phi_total_x[fc[0] * n_tot_variables];
+        double *grad_phi_total_y_i = &solver_data->grad_phi_total_y[fc[0] * n_tot_variables];
+        double *grad_phi_total_z_i = &solver_data->grad_phi_total_z[fc[0] * n_tot_variables];
 
         for (int j = 0; j < n_tot_variables; ++j)
         {
             double slope = r[0] * grad_phi_total_x_i[j] + r[1] * grad_phi_total_y_i[j] + r[2] * grad_phi_total_z_i[j];
             double lim = limiter_function_pointer(fc[0], j, slope);
 
-            solver_phi_total_left[i * n_tot_variables + j] = solver_phi_total[fc[0] * n_tot_variables + j] + lim * slope;
+            solver_data->phi_total_left[i * n_tot_variables + j] = solver_data->phi_total[fc[0] * n_tot_variables + j] + lim * slope;
         }
 
         for (int j = 0; j < n_tot_variables; ++j)
         {
-            solver_phi_total_right[i * n_tot_variables + j] = solver_phi_total[fc[1] * n_tot_variables + j];
+            solver_data->phi_total_right[i * n_tot_variables + j] = solver_data->phi_total[fc[1] * n_tot_variables + j];
         }
     }
 }
