@@ -6,6 +6,7 @@
  * @date 2021-11-15
  * @copyright Copyright (c) 2021
  ******************************************************************************/
+#include "timedisc/timedisc_private.h"
 #include "restart_private.h"
 
 int solver_use_restart = 0;
@@ -80,31 +81,31 @@ void read_restart_data(cstring_t restart_file)
                                         count, dims, offset[0], cells->stride, n_domain_cells, phi_dt_restart);
         }
 
-        // if (n_bdf_stages > 0)
-        // {
-        //     GET_HDF5_ATTRIBUTE(file_id, "n_stages", HDF5Int, &n_stages_restart);
-        //     CHECK_EXPRESSION(n_stages_restart == n_bdf_stages);
+        if (n_bdf_stages > 0)
+        {
+            GET_HDF5_ATTRIBUTE(file_id, "n_stages", HDF5Int, &n_stages_restart);
+            CHECK_EXPRESSION(n_stages_restart == n_bdf_stages);
 
-        //     phi_old_restart = ALLOCATE(sizeof(double *) * n_stages_restart);
-        //     for (int i = 0; i < n_stages_restart; ++i)
-        //         phi_old_restart[i] = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
+            phi_old_restart = ALLOCATE(sizeof(double *) * n_stages_restart);
+            for (int i = 0; i < n_stages_restart; ++i)
+                phi_old_restart[i] = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
 
-        //     for (int i_stage = 0; i_stage < n_stages_restart; ++i_stage)
-        //     {
-        //         char iter_string[256];
-        //         sprintf(iter_string, "%d", i_stage);
-        //         string_t tmp = allocate_strcat("phi_old:", iter_string);
+            for (int i_stage = 0; i_stage < n_stages_restart; ++i_stage)
+            {
+                char iter_string[256];
+                sprintf(iter_string, "%d", i_stage);
+                string_t tmp = allocate_strcat("phi_old:", iter_string);
 
-        //         hsize_t dims[2] = {n_domain_cells, n_sol_variables};
-        //         hsize_t offset[2] = {0, 0};
-        //         hsize_t count[2] = {n_domain_cells, n_sol_variables};
+                hsize_t dims[2] = {n_domain_cells, n_sol_variables};
+                hsize_t offset[2] = {0, 0};
+                hsize_t count[2] = {n_domain_cells, n_sol_variables};
 
-        //         GET_HDF5_DATASET_SELECT_N_M(file_id, tmp, HDF5Double,
-        //                                     count, dims, offset[0], cells->stride, n_domain_cells, phi_old_restart[i_stage]);
+                GET_HDF5_DATASET_SELECT_N_M(file_id, tmp, HDF5Double,
+                                            count, dims, offset[0], cells->stride, n_domain_cells, phi_old_restart[i_stage]);
 
-        //         DEALLOCATE(tmp);
-        //     }
-        // }
+                DEALLOCATE(tmp);
+            }
+        }
     }
     else
     {
@@ -118,28 +119,28 @@ void read_restart_data(cstring_t restart_file)
             GET_HDF5_DATASET_N_M(file_id, "solver_data->phi_dt", HDF5Double, dims, phi_dt_restart);
         }
 
-        // if (n_bdf_stages > 0)
-        // {
-        //     GET_HDF5_ATTRIBUTE(file_id, "n_stages", HDF5Int, &n_stages_restart);
-        //     CHECK_EXPRESSION(n_stages_restart == n_bdf_stages);
+        if (n_bdf_stages > 0)
+        {
+            GET_HDF5_ATTRIBUTE(file_id, "n_stages", HDF5Int, &n_stages_restart);
+            CHECK_EXPRESSION(n_stages_restart == n_bdf_stages);
 
-        //     phi_old_restart = ALLOCATE(sizeof(double *) * n_stages_restart);
-        //     for (int i = 0; i < n_stages_restart; ++i)
-        //         phi_old_restart[i] = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
+            phi_old_restart = ALLOCATE(sizeof(double *) * n_stages_restart);
+            for (int i = 0; i < n_stages_restart; ++i)
+                phi_old_restart[i] = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
 
-        //     for (int i_stage = 0; i_stage < n_stages_restart; ++i_stage)
-        //     {
-        //         char iter_string[256];
-        //         sprintf(iter_string, "%d", i_stage);
-        //         string_t tmp = allocate_strcat("phi_old:", iter_string);
+            for (int i_stage = 0; i_stage < n_stages_restart; ++i_stage)
+            {
+                char iter_string[256];
+                sprintf(iter_string, "%d", i_stage);
+                string_t tmp = allocate_strcat("phi_old:", iter_string);
 
-        //         hsize_t dims[2] = {n_domain_cells, n_sol_variables};
+                hsize_t dims[2] = {n_domain_cells, n_sol_variables};
 
-        //         GET_HDF5_DATASET_N_M(file_id, tmp, HDF5Double, dims, phi_old_restart[i_stage]);
+                GET_HDF5_DATASET_N_M(file_id, tmp, HDF5Double, dims, phi_old_restart[i_stage]);
 
-        //         DEALLOCATE(tmp);
-        //     }
-        // }
+                DEALLOCATE(tmp);
+            }
+        }
     }
 
     close_hdf5_file(file_id);
@@ -147,10 +148,10 @@ void read_restart_data(cstring_t restart_file)
     copy_n(phi_total_restart, n_tot_variables * n_domain_cells, solver_data->phi_total);
     copy_n(phi_dt_restart, n_sol_variables * n_domain_cells, solver_data->phi_dt);
 
-    // for (int i_stage = 0; i_stage < n_stages_restart; ++i_stage)
-    // {
-    //     copy_n(phi_old_restart[i_stage], n_sol_variables * n_domain_cells, phi_old[i_stage]);
-    // }
+    for (int i_stage = 0; i_stage < n_stages_restart; ++i_stage)
+    {
+        copy_n(phi_old_restart[i_stage], n_sol_variables * n_domain_cells, phi_old[i_stage]);
+    }
 
     DEALLOCATE(phi_total_restart);
     DEALLOCATE(phi_dt_restart);
