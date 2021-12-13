@@ -33,7 +33,7 @@ Variables_t *allocate_variables()
  * @param name
  * @return int
  ******************************************************************************/
-int add_sol_variable(string_t name)
+int add_sol_variable(cstring_t name)
 {
     solver_variables->n_sol_variables += 1;
     solver_variables->sol_variables =
@@ -53,7 +53,7 @@ int add_sol_variable(string_t name)
  * @param name
  * @return int
  ******************************************************************************/
-int add_dep_variable(string_t name)
+int add_dep_variable(cstring_t name)
 {
     solver_variables->n_dep_variables += 1;
     solver_variables->dep_variables =

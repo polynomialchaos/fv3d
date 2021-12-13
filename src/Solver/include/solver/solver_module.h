@@ -21,14 +21,14 @@ extern data_t *solver_data;           /** Global solver data */
  * @param name
  * @return int
  ******************************************************************************/
-int add_sol_variable(string_t name);
+int add_sol_variable(cstring_t name);
 
 /*******************************************************************************
  * @brief Add a dependent variable
  * @param name
  * @return int
  ******************************************************************************/
-int add_dep_variable(string_t name);
+int add_dep_variable(cstring_t name);
 
 /*******************************************************************************
  * @brief Calculate the global residual
