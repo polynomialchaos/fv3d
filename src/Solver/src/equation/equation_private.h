@@ -23,6 +23,22 @@ Variables_t *allocate_variables();
 void deallocate_variables(Variables_t *variables);
 
 /*******************************************************************************
+ * @brief Deallocate the variable
+ * @param variable
+ ******************************************************************************/
+void deallocate_variable(Variable_t *variable);
+
+/*******************************************************************************
+ * @brief Initialize an allocated variable
+ * @param variable
+ * @param name
+ * @param solve
+ * @param calc_gradients
+ ******************************************************************************/
+void init_variable(Variable_t *variable, cstring_t name,
+                   bool_t solve, bool_t calc_gradients);
+
+/*******************************************************************************
  * @brief Set the total variables
  ******************************************************************************/
 void set_tot_variables();
