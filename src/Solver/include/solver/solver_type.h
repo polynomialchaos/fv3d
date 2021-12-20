@@ -172,13 +172,6 @@ typedef struct Mesh
 typedef struct Variable
 {
     string_t name;
-    bool_t solve;
-    bool_t calc_gradients;
-
-    // double *phi;
-    // double *phi_grad_x;
-    // double *phi_grad_y;
-    // double *phi_grad_z;
 } Variable_t;
 
 /*******************************************************************************

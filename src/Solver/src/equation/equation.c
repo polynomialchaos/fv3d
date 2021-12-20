@@ -42,7 +42,7 @@ int add_sol_variable(cstring_t name)
 
     Variable_t *tmp =
         &solver_variables->sol_variables[solver_variables->n_sol_variables - 1];
-    init_variable(tmp, name, BTRU, BTRU);
+    init_variable(tmp, name);
 
     set_tot_variables(solver_variables);
     return solver_variables->n_tot_variables - 1;
@@ -62,7 +62,7 @@ int add_dep_variable(cstring_t name)
 
     Variable_t *tmp =
         &solver_variables->dep_variables[solver_variables->n_dep_variables - 1];
-    init_variable(tmp, name, BFLS, BTRU);
+    init_variable(tmp, name);
 
     set_tot_variables(solver_variables);
     return solver_variables->n_tot_variables - 1;
@@ -75,10 +75,6 @@ int add_dep_variable(cstring_t name)
 void deallocate_variable(Variable_t *variable)
 {
     DEALLOCATE(variable->name);
-    // DEALLOCATE(variable->phi);
-    // DEALLOCATE(variable->phi_grad_x);
-    // DEALLOCATE(variable->phi_grad_y);
-    // DEALLOCATE(variable->phi_grad_z);
 }
 
 /*******************************************************************************
@@ -122,31 +118,10 @@ void init_equation()
  * @brief Initialize an allocated variable
  * @param variable
  * @param name
- * @param solve
- * @param calc_gradients
  ******************************************************************************/
-void init_variable(Variable_t *variable, cstring_t name,
-                   bool_t solve, bool_t calc_gradients)
+void init_variable(Variable_t *variable, cstring_t name)
 {
-    const Cells_t *cells = solver_mesh->cells;
-    const Boundaries_t *boundaries = solver_mesh->boundaries;
-    const int n_local_cells = cells->n_local_cells;
-    const int n_boundaries = boundaries->n_boundaries;
-    const int n_elements = n_local_cells + n_boundaries;
-
     variable->name = allocate_strcpy(name);
-    variable->solve = solve;
-    variable->calc_gradients = calc_gradients;
-
-    // if (solve == BTRU)
-    //     variable->phi = ALLOCATE(sizeof(double) * n_elements);
-
-    // if (calc_gradients == BTRU)
-    // {
-    //     variable->phi_grad_x = ALLOCATE(sizeof(double) * n_elements);
-    //     variable->phi_grad_y = ALLOCATE(sizeof(double) * n_elements);
-    //     variable->phi_grad_z = ALLOCATE(sizeof(double) * n_elements);
-    // }
 }
 
 /*******************************************************************************
