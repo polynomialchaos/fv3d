@@ -35,11 +35,11 @@ void boundary_define()
  ******************************************************************************/
 void boundary_finalize()
 {
-    if (solver_mesh)
+    if (solver_mesh != NULL)
     {
         Regions_t *regions = solver_mesh->regions;
 
-        if (regions)
+        if (regions != NULL)
         {
             DEALLOCATE(regions->type);
             DEALLOCATE(regions->function_id);

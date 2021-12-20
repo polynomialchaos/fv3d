@@ -35,6 +35,8 @@ Variables_t *allocate_variables()
  ******************************************************************************/
 int add_sol_variable(cstring_t name)
 {
+    CHECK_EXPRESSION(solver_variables->n_dep_variables == 0);
+
     solver_variables->n_sol_variables += 1;
     solver_variables->sol_variables =
         REALLOCATE(solver_variables->sol_variables,

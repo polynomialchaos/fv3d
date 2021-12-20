@@ -32,8 +32,9 @@ void calc_gradients();
 
 /*******************************************************************************
  * @brief Deallocate the solver data
+ * @param data
  ******************************************************************************/
-void deallocate_data(data_t *this);
+void deallocate_data(data_t *data);
 
 /*******************************************************************************
  * @brief Barth-Jespersenn limiter calculation (return 0-1)

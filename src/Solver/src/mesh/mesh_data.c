@@ -287,6 +287,10 @@ Regions_t *allocate_regions(Mesh_t *mesh, int n_regions, int max_name_length)
         allocate_hdf5_string_buffer(n_regions, max_name_length, NULL);
     regions->is_boundary = ALLOCATE(sizeof(int) * n_regions);
 
+    regions->type = NULL;
+    regions->function_id = NULL;
+    regions->phi_total = NULL;
+
     return regions;
 }
 

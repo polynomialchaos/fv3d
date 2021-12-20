@@ -53,18 +53,22 @@ data_t *allocate_data()
 
 /*******************************************************************************
  * @brief Deallocate the solver data
+ * @param data
  ******************************************************************************/
-void deallocate_data(data_t *this)
+void deallocate_data(data_t *data)
 {
-    DEALLOCATE(this->flux);
-    DEALLOCATE(this->phi_total_left);
-    DEALLOCATE(this->phi_total_right);
+    if (data == NULL)
+        return;
 
-    DEALLOCATE(this->grad_phi_total_x);
-    DEALLOCATE(this->grad_phi_total_y);
-    DEALLOCATE(this->grad_phi_total_z);
-    DEALLOCATE(this->phi_dt);
-    DEALLOCATE(this->phi_total);
+    DEALLOCATE(data->flux);
+    DEALLOCATE(data->phi_total_left);
+    DEALLOCATE(data->phi_total_right);
+
+    DEALLOCATE(data->grad_phi_total_x);
+    DEALLOCATE(data->grad_phi_total_y);
+    DEALLOCATE(data->grad_phi_total_z);
+    DEALLOCATE(data->phi_dt);
+    DEALLOCATE(data->phi_total);
 }
 
 /*******************************************************************************
