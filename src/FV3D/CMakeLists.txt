@@ -3,8 +3,9 @@
 # @author Florian Eigentler
 # @brief
 # @version 0.1
-# @date 2021-11-08
-# @copyright Copyright (c) 2021
+# @date 2022-02-22
+# @copyright Copyright (c) 2022 by Florian Eigentler.
+#  This work is licensed under terms of the MIT license (<LICENSE>).
 #*******************************************************************************
 set(target ${CMAKE_PROJECT_NAME})
 

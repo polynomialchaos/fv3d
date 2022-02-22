@@ -3,8 +3,9 @@
 # @author Florian Eigentler
 # @brief
 # @version 0.1
-# @date 2021-11-08
-# @copyright Copyright (c) 2021
+# @date 2022-02-22
+# @copyright Copyright (c) 2022 by Florian Eigentler.
+#  This work is licensed under terms of the MIT license (<LICENSE>).
 #*******************************************************************************
 cmake_minimum_required(VERSION 3.16.3)
 project(FV3D VERSION 1.0.0 DESCRIPTION "Finite volume solver")
