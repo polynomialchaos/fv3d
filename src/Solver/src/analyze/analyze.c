@@ -16,7 +16,7 @@ double *solver_residual = NULL;
  ******************************************************************************/
 void free_analyze()
 {
-    DEALLOCATE(solver_residual);
+    BM_DEALLOCATE(solver_residual);
 }
 
 /*******************************************************************************
@@ -26,7 +26,7 @@ void init_analyze()
 {
     int n_sol_variables = solver_variables->n_sol_variables;
 
-    solver_residual = ALLOCATE(sizeof(double) * n_sol_variables);
+    solver_residual = BM_ALLOCATE(sizeof(double) * n_sol_variables);
     set_value_n(0.0, n_sol_variables, solver_residual);
 }
 
@@ -49,7 +49,7 @@ void calc_global_residual(double dt)
 
         for (int j = 0; j < n_sol_variables; ++j)
         {
-            tmp[j] += ABS(solver_data->phi_dt[i * n_sol_variables + j]) * volume;
+            tmp[j] += BM_ABS(solver_data->phi_dt[i * n_sol_variables + j]) * volume;
         }
     }
 

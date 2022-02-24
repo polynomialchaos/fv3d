@@ -14,8 +14,8 @@
  ******************************************************************************/
 void fv_define()
 {
-    REGISTER_INITIALIZE_ROUTINE(fv_initialize);
-    REGISTER_FINALIZE_ROUTINE(fv_finalize);
+    BM_REGISTER_INITIALIZE_ROUTINE(fv_initialize);
+    BM_REGISTER_FINALIZE_ROUTINE(fv_finalize);
 
     reconstruction_define();
     limiter_define();

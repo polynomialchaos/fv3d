@@ -16,15 +16,15 @@ string_t reconstruction_name = NULL;
  ******************************************************************************/
 void reconstruction_define()
 {
-    REGISTER_INITIALIZE_ROUTINE(reconstruction_initialize);
-    REGISTER_FINALIZE_ROUTINE(reconstruction_finalize);
+    BM_REGISTER_INITIALIZE_ROUTINE(reconstruction_initialize);
+    BM_REGISTER_FINALIZE_ROUTINE(reconstruction_finalize);
 
     string_t tmp_opt[] = {"Linear", "First-Order"};
     int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
     string_t tmp = tmp_opt[0];
 
-    SET_PARAMETER("FV/Reconstruction/reconstruction", StringParameter, &tmp,
-                  "The reconstruction method", &tmp_opt, tmp_opt_n);
+    BM_SET_PARAMETER("FV/Reconstruction/reconstruction", StringParameter, &tmp,
+                     "The reconstruction method", &tmp_opt, tmp_opt_n);
 }
 
 /*******************************************************************************
@@ -32,7 +32,7 @@ void reconstruction_define()
  ******************************************************************************/
 void reconstruction_finalize()
 {
-    DEALLOCATE(reconstruction_name);
+    BM_DEALLOCATE(reconstruction_name);
     free_reconstruction();
 }
 
@@ -41,8 +41,8 @@ void reconstruction_finalize()
  ******************************************************************************/
 void reconstruction_initialize()
 {
-    GET_PARAMETER("FV/Reconstruction/reconstruction", StringParameter,
-                  &reconstruction_name);
+    BM_GET_PARAMETER("FV/Reconstruction/reconstruction", StringParameter,
+                     &reconstruction_name);
 
     if (is_equal(reconstruction_name, "First-Order"))
     {
@@ -54,6 +54,6 @@ void reconstruction_initialize()
     }
     else
     {
-        CHECK_EXPRESSION(0);
+        BM_CHECK_EXPRESSION(0);
     }
 }

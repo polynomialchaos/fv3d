@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  * @file implicit.c
  * @author Florian Eigentler
@@ -23,8 +22,8 @@ int max_krylov_restarts = 2;
  ******************************************************************************/
 void implicit_define()
 {
-    REGISTER_INITIALIZE_ROUTINE(implicit_initialize);
-    REGISTER_FINALIZE_ROUTINE(implicit_finalize);
+    BM_REGISTER_INITIALIZE_ROUTINE(implicit_initialize);
+    BM_REGISTER_FINALIZE_ROUTINE(implicit_finalize);
 
     string_t tmp_opt[] = {"BDF-2", "Euler"};
     int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
@@ -34,27 +33,27 @@ void implicit_define()
     int tmp2_opt_n = sizeof(tmp2_opt) / sizeof(string_t);
     string_t tmp2 = tmp2_opt[0];
 
-    SET_PARAMETER("TimeDisc/Implicit/scheme", StringParameter, &tmp,
-                  "The implicit timestep scheme", &tmp_opt, tmp_opt_n);
-    SET_PARAMETER("TimeDisc/Implicit/max_iter_inner", DigitParameter,
-                  &max_iter_inner,
-                  "The maximum number of inner iterations", NULL, 0);
-    SET_PARAMETER("TimeDisc/Implicit/solver", StringParameter, &tmp2,
-                  "The linear system of equations solver",
-                  &tmp2_opt, tmp2_opt_n);
-    SET_PARAMETER("TimeDisc/Implicit/tolerance_lsoe", NumberParameter,
-                  &tolerance_lsoe,
-                  "The linear solver tolerance", NULL, 0);
-    SET_PARAMETER("TimeDisc/Implicit/max_iter_lsoe", DigitParameter,
-                  &max_iter_lsoe,
-                  "The linear solver maximum number of iterations", NULL, 0);
-    SET_PARAMETER("TimeDisc/Implicit/max_krylov_dims", DigitParameter,
-                  &max_krylov_dims,
-                  "The maximum Krylov space dimension in GMRes solver",
-                  NULL, 0);
-    SET_PARAMETER("TimeDisc/Implicit/max_krylov_restarts", DigitParameter,
-                  &max_krylov_restarts,
-                  "The maximum restarts performed in GMRes solver", NULL, 0);
+    BM_SET_PARAMETER("TimeDisc/Implicit/scheme", StringParameter, &tmp,
+                     "The implicit timestep scheme", &tmp_opt, tmp_opt_n);
+    BM_SET_PARAMETER("TimeDisc/Implicit/max_iter_inner", DigitParameter,
+                     &max_iter_inner,
+                     "The maximum number of inner iterations", NULL, 0);
+    BM_SET_PARAMETER("TimeDisc/Implicit/solver", StringParameter, &tmp2,
+                     "The linear system of equations solver",
+                     &tmp2_opt, tmp2_opt_n);
+    BM_SET_PARAMETER("TimeDisc/Implicit/tolerance_lsoe", NumberParameter,
+                     &tolerance_lsoe,
+                     "The linear solver tolerance", NULL, 0);
+    BM_SET_PARAMETER("TimeDisc/Implicit/max_iter_lsoe", DigitParameter,
+                     &max_iter_lsoe,
+                     "The linear solver maximum number of iterations", NULL, 0);
+    BM_SET_PARAMETER("TimeDisc/Implicit/max_krylov_dims", DigitParameter,
+                     &max_krylov_dims,
+                     "The maximum Krylov space dimension in GMRes solver",
+                     NULL, 0);
+    BM_SET_PARAMETER("TimeDisc/Implicit/max_krylov_restarts", DigitParameter,
+                     &max_krylov_restarts,
+                     "The maximum restarts performed in GMRes solver", NULL, 0);
 }
 
 /*******************************************************************************
@@ -62,8 +61,8 @@ void implicit_define()
  ******************************************************************************/
 void implicit_finalize()
 {
-    DEALLOCATE(implicit_scheme_name);
-    DEALLOCATE(solver_name);
+    BM_DEALLOCATE(implicit_scheme_name);
+    BM_DEALLOCATE(solver_name);
     free_implicit();
 }
 
@@ -72,22 +71,22 @@ void implicit_finalize()
  ******************************************************************************/
 void implicit_initialize()
 {
-    if (is_explicit() == BTRU)
+    if (is_explicit() == BC_TRUE)
         return;
 
-    GET_PARAMETER("TimeDisc/Implicit/scheme", StringParameter,
-                  &implicit_scheme_name);
-    GET_PARAMETER("TimeDisc/Implicit/max_iter_inner", DigitParameter,
-                  &max_iter_inner);
-    GET_PARAMETER("TimeDisc/Implicit/solver", StringParameter, &solver_name);
-    GET_PARAMETER("TimeDisc/Implicit/tolerance_lsoe", NumberParameter,
-                  &tolerance_lsoe);
-    GET_PARAMETER("TimeDisc/Implicit/max_iter_lsoe", DigitParameter,
-                  &max_iter_lsoe);
-    GET_PARAMETER("TimeDisc/Implicit/max_krylov_dims", DigitParameter,
-                  &max_krylov_dims);
-    GET_PARAMETER("TimeDisc/Implicit/max_krylov_restarts", DigitParameter,
-                  &max_krylov_restarts);
+    BM_GET_PARAMETER("TimeDisc/Implicit/scheme", StringParameter,
+                     &implicit_scheme_name);
+    BM_GET_PARAMETER("TimeDisc/Implicit/max_iter_inner", DigitParameter,
+                     &max_iter_inner);
+    BM_GET_PARAMETER("TimeDisc/Implicit/solver", StringParameter, &solver_name);
+    BM_GET_PARAMETER("TimeDisc/Implicit/tolerance_lsoe", NumberParameter,
+                     &tolerance_lsoe);
+    BM_GET_PARAMETER("TimeDisc/Implicit/max_iter_lsoe", DigitParameter,
+                     &max_iter_lsoe);
+    BM_GET_PARAMETER("TimeDisc/Implicit/max_krylov_dims", DigitParameter,
+                     &max_krylov_dims);
+    BM_GET_PARAMETER("TimeDisc/Implicit/max_krylov_restarts", DigitParameter,
+                     &max_krylov_restarts);
 
     implicit_scheme_t implicit_scheme = -1;
     if (is_equal(implicit_scheme_name, "Euler"))
@@ -100,7 +99,7 @@ void implicit_initialize()
     }
     else
     {
-        CHECK_EXPRESSION(0);
+        BM_CHECK_EXPRESSION(0);
     }
 
     implicit_solver_t implicit_solver = -1;
@@ -114,7 +113,7 @@ void implicit_initialize()
     }
     else
     {
-        CHECK_EXPRESSION(0);
+        BM_CHECK_EXPRESSION(0);
     }
 
     init_implicit(implicit_scheme, implicit_solver, max_iter_inner,

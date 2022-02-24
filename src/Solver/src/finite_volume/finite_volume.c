@@ -34,20 +34,20 @@ data_t *allocate_data()
     const int n_tot_variables = solver_variables->n_tot_variables;
     const int n_sol_variables = solver_variables->n_sol_variables;
 
-    data_t *tmp = ALLOCATE(sizeof(data_t));
+    data_t *tmp = BM_ALLOCATE(sizeof(data_t));
 
-    tmp->flux = ALLOCATE(sizeof(double) * n_sol_variables * n_faces);
-    tmp->phi_total_left = ALLOCATE(sizeof(double) * n_tot_variables * n_faces);
-    tmp->phi_total_right = ALLOCATE(sizeof(double) * n_tot_variables * n_faces);
+    tmp->flux = BM_ALLOCATE(sizeof(double) * n_sol_variables * n_faces);
+    tmp->phi_total_left = BM_ALLOCATE(sizeof(double) * n_tot_variables * n_faces);
+    tmp->phi_total_right = BM_ALLOCATE(sizeof(double) * n_tot_variables * n_faces);
 
     tmp->grad_phi_total_x =
-        ALLOCATE(sizeof(double) * n_tot_variables * n_elements);
+        BM_ALLOCATE(sizeof(double) * n_tot_variables * n_elements);
     tmp->grad_phi_total_y =
-        ALLOCATE(sizeof(double) * n_tot_variables * n_elements);
+        BM_ALLOCATE(sizeof(double) * n_tot_variables * n_elements);
     tmp->grad_phi_total_z =
-        ALLOCATE(sizeof(double) * n_tot_variables * n_elements);
-    tmp->phi_dt = ALLOCATE(sizeof(double) * n_sol_variables * n_elements);
-    tmp->phi_total = ALLOCATE(sizeof(double) * n_tot_variables * n_elements);
+        BM_ALLOCATE(sizeof(double) * n_tot_variables * n_elements);
+    tmp->phi_dt = BM_ALLOCATE(sizeof(double) * n_sol_variables * n_elements);
+    tmp->phi_total = BM_ALLOCATE(sizeof(double) * n_tot_variables * n_elements);
 
     return tmp;
 }
@@ -61,15 +61,15 @@ void deallocate_data(data_t *data)
     if (data == NULL)
         return;
 
-    DEALLOCATE(data->flux);
-    DEALLOCATE(data->phi_total_left);
-    DEALLOCATE(data->phi_total_right);
+    BM_DEALLOCATE(data->flux);
+    BM_DEALLOCATE(data->phi_total_left);
+    BM_DEALLOCATE(data->phi_total_right);
 
-    DEALLOCATE(data->grad_phi_total_x);
-    DEALLOCATE(data->grad_phi_total_y);
-    DEALLOCATE(data->grad_phi_total_z);
-    DEALLOCATE(data->phi_dt);
-    DEALLOCATE(data->phi_total);
+    BM_DEALLOCATE(data->grad_phi_total_x);
+    BM_DEALLOCATE(data->grad_phi_total_y);
+    BM_DEALLOCATE(data->grad_phi_total_z);
+    BM_DEALLOCATE(data->phi_dt);
+    BM_DEALLOCATE(data->phi_total);
 }
 
 /*******************************************************************************
@@ -86,7 +86,6 @@ void finite_volume_time_derivative(double time)
     int n_boundaries = boundaries->n_boundaries;
     int n_faces = faces->n_faces;
     int n_sol_variables = solver_variables->n_sol_variables;
-
 
     reconstruction_function_pointer(time);
     calc_flux_function_pointer(time);
@@ -128,7 +127,7 @@ void free_finite_volume()
     calc_exact_function_pointer = NULL;
 
     deallocate_data(solver_data);
-    DEALLOCATE(solver_data);
+    BM_DEALLOCATE(solver_data);
 }
 
 /*******************************************************************************

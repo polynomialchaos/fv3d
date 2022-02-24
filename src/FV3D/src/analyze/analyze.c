@@ -14,8 +14,8 @@
  ******************************************************************************/
 void analyze_define()
 {
-    REGISTER_INITIALIZE_ROUTINE(analyze_initialize);
-    REGISTER_FINALIZE_ROUTINE(analyze_finalize);
+    BM_REGISTER_INITIALIZE_ROUTINE(analyze_initialize);
+    BM_REGISTER_FINALIZE_ROUTINE(analyze_finalize);
 }
 
 /*******************************************************************************

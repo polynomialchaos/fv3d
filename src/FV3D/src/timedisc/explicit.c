@@ -16,15 +16,15 @@ string_t explicit_scheme_name = NULL;
  ******************************************************************************/
 void explicit_define()
 {
-    REGISTER_INITIALIZE_ROUTINE(explicit_initialize);
-    REGISTER_FINALIZE_ROUTINE(explicit_finalize);
+    BM_REGISTER_INITIALIZE_ROUTINE(explicit_initialize);
+    BM_REGISTER_FINALIZE_ROUTINE(explicit_finalize);
 
     string_t tmp_opt[] = {"RK3-3", "RK4-5", "Euler"};
     int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
     string_t tmp = tmp_opt[0];
 
-    SET_PARAMETER("TimeDisc/Explicit/scheme", StringParameter, &tmp,
-                  "The explicit timestep scheme", &tmp_opt, tmp_opt_n);
+    BM_SET_PARAMETER("TimeDisc/Explicit/scheme", StringParameter, &tmp,
+                     "The explicit timestep scheme", &tmp_opt, tmp_opt_n);
 }
 
 /*******************************************************************************
@@ -32,7 +32,7 @@ void explicit_define()
  ******************************************************************************/
 void explicit_finalize()
 {
-    DEALLOCATE(explicit_scheme_name);
+    BM_DEALLOCATE(explicit_scheme_name);
     free_explicit();
 }
 
@@ -41,11 +41,11 @@ void explicit_finalize()
  ******************************************************************************/
 void explicit_initialize()
 {
-    if (is_explicit() == BFLS)
+    if (is_explicit() == BC_FALSE)
         return;
 
-    GET_PARAMETER("TimeDisc/Explicit/scheme", StringParameter,
-                  &explicit_scheme_name);
+    BM_GET_PARAMETER("TimeDisc/Explicit/scheme", StringParameter,
+                     &explicit_scheme_name);
 
     if (is_equal(explicit_scheme_name, "Euler"))
     {
@@ -61,6 +61,6 @@ void explicit_initialize()
     }
     else
     {
-        CHECK_EXPRESSION(0);
+        BM_CHECK_EXPRESSION(0);
     }
 }

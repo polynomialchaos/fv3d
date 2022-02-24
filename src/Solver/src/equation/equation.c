@@ -16,7 +16,7 @@ Variables_t *solver_variables = NULL;
  ******************************************************************************/
 Variables_t *allocate_variables()
 {
-    Variables_t *tmp = ALLOCATE(sizeof(Variables_t));
+    Variables_t *tmp = BM_ALLOCATE(sizeof(Variables_t));
 
     tmp->n_sol_variables = 0;
     tmp->n_dep_variables = 0;
@@ -36,12 +36,12 @@ Variables_t *allocate_variables()
  ******************************************************************************/
 int add_sol_variable(cstring_t name)
 {
-    CHECK_EXPRESSION(solver_variables->n_dep_variables == 0);
+    BM_CHECK_EXPRESSION(solver_variables->n_dep_variables == 0);
 
     solver_variables->n_sol_variables += 1;
     solver_variables->sol_variables =
-        REALLOCATE(solver_variables->sol_variables,
-                   sizeof(Variable_t) * solver_variables->n_sol_variables);
+        BM_REALLOCATE(solver_variables->sol_variables,
+                      sizeof(Variable_t) * solver_variables->n_sol_variables);
 
     Variable_t *tmp =
         &solver_variables->sol_variables[solver_variables->n_sol_variables - 1];
@@ -60,8 +60,8 @@ int add_dep_variable(cstring_t name)
 {
     solver_variables->n_dep_variables += 1;
     solver_variables->dep_variables =
-        REALLOCATE(solver_variables->dep_variables,
-                   sizeof(Variable_t) * solver_variables->n_dep_variables);
+        BM_REALLOCATE(solver_variables->dep_variables,
+                      sizeof(Variable_t) * solver_variables->n_dep_variables);
 
     Variable_t *tmp =
         &solver_variables->dep_variables[solver_variables->n_dep_variables - 1];
@@ -77,7 +77,7 @@ int add_dep_variable(cstring_t name)
  ******************************************************************************/
 void deallocate_variable(Variable_t *variable)
 {
-    DEALLOCATE(variable->name);
+    BM_DEALLOCATE(variable->name);
 }
 
 /*******************************************************************************
@@ -91,13 +91,13 @@ void deallocate_variables(Variables_t *variables)
 
     for (int i = 0; i < variables->n_sol_variables; ++i)
         deallocate_variable(&variables->sol_variables[i]);
-    DEALLOCATE(variables->sol_variables);
+    BM_DEALLOCATE(variables->sol_variables);
 
     for (int i = 0; i < variables->n_dep_variables; ++i)
         deallocate_variable(&variables->dep_variables[i]);
-    DEALLOCATE(variables->dep_variables);
+    BM_DEALLOCATE(variables->dep_variables);
 
-    DEALLOCATE(variables->tot_variables);
+    BM_DEALLOCATE(variables->tot_variables);
 }
 
 /*******************************************************************************
@@ -106,7 +106,7 @@ void deallocate_variables(Variables_t *variables)
 void free_equation()
 {
     deallocate_variables(solver_variables);
-    DEALLOCATE(solver_variables);
+    BM_DEALLOCATE(solver_variables);
 }
 
 /*******************************************************************************
@@ -132,19 +132,19 @@ void init_variable(Variable_t *variable, cstring_t name)
  ******************************************************************************/
 void print_variables()
 {
-    PRINTF("VARIABLES\n");
+    BM_PRINT("VARIABLES\n");
 
-    PRINTF("n_sol_variables = %d\n", solver_variables->n_sol_variables);
+    BM_PRINT("n_sol_variables = %d\n", solver_variables->n_sol_variables);
     for (int i = 0; i < solver_variables->n_sol_variables; ++i)
-        PRINTF("%d: %s\n", i, (&solver_variables->sol_variables[i])->name);
+        BM_PRINT("%d: %s\n", i, (&solver_variables->sol_variables[i])->name);
 
-    PRINTF("n_dep_variables  = %d\n", solver_variables->n_dep_variables);
+    BM_PRINT("n_dep_variables  = %d\n", solver_variables->n_dep_variables);
     for (int i = 0; i < solver_variables->n_dep_variables; ++i)
-        PRINTF("%d: %s\n", i, (&solver_variables->dep_variables[i])->name);
+        BM_PRINT("%d: %s\n", i, (&solver_variables->dep_variables[i])->name);
 
-    PRINTF("n_tot_variables = %d\n", solver_variables->n_tot_variables);
+    BM_PRINT("n_tot_variables = %d\n", solver_variables->n_tot_variables);
     for (int i = 0; i < solver_variables->n_tot_variables; ++i)
-        PRINTF("%d: %s\n", i, solver_variables->tot_variables[i]->name);
+        BM_PRINT("%d: %s\n", i, solver_variables->tot_variables[i]->name);
 }
 
 /*******************************************************************************
@@ -155,8 +155,8 @@ void set_tot_variables()
     solver_variables->n_tot_variables =
         solver_variables->n_sol_variables + solver_variables->n_dep_variables;
     solver_variables->tot_variables =
-        REALLOCATE(solver_variables->tot_variables,
-                   sizeof(Variable_t *) * solver_variables->n_tot_variables);
+        BM_REALLOCATE(solver_variables->tot_variables,
+                      sizeof(Variable_t *) * solver_variables->n_tot_variables);
 
     for (int i = 0; i < solver_variables->n_sol_variables; ++i)
         solver_variables->tot_variables[i] =

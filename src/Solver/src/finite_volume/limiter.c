@@ -34,7 +34,7 @@ void init_limiter(limiter_type_t limiter_type)
         limiter_function_pointer = limiter_none;
         break;
     default:
-        CHECK_EXPRESSION(0);
+        BM_CHECK_EXPRESSION(0);
         break;
     }
 }
@@ -63,13 +63,13 @@ double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
 
         if (fc[0] == i_cell)
         {
-            phi_min = MIN(phi_min, solver_data->phi_total[fc[1] * n_tot_variables + i_var]);
-            phi_max = MAX(phi_max, solver_data->phi_total[fc[1] * n_tot_variables + i_var]);
+            phi_min = BM_MIN(phi_min, solver_data->phi_total[fc[1] * n_tot_variables + i_var]);
+            phi_max = BM_MAX(phi_max, solver_data->phi_total[fc[1] * n_tot_variables + i_var]);
         }
         else
         {
-            phi_min = MIN(phi_min, solver_data->phi_total[fc[0] * n_tot_variables + i_var]);
-            phi_max = MAX(phi_max, solver_data->phi_total[fc[0] * n_tot_variables + i_var]);
+            phi_min = BM_MIN(phi_min, solver_data->phi_total[fc[0] * n_tot_variables + i_var]);
+            phi_max = BM_MAX(phi_max, solver_data->phi_total[fc[0] * n_tot_variables + i_var]);
         }
     }
 
@@ -87,7 +87,7 @@ double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
             y = (phi_min - solver_data->phi_total[i_cell * n_tot_variables + i_var]) / slope;
         }
 
-        tmp = MIN(tmp, y);
+        tmp = BM_MIN(tmp, y);
     }
 
     return tmp;
@@ -103,9 +103,9 @@ double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
 double limiter_none(int i_cell, int i_var, double slope)
 {
 #ifdef DEBUG
-    UNUSED(i_cell);
-    UNUSED(i_var);
-    UNUSED(slope);
+    BM_UNUSED(i_cell);
+    BM_UNUSED(i_var);
+    BM_UNUSED(slope);
 #endif /* DEBUG */
     return 1.0;
 }

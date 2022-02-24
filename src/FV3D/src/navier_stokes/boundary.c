@@ -27,8 +27,8 @@ string_t boundary_type_strings[BoundaryTypeMax] = {
  ******************************************************************************/
 void boundary_define()
 {
-    REGISTER_INITIALIZE_ROUTINE(boundary_initialize);
-    REGISTER_FINALIZE_ROUTINE(boundary_finalize);
+    BM_REGISTER_INITIALIZE_ROUTINE(boundary_initialize);
+    BM_REGISTER_FINALIZE_ROUTINE(boundary_finalize);
 }
 
 /*******************************************************************************
@@ -42,9 +42,9 @@ void boundary_finalize()
 
         if (regions != NULL)
         {
-            DEALLOCATE(regions->type);
-            DEALLOCATE(regions->function_id);
-            DEALLOCATE(regions->phi_total);
+            BM_DEALLOCATE(regions->type);
+            BM_DEALLOCATE(regions->function_id);
+            BM_DEALLOCATE(regions->phi_total);
         }
     }
 }
@@ -58,22 +58,22 @@ void boundary_initialize()
     int n_regions = regions->n_regions;
     int n_tot_variables = solver_variables->n_tot_variables;
 
-    regions->type = ALLOCATE(sizeof(int) * n_regions);
-    regions->function_id = ALLOCATE(sizeof(int) * n_regions);
-    regions->phi_total = ALLOCATE(sizeof(double) * n_tot_variables * n_regions);
+    regions->type = BM_ALLOCATE(sizeof(int) * n_regions);
+    regions->function_id = BM_ALLOCATE(sizeof(int) * n_regions);
+    regions->phi_total = BM_ALLOCATE(sizeof(double) * n_tot_variables * n_regions);
 
     for (int i = 0; i < n_regions; ++i)
     {
         string_t path = allocate_strcat("Equation/Navier-Stokes/Boundary/", regions->name[i]);
-        CHECK_EXPRESSION(PARAMETER_EXISTS(path) == BTRU);
+        BM_CHECK_EXPRESSION(BM_PARAMETER_EXISTS(path) == BC_TRUE);
 
         string_t type = allocate_strcat(path, "/type");
         string_t tmp;
-        GET_PARAMETER(type, StringParameter, &tmp);
+        BM_GET_PARAMETER(type, StringParameter, &tmp);
 
         if (is_equal(tmp, boundary_type_strings[BoundaryFlow]))
         {
-            CHECK_EXPRESSION(regions->flow_region == i);
+            BM_CHECK_EXPRESSION(regions->flow_region == i);
             regions->type[i] = BoundaryFlow;
             parse_primitive_state(path, &regions->phi_total[i * n_tot_variables]);
             prim_to_con(&regions->phi_total[i * n_tot_variables]);
@@ -96,9 +96,9 @@ void boundary_initialize()
         {
             regions->type[i] = BoundaryIsothermalWall;
             string_t tmp_T = allocate_strcat(path, "/T");
-            GET_PARAMETER(tmp_T, NumberParameter,
-                          &regions->phi_total[i * n_tot_variables + ip_T]);
-            DEALLOCATE(tmp_T);
+            BM_GET_PARAMETER(tmp_T, NumberParameter,
+                             &regions->phi_total[i * n_tot_variables + ip_T]);
+            BM_DEALLOCATE(tmp_T);
         }
         else if (is_equal(tmp, boundary_type_strings[BoundarySlipWall]))
         {
@@ -118,18 +118,18 @@ void boundary_initialize()
         {
             regions->type[i] = BoundaryFunction;
             string_t tmp_f = allocate_strcat(path, "/function_id");
-            GET_PARAMETER(tmp_f, DigitParameter, &regions->function_id[i]);
-            CHECK_EXPRESSION(regions->function_id[i] >= BoundaryTypeMax);
-            DEALLOCATE(tmp_f);
+            BM_GET_PARAMETER(tmp_f, DigitParameter, &regions->function_id[i]);
+            BM_CHECK_EXPRESSION(regions->function_id[i] >= BoundaryTypeMax);
+            BM_DEALLOCATE(tmp_f);
         }
         else
         {
-            CHECK_EXPRESSION(0);
+            BM_CHECK_EXPRESSION(0);
         }
 
-        DEALLOCATE(tmp);
-        DEALLOCATE(type);
-        DEALLOCATE(path);
+        BM_DEALLOCATE(tmp);
+        BM_DEALLOCATE(type);
+        BM_DEALLOCATE(path);
     }
 }
 
@@ -145,36 +145,36 @@ void parse_primitive_state(cstring_t prefix, double *phi)
     string_t tmp_p = allocate_strcat(prefix, "/p");
     string_t tmp_T = allocate_strcat(prefix, "/T");
 
-    /* int has_rho = PARAMETER_EXISTS( tmp_rho ); */
-    int has_u = PARAMETER_EXISTS(tmp_u);
-    int has_v = PARAMETER_EXISTS(tmp_v);
-    int has_w = PARAMETER_EXISTS(tmp_w);
-    int has_p = PARAMETER_EXISTS(tmp_p);
-    int has_T = PARAMETER_EXISTS(tmp_T);
+    /* int has_rho = BM_PARAMETER_EXISTS( tmp_rho ); */
+    int has_u = BM_PARAMETER_EXISTS(tmp_u);
+    int has_v = BM_PARAMETER_EXISTS(tmp_v);
+    int has_w = BM_PARAMETER_EXISTS(tmp_w);
+    int has_p = BM_PARAMETER_EXISTS(tmp_p);
+    int has_T = BM_PARAMETER_EXISTS(tmp_T);
 
     set_value_n(0.0, solver_variables->n_tot_variables, phi);
 
     /* check the provided data and fill the arrays */
     if (has_u && has_v && has_w && has_p && has_T)
     {
-        GET_PARAMETER(tmp_u, NumberParameter, &phi[ip_u]);
-        GET_PARAMETER(tmp_v, NumberParameter, &phi[ip_v]);
-        GET_PARAMETER(tmp_w, NumberParameter, &phi[ip_w]);
-        GET_PARAMETER(tmp_p, NumberParameter, &phi[ip_p]);
-        GET_PARAMETER(tmp_T, NumberParameter, &phi[ip_T]);
+        BM_GET_PARAMETER(tmp_u, NumberParameter, &phi[ip_u]);
+        BM_GET_PARAMETER(tmp_v, NumberParameter, &phi[ip_v]);
+        BM_GET_PARAMETER(tmp_w, NumberParameter, &phi[ip_w]);
+        BM_GET_PARAMETER(tmp_p, NumberParameter, &phi[ip_p]);
+        BM_GET_PARAMETER(tmp_T, NumberParameter, &phi[ip_T]);
         phi[ic_rho] = calc_ig_rho(phi[ip_p], phi[ip_T], R_mix);
     }
     else
     {
-        CHECK_EXPRESSION(0);
+        BM_CHECK_EXPRESSION(0);
     }
 
-    /* DEALLOCATE( tmp_rho ); */
-    DEALLOCATE(tmp_u);
-    DEALLOCATE(tmp_v);
-    DEALLOCATE(tmp_w);
-    DEALLOCATE(tmp_p);
-    DEALLOCATE(tmp_T);
+    /* BM_DEALLOCATE( tmp_rho ); */
+    BM_DEALLOCATE(tmp_u);
+    BM_DEALLOCATE(tmp_v);
+    BM_DEALLOCATE(tmp_w);
+    BM_DEALLOCATE(tmp_p);
+    BM_DEALLOCATE(tmp_T);
 }
 
 /*******************************************************************************
@@ -281,7 +281,7 @@ void update_boundaries(double t)
             con_to_prim(phi_total_i);
             break;
         default:
-            CHECK_EXPRESSION(0);
+            BM_CHECK_EXPRESSION(0);
             break;
         }
 
@@ -295,7 +295,7 @@ void update_boundaries(double t)
 void update_gradients_boundaries(double time)
 {
 #ifdef DEBUG
-    UNUSED(time);
+    BM_UNUSED(time);
 #endif /* DEBUG */
     Cells_t *cells = solver_mesh->cells;
     Boundaries_t *boundaries = solver_mesh->boundaries;
@@ -357,7 +357,7 @@ void update_gradients_boundaries(double time)
             }
             break;
         default:
-            CHECK_EXPRESSION(0);
+            BM_CHECK_EXPRESSION(0);
             break;
         }
     }

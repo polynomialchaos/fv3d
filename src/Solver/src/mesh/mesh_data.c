@@ -20,7 +20,7 @@
 Boundaries_t *allocate_boundaries(Mesh_t *mesh, int n_boundaries,
                                   int max_boundary_vertices)
 {
-    mesh->boundaries = ALLOCATE(sizeof(Boundaries_t));
+    mesh->boundaries = BM_ALLOCATE(sizeof(Boundaries_t));
     Boundaries_t *boundaries = mesh->boundaries;
 
     boundaries->n_global_boundaries = n_boundaries;
@@ -33,20 +33,20 @@ Boundaries_t *allocate_boundaries(Mesh_t *mesh, int n_boundaries,
         n_boundaries = boundaries->n_boundaries;
     }
 
-    boundaries->id = ALLOCATE(sizeof(int) * n_boundaries);
-    boundaries->type = ALLOCATE(sizeof(int) * n_boundaries);
-    boundaries->n_vertices = ALLOCATE(sizeof(int) * n_boundaries);
+    boundaries->id = BM_ALLOCATE(sizeof(int) * n_boundaries);
+    boundaries->type = BM_ALLOCATE(sizeof(int) * n_boundaries);
+    boundaries->n_vertices = BM_ALLOCATE(sizeof(int) * n_boundaries);
     boundaries->vertices =
-        ALLOCATE(sizeof(int) * max_boundary_vertices * n_boundaries);
-    boundaries->face = ALLOCATE(sizeof(int) * n_boundaries);
-    boundaries->distance = ALLOCATE(sizeof(double) * n_boundaries);
-    boundaries->n = ALLOCATE(sizeof(double) * DIM * n_boundaries);
-    boundaries->t1 = ALLOCATE(sizeof(double) * DIM * n_boundaries);
-    boundaries->t2 = ALLOCATE(sizeof(double) * DIM * n_boundaries);
+        BM_ALLOCATE(sizeof(int) * max_boundary_vertices * n_boundaries);
+    boundaries->face = BM_ALLOCATE(sizeof(int) * n_boundaries);
+    boundaries->distance = BM_ALLOCATE(sizeof(double) * n_boundaries);
+    boundaries->n = BM_ALLOCATE(sizeof(double) * DIM * n_boundaries);
+    boundaries->t1 = BM_ALLOCATE(sizeof(double) * DIM * n_boundaries);
+    boundaries->t2 = BM_ALLOCATE(sizeof(double) * DIM * n_boundaries);
 
     set_value_int_n(0, n_boundaries, boundaries->n_vertices);
 
-    boundaries->stride = ALLOCATE(sizeof(hsize_t) * n_boundaries);
+    boundaries->stride = BM_ALLOCATE(sizeof(hsize_t) * n_boundaries);
     if (is_parallel())
     {
         Partition_t *partition = mesh->partition;
@@ -76,7 +76,7 @@ Boundaries_t *allocate_boundaries(Mesh_t *mesh, int n_boundaries,
 Cells_t *allocate_cells(Mesh_t *mesh, int n_cells,
                         int max_cell_vertices, int max_cell_faces)
 {
-    mesh->cells = ALLOCATE(sizeof(Cells_t));
+    mesh->cells = BM_ALLOCATE(sizeof(Cells_t));
     Cells_t *cells = mesh->cells;
 
     cells->n_global_cells = n_cells;
@@ -93,20 +93,20 @@ Cells_t *allocate_cells(Mesh_t *mesh, int n_cells,
         n_cells = cells->n_local_cells;
     }
 
-    cells->id = ALLOCATE(sizeof(int) * n_cells);
-    cells->type = ALLOCATE(sizeof(int) * n_cells);
-    cells->n_vertices = ALLOCATE(sizeof(int) * n_cells);
-    cells->vertices = ALLOCATE(sizeof(int) * max_cell_vertices * n_cells);
-    cells->n_faces = ALLOCATE(sizeof(int) * n_cells);
-    cells->faces = ALLOCATE(sizeof(int) * max_cell_faces * n_cells);
-    cells->x = ALLOCATE(sizeof(double) * DIM * n_cells);
-    cells->volume = ALLOCATE(sizeof(double) * n_cells);
-    cells->dx = ALLOCATE(sizeof(double) * DIM * n_cells);
+    cells->id = BM_ALLOCATE(sizeof(int) * n_cells);
+    cells->type = BM_ALLOCATE(sizeof(int) * n_cells);
+    cells->n_vertices = BM_ALLOCATE(sizeof(int) * n_cells);
+    cells->vertices = BM_ALLOCATE(sizeof(int) * max_cell_vertices * n_cells);
+    cells->n_faces = BM_ALLOCATE(sizeof(int) * n_cells);
+    cells->faces = BM_ALLOCATE(sizeof(int) * max_cell_faces * n_cells);
+    cells->x = BM_ALLOCATE(sizeof(double) * DIM * n_cells);
+    cells->volume = BM_ALLOCATE(sizeof(double) * n_cells);
+    cells->dx = BM_ALLOCATE(sizeof(double) * DIM * n_cells);
 
     set_value_int_n(0, n_cells, cells->n_vertices);
     set_value_int_n(0, n_cells, cells->n_faces);
 
-    cells->stride = ALLOCATE(sizeof(hsize_t) * n_cells);
+    cells->stride = BM_ALLOCATE(sizeof(hsize_t) * n_cells);
     if (is_parallel())
     {
         Partition_t *partition = mesh->partition;
@@ -139,7 +139,7 @@ Cells_t *allocate_cells(Mesh_t *mesh, int n_cells,
  ******************************************************************************/
 Faces_t *allocate_faces(Mesh_t *mesh, int n_faces, int max_face_vertices)
 {
-    mesh->faces = ALLOCATE(sizeof(Faces_t));
+    mesh->faces = BM_ALLOCATE(sizeof(Faces_t));
     Faces_t *faces = mesh->faces;
 
     faces->n_global_faces = n_faces;
@@ -152,17 +152,17 @@ Faces_t *allocate_faces(Mesh_t *mesh, int n_faces, int max_face_vertices)
         n_faces = faces->n_faces;
     }
 
-    faces->type = ALLOCATE(sizeof(int) * n_faces);
-    faces->n_vertices = ALLOCATE(sizeof(int) * n_faces);
-    faces->vertices = ALLOCATE(sizeof(int) * max_face_vertices * n_faces);
-    faces->cells = ALLOCATE(sizeof(int) * FACE_CELLS * n_faces);
-    faces->boundary = ALLOCATE(sizeof(int) * n_faces);
-    faces->area = ALLOCATE(sizeof(double) * n_faces);
-    faces->lambda = ALLOCATE(sizeof(double) * n_faces);
-    faces->x = ALLOCATE(sizeof(double) * DIM * n_faces);
-    faces->n = ALLOCATE(sizeof(double) * DIM * n_faces);
-    faces->t1 = ALLOCATE(sizeof(double) * DIM * n_faces);
-    faces->t2 = ALLOCATE(sizeof(double) * DIM * n_faces);
+    faces->type = BM_ALLOCATE(sizeof(int) * n_faces);
+    faces->n_vertices = BM_ALLOCATE(sizeof(int) * n_faces);
+    faces->vertices = BM_ALLOCATE(sizeof(int) * max_face_vertices * n_faces);
+    faces->cells = BM_ALLOCATE(sizeof(int) * FACE_CELLS * n_faces);
+    faces->boundary = BM_ALLOCATE(sizeof(int) * n_faces);
+    faces->area = BM_ALLOCATE(sizeof(double) * n_faces);
+    faces->lambda = BM_ALLOCATE(sizeof(double) * n_faces);
+    faces->x = BM_ALLOCATE(sizeof(double) * DIM * n_faces);
+    faces->n = BM_ALLOCATE(sizeof(double) * DIM * n_faces);
+    faces->t1 = BM_ALLOCATE(sizeof(double) * DIM * n_faces);
+    faces->t2 = BM_ALLOCATE(sizeof(double) * DIM * n_faces);
 
     set_value_int_n(0, n_faces, faces->n_vertices);
 
@@ -173,7 +173,7 @@ Faces_t *allocate_faces(Mesh_t *mesh, int n_faces, int max_face_vertices)
     faces->internal_faces = NULL;
     faces->boundary_faces = NULL;
 
-    faces->stride = ALLOCATE(sizeof(hsize_t) * n_faces);
+    faces->stride = BM_ALLOCATE(sizeof(hsize_t) * n_faces);
     if (is_parallel())
     {
         Partition_t *partition = mesh->partition;
@@ -198,7 +198,7 @@ Faces_t *allocate_faces(Mesh_t *mesh, int n_faces, int max_face_vertices)
  ******************************************************************************/
 Mesh_t *allocate_mesh()
 {
-    Mesh_t *tmp = ALLOCATE(sizeof(Mesh_t));
+    Mesh_t *tmp = BM_ALLOCATE(sizeof(Mesh_t));
 
     tmp->dimension = 0;
     tmp->is_partitioned = 0;
@@ -235,7 +235,7 @@ Partition_t *allocate_partition(Mesh_t *mesh,
                                 int n_partition_sends,
                                 int n_partition_receives)
 {
-    mesh->partition = ALLOCATE(sizeof(Partition_t));
+    mesh->partition = BM_ALLOCATE(sizeof(Partition_t));
     Partition_t *partition = mesh->partition;
 
     partition->n_partitions = n_partitions;
@@ -245,23 +245,23 @@ Partition_t *allocate_partition(Mesh_t *mesh,
     partition->n_partition_sends = n_partition_sends;
     partition->n_partition_receives = n_partition_receives;
 
-    partition->partition_cells = ALLOCATE(sizeof(int) * n_partition_cells);
+    partition->partition_cells = BM_ALLOCATE(sizeof(int) * n_partition_cells);
     partition->partition_boundaries =
-        ALLOCATE(sizeof(int) * n_partition_boundaries);
-    partition->partition_faces = ALLOCATE(sizeof(int) * n_partition_faces);
-    partition->partition_sends = ALLOCATE(sizeof(int) * n_partition_sends);
-    partition->partition_sends_pid = ALLOCATE(sizeof(int) * n_partition_sends);
+        BM_ALLOCATE(sizeof(int) * n_partition_boundaries);
+    partition->partition_faces = BM_ALLOCATE(sizeof(int) * n_partition_faces);
+    partition->partition_sends = BM_ALLOCATE(sizeof(int) * n_partition_sends);
+    partition->partition_sends_pid = BM_ALLOCATE(sizeof(int) * n_partition_sends);
     partition->partition_receives =
-        ALLOCATE(sizeof(int) * n_partition_receives);
+        BM_ALLOCATE(sizeof(int) * n_partition_receives);
     partition->partition_receives_pid =
-        ALLOCATE(sizeof(int) * n_partition_receives);
+        BM_ALLOCATE(sizeof(int) * n_partition_receives);
 
-    partition->n_partition_sends_to = ALLOCATE(sizeof(int) * n_partitions);
+    partition->n_partition_sends_to = BM_ALLOCATE(sizeof(int) * n_partitions);
     partition->partition_sends_to =
-        ALLOCATE(sizeof(int) * n_partition_sends * n_partitions);
-    partition->n_partition_receives_from = ALLOCATE(sizeof(int) * n_partitions);
+        BM_ALLOCATE(sizeof(int) * n_partition_sends * n_partitions);
+    partition->n_partition_receives_from = BM_ALLOCATE(sizeof(int) * n_partitions);
     partition->partition_receives_from =
-        ALLOCATE(sizeof(int) * n_partition_receives * n_partitions);
+        BM_ALLOCATE(sizeof(int) * n_partition_receives * n_partitions);
 
     set_value_int_n(0, n_partitions, partition->n_partition_sends_to);
     set_value_int_n(0, n_partitions, partition->n_partition_receives_from);
@@ -278,7 +278,7 @@ Partition_t *allocate_partition(Mesh_t *mesh,
  ******************************************************************************/
 Regions_t *allocate_regions(Mesh_t *mesh, int n_regions, int max_name_length)
 {
-    mesh->regions = ALLOCATE(sizeof(Regions_t));
+    mesh->regions = BM_ALLOCATE(sizeof(Regions_t));
     Regions_t *regions = mesh->regions;
 
     regions->n_regions = n_regions;
@@ -286,7 +286,7 @@ Regions_t *allocate_regions(Mesh_t *mesh, int n_regions, int max_name_length)
 
     regions->name =
         allocate_hdf5_string_buffer(n_regions, max_name_length, NULL);
-    regions->is_boundary = ALLOCATE(sizeof(int) * n_regions);
+    regions->is_boundary = BM_ALLOCATE(sizeof(int) * n_regions);
 
     regions->type = NULL;
     regions->function_id = NULL;
@@ -303,12 +303,12 @@ Regions_t *allocate_regions(Mesh_t *mesh, int n_regions, int max_name_length)
  ******************************************************************************/
 Vertices_t *allocate_vertices(Mesh_t *mesh, int n_vertices)
 {
-    mesh->vertices = ALLOCATE(sizeof(Vertices_t));
+    mesh->vertices = BM_ALLOCATE(sizeof(Vertices_t));
     Vertices_t *vertices = mesh->vertices;
 
     vertices->n_vertices = n_vertices;
 
-    vertices->x = ALLOCATE(sizeof(double) * n_vertices * DIM);
+    vertices->x = BM_ALLOCATE(sizeof(double) * n_vertices * DIM);
 
     return vertices;
 }
@@ -322,17 +322,17 @@ void deallocate_boundaries(Boundaries_t *boundaries)
     if (boundaries == NULL)
         return;
 
-    DEALLOCATE(boundaries->id);
-    DEALLOCATE(boundaries->type);
-    DEALLOCATE(boundaries->n_vertices);
-    DEALLOCATE(boundaries->vertices);
-    DEALLOCATE(boundaries->face);
-    DEALLOCATE(boundaries->distance);
-    DEALLOCATE(boundaries->n);
-    DEALLOCATE(boundaries->t1);
-    DEALLOCATE(boundaries->t2);
+    BM_DEALLOCATE(boundaries->id);
+    BM_DEALLOCATE(boundaries->type);
+    BM_DEALLOCATE(boundaries->n_vertices);
+    BM_DEALLOCATE(boundaries->vertices);
+    BM_DEALLOCATE(boundaries->face);
+    BM_DEALLOCATE(boundaries->distance);
+    BM_DEALLOCATE(boundaries->n);
+    BM_DEALLOCATE(boundaries->t1);
+    BM_DEALLOCATE(boundaries->t2);
 
-    DEALLOCATE(boundaries->stride);
+    BM_DEALLOCATE(boundaries->stride);
 }
 
 /*******************************************************************************
@@ -344,17 +344,17 @@ void deallocate_cells(Cells_t *cells)
     if (cells == NULL)
         return;
 
-    DEALLOCATE(cells->id);
-    DEALLOCATE(cells->type);
-    DEALLOCATE(cells->n_vertices);
-    DEALLOCATE(cells->vertices);
-    DEALLOCATE(cells->n_faces);
-    DEALLOCATE(cells->faces);
-    DEALLOCATE(cells->x);
-    DEALLOCATE(cells->volume);
-    DEALLOCATE(cells->dx);
+    BM_DEALLOCATE(cells->id);
+    BM_DEALLOCATE(cells->type);
+    BM_DEALLOCATE(cells->n_vertices);
+    BM_DEALLOCATE(cells->vertices);
+    BM_DEALLOCATE(cells->n_faces);
+    BM_DEALLOCATE(cells->faces);
+    BM_DEALLOCATE(cells->x);
+    BM_DEALLOCATE(cells->volume);
+    BM_DEALLOCATE(cells->dx);
 
-    DEALLOCATE(cells->stride);
+    BM_DEALLOCATE(cells->stride);
 }
 
 /*******************************************************************************
@@ -366,24 +366,24 @@ void deallocate_faces(Faces_t *faces)
     if (faces == NULL)
         return;
 
-    DEALLOCATE(faces->type);
-    DEALLOCATE(faces->n_vertices);
-    DEALLOCATE(faces->vertices);
-    DEALLOCATE(faces->cells);
-    DEALLOCATE(faces->boundary);
-    DEALLOCATE(faces->area);
-    DEALLOCATE(faces->lambda);
-    DEALLOCATE(faces->x);
-    DEALLOCATE(faces->n);
-    DEALLOCATE(faces->t1);
-    DEALLOCATE(faces->t2);
+    BM_DEALLOCATE(faces->type);
+    BM_DEALLOCATE(faces->n_vertices);
+    BM_DEALLOCATE(faces->vertices);
+    BM_DEALLOCATE(faces->cells);
+    BM_DEALLOCATE(faces->boundary);
+    BM_DEALLOCATE(faces->area);
+    BM_DEALLOCATE(faces->lambda);
+    BM_DEALLOCATE(faces->x);
+    BM_DEALLOCATE(faces->n);
+    BM_DEALLOCATE(faces->t1);
+    BM_DEALLOCATE(faces->t2);
 
-    DEALLOCATE(faces->stride);
+    BM_DEALLOCATE(faces->stride);
 
-    DEALLOCATE(faces->dist_cell_1);
-    DEALLOCATE(faces->dist_cell_2);
-    DEALLOCATE(faces->internal_faces);
-    DEALLOCATE(faces->boundary_faces);
+    BM_DEALLOCATE(faces->dist_cell_1);
+    BM_DEALLOCATE(faces->dist_cell_2);
+    BM_DEALLOCATE(faces->internal_faces);
+    BM_DEALLOCATE(faces->boundary_faces);
 }
 
 /*******************************************************************************
@@ -396,22 +396,22 @@ void deallocate_mesh(Mesh_t *mesh)
         return;
 
     deallocate_partition(mesh->partition);
-    DEALLOCATE(mesh->partition);
+    BM_DEALLOCATE(mesh->partition);
 
     deallocate_vertices(mesh->vertices);
-    DEALLOCATE(mesh->vertices);
+    BM_DEALLOCATE(mesh->vertices);
 
     deallocate_cells(mesh->cells);
-    DEALLOCATE(mesh->cells);
+    BM_DEALLOCATE(mesh->cells);
 
     deallocate_boundaries(mesh->boundaries);
-    DEALLOCATE(mesh->boundaries);
+    BM_DEALLOCATE(mesh->boundaries);
 
     deallocate_faces(mesh->faces);
-    DEALLOCATE(mesh->faces);
+    BM_DEALLOCATE(mesh->faces);
 
     deallocate_regions(mesh->regions);
-    DEALLOCATE(mesh->regions);
+    BM_DEALLOCATE(mesh->regions);
 }
 
 /*******************************************************************************
@@ -423,18 +423,18 @@ void deallocate_partition(Partition_t *partition)
     if (partition == NULL)
         return;
 
-    DEALLOCATE(partition->partition_cells);
-    DEALLOCATE(partition->partition_boundaries);
-    DEALLOCATE(partition->partition_faces);
-    DEALLOCATE(partition->partition_sends);
-    DEALLOCATE(partition->partition_sends_pid);
-    DEALLOCATE(partition->partition_receives);
-    DEALLOCATE(partition->partition_receives_pid);
+    BM_DEALLOCATE(partition->partition_cells);
+    BM_DEALLOCATE(partition->partition_boundaries);
+    BM_DEALLOCATE(partition->partition_faces);
+    BM_DEALLOCATE(partition->partition_sends);
+    BM_DEALLOCATE(partition->partition_sends_pid);
+    BM_DEALLOCATE(partition->partition_receives);
+    BM_DEALLOCATE(partition->partition_receives_pid);
 
-    DEALLOCATE(partition->n_partition_sends_to);
-    DEALLOCATE(partition->partition_sends_to);
-    DEALLOCATE(partition->n_partition_receives_from);
-    DEALLOCATE(partition->partition_receives_from);
+    BM_DEALLOCATE(partition->n_partition_sends_to);
+    BM_DEALLOCATE(partition->partition_sends_to);
+    BM_DEALLOCATE(partition->n_partition_receives_from);
+    BM_DEALLOCATE(partition->partition_receives_from);
 }
 
 /*******************************************************************************
@@ -447,8 +447,8 @@ void deallocate_regions(Regions_t *regions)
         return;
 
     deallocate_hdf5_string_buffer(regions->name);
-    DEALLOCATE(regions->name);
-    DEALLOCATE(regions->is_boundary);
+    BM_DEALLOCATE(regions->name);
+    BM_DEALLOCATE(regions->is_boundary);
 }
 
 /*******************************************************************************
@@ -460,5 +460,5 @@ void deallocate_vertices(Vertices_t *vertices)
     if (vertices == NULL)
         return;
 
-    DEALLOCATE(vertices->x);
+    BM_DEALLOCATE(vertices->x);
 }

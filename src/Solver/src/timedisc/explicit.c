@@ -78,7 +78,7 @@ void init_explicit(explicit_scheme_t explicit_scheme)
         rk_g = rk_g_rk45;
         break;
     default:
-        CHECK_EXPRESSION(0);
+        BM_CHECK_EXPRESSION(0);
         break;
     }
 }
@@ -92,7 +92,7 @@ void init_explicit(explicit_scheme_t explicit_scheme)
 void timestep_lserkw2(int iter, double t, double dt)
 {
 #if DEBUG
-    UNUSED(iter);
+    BM_UNUSED(iter);
 #endif /* DEBUG */
 
     Cells_t *cells = solver_mesh->cells;

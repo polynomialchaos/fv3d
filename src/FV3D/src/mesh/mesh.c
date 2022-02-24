@@ -17,12 +17,12 @@ string_t mesh_file = NULL;
  ******************************************************************************/
 void mesh_define()
 {
-    REGISTER_INITIALIZE_ROUTINE(mesh_initialize);
-    REGISTER_FINALIZE_ROUTINE(mesh_finalize);
+    BM_REGISTER_INITIALIZE_ROUTINE(mesh_initialize);
+    BM_REGISTER_FINALIZE_ROUTINE(mesh_finalize);
 
     string_t tmp = "untitled.mesh.h5";
-    SET_PARAMETER("Mesh/mesh_file", StringParameter, &tmp,
-                  "The mesh file", NULL, 0);
+    BM_SET_PARAMETER("Mesh/mesh_file", StringParameter, &tmp,
+                     "The mesh file", NULL, 0);
 }
 
 /*******************************************************************************
@@ -31,7 +31,7 @@ void mesh_define()
 void mesh_finalize()
 {
     free_mesh();
-    DEALLOCATE(mesh_file);
+    BM_DEALLOCATE(mesh_file);
 }
 
 /*******************************************************************************
@@ -39,6 +39,6 @@ void mesh_finalize()
  ******************************************************************************/
 void mesh_initialize()
 {
-    GET_PARAMETER("Mesh/mesh_file", StringParameter, &mesh_file);
+    BM_GET_PARAMETER("Mesh/mesh_file", StringParameter, &mesh_file);
     init_mesh(mesh_file);
 }

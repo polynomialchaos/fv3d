@@ -37,22 +37,22 @@ int main(int argc, string_t *argv)
     restart_define();
 
     /* call the global initialize routine */
-    global_initialize(argc, argv, BTRU, BTRU, BTRU, BTRU);
+    global_initialize(argc, argv, BC_TRUE, BC_TRUE, BC_TRUE, BC_TRUE);
 
     /* mesh info */
-    PRINTF("\n");
+    BM_PRINT("\n");
     printf_r_sep_title('=', "Mesh");
     print_mesh_info();
     printf_r_sep('=');
 
     /* equation info */
-    PRINTF("\n");
+    BM_PRINT("\n");
     printf_r_sep_title('=', "Variables");
     print_variables();
     printf_r_sep('=');
 
     /* calculation */
-    PRINTF("\n");
+    BM_PRINT("\n");
     printf_r_sep_title('=', "Calculation");
     timedisc();
     printf_r_sep('=');
@@ -67,12 +67,12 @@ int main(int argc, string_t *argv)
  ******************************************************************************/
 void fv3d_define()
 {
-    REGISTER_INITIALIZE_ROUTINE(fv3d_initialize);
-    REGISTER_FINALIZE_ROUTINE(fv3d_finalize);
+    BM_REGISTER_INITIALIZE_ROUTINE(fv3d_initialize);
+    BM_REGISTER_FINALIZE_ROUTINE(fv3d_finalize);
 
     string_t title = "untitled";
-    SET_PARAMETER("General/title", StringParameter, &title,
-                  "The project title", NULL, 0);
+    BM_SET_PARAMETER("General/title", StringParameter, &title,
+                     "The project title", NULL, 0);
 }
 
 /*******************************************************************************
@@ -81,7 +81,7 @@ void fv3d_define()
 void fv3d_finalize()
 {
     free_solver();
-    DEALLOCATE(title);
+    BM_DEALLOCATE(title);
 }
 
 /*******************************************************************************
@@ -89,6 +89,6 @@ void fv3d_finalize()
  ******************************************************************************/
 void fv3d_initialize()
 {
-    GET_PARAMETER("General/title", StringParameter, &title);
+    BM_GET_PARAMETER("General/title", StringParameter, &title);
     init_solver(title);
 }

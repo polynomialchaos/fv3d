@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  * @file timedisc.c
  * @author Florian Eigentler
@@ -16,7 +15,7 @@
 void_timestep_ft timestep_function_pointer = NULL;
 double_calc_timestep_ft calc_timestep_function_pointer = NULL;
 
-bool_t solver_is_explicit = BTRU;
+bool_t solver_is_explicit = BC_TRUE;
 
 bool_t solver_is_viscous_dt = 0;
 int solver_max_iter = 1000;
@@ -50,13 +49,13 @@ void init_timedisc(timedisc_type_t timedisc_type, int max_iter,
     switch (timedisc_type)
     {
     case Explicit:
-        solver_is_explicit = BTRU;
+        solver_is_explicit = BC_TRUE;
         break;
     case Implicit:
-        solver_is_explicit = BFLS;
+        solver_is_explicit = BC_FALSE;
         break;
     default:
-        CHECK_EXPRESSION(0);
+        BM_CHECK_EXPRESSION(0);
         break;
     }
 
@@ -65,7 +64,7 @@ void init_timedisc(timedisc_type_t timedisc_type, int max_iter,
     solver_abort_residual = abort_residual;
 
     solver_t_start = t_start;
-    solver_t_end = solver_is_transient == BTRU ? t_end : BDMX;
+    solver_t_end = solver_is_transient == BC_TRUE ? t_end : BC_DMAX;
 }
 
 /*******************************************************************************
@@ -86,22 +85,22 @@ bool_t is_explicit()
  ******************************************************************************/
 void print_residual(int iter, double t, double dt, bool_t do_output)
 {
-    char output_str = (do_output == BTRU) ? '*' : ' ';
-    char viscous_str = (solver_is_viscous_dt == BTRU) ? 'T' : 'F';
+    char output_str = (do_output == BC_TRUE) ? '*' : ' ';
+    char viscous_str = (solver_is_viscous_dt == BC_TRUE) ? 'T' : 'F';
 
     if (solver_is_explicit)
     {
-        PRINTF("%09d %12.5e %12.5e %c %c:", iter, t, dt, viscous_str, output_str);
+        BM_PRINT("%09d %12.5e %12.5e %c %c:", iter, t, dt, viscous_str, output_str);
     }
     else
     {
-        PRINTF("%09d %12.5e %12.5e %c %c %6d %6d:", iter, t, dt, viscous_str, output_str, n_iter_inner, n_iter_lsoe);
+        BM_PRINT("%09d %12.5e %12.5e %c %c %6d %6d:", iter, t, dt, viscous_str, output_str, n_iter_inner, n_iter_lsoe);
     }
 
     for (int i = 0; i < solver_variables->n_sol_variables; ++i)
-        PRINTF(" %12.5e", solver_residual[i]);
+        BM_PRINT(" %12.5e", solver_residual[i]);
 
-    PRINTF("\n");
+    BM_PRINT("\n");
 }
 
 /*******************************************************************************
@@ -111,17 +110,17 @@ void print_residual_header()
 {
     if (solver_is_explicit)
     {
-        PRINTF("%9s %12s %12s %1s %1s:", "iter", "time", "dt", "V", "O");
+        BM_PRINT("%9s %12s %12s %1s %1s:", "iter", "time", "dt", "V", "O");
     }
     else
     {
-        PRINTF("%9s %12s %12s %1s %1s %6s %6s:", "iter", "time", "dt", "V", "O", "inner", "lsoe");
+        BM_PRINT("%9s %12s %12s %1s %1s %6s %6s:", "iter", "time", "dt", "V", "O", "inner", "lsoe");
     }
 
     for (int i = 0; i < solver_variables->n_sol_variables; ++i)
-        PRINTF(" %12s", solver_variables->sol_variables[i].name);
+        BM_PRINT(" %12s", solver_variables->sol_variables[i].name);
 
-    PRINTF("\n");
+    BM_PRINT("\n");
 }
 
 /*******************************************************************************
@@ -132,15 +131,15 @@ void timedisc()
     /* check for errors */
     check_abort(0);
 
-    bool_t do_output = BFLS;
-    bool_t do_finalize = BFLS;
+    bool_t do_output = BC_FALSE;
+    bool_t do_finalize = BC_FALSE;
 
     int iter = 0;
-    if (solver_use_restart == BTRU)
+    if (solver_use_restart == BC_TRUE)
         iter = solver_iter_restart;
 
     double t = solver_t_start;
-    if (solver_use_restart == BTRU)
+    if (solver_use_restart == BC_TRUE)
         t = solver_t_restart;
 
     double dt;
@@ -148,7 +147,7 @@ void timedisc()
     print_residual_header();
     if (iter == 0)
         finite_volume_time_derivative(t);
-    if ((solver_do_output_data == BTRU) && (solver_use_restart == BFLS))
+    if ((solver_do_output_data == BC_TRUE) && (solver_use_restart == BC_FALSE))
         write_output(iter, t);
 
     while (1)
@@ -158,13 +157,13 @@ void timedisc()
 
         /* calculate time step dt */
         double dt_local = calc_timestep_function_pointer(t);
-        MPI_ALL_REDUCE(MPIDouble, MPIMin, &dt_local, &dt);
+        BM_MPI_ALL_REDUCE(MPIDouble, MPIMin, &dt_local, &dt);
 
         if (t + dt > solver_t_end)
         {
             dt = solver_t_end - t;
-            do_output = BTRU;
-            do_finalize = BTRU;
+            do_output = BC_TRUE;
+            do_finalize = BC_TRUE;
         }
 
         /* the timestep to be called */
@@ -174,39 +173,39 @@ void timedisc()
         /* check for NAN and INF */
         if (is_nan_n(solver_residual, solver_variables->n_sol_variables) ||
             is_inf_n(solver_residual, solver_variables->n_sol_variables))
-            CHECK_EXPRESSION(0);
+            BM_CHECK_EXPRESSION(0);
 
         t = t + dt;
         iter = iter + 1;
 
         /* steady-state simulation */
-        if ((solver_is_transient == BFLS) && (max_n(solver_residual, solver_variables->n_sol_variables) < solver_abort_residual))
+        if ((solver_is_transient == BC_FALSE) && (max_n(solver_residual, solver_variables->n_sol_variables) < solver_abort_residual))
         {
             solver_t_end = t;
-            do_output = BTRU;
-            do_finalize = BTRU;
+            do_output = BC_TRUE;
+            do_finalize = BC_TRUE;
         }
 
         if ((solver_i_output_data > 0) && (iter % solver_i_output_data == 0))
         {
-            do_output = BTRU;
+            do_output = BC_TRUE;
         }
 
         /* maximum iteration number reacher */
         if (iter >= solver_iter_restart + solver_max_iter)
         {
             solver_t_end = t;
-            do_output = BTRU;
-            do_finalize = BTRU;
+            do_output = BC_TRUE;
+            do_finalize = BC_TRUE;
         }
 
         print_residual(iter, t, dt, do_output);
 
         /* output */
-        if ((solver_do_output_data == BTRU) && (do_output == BTRU))
+        if ((solver_do_output_data == BC_TRUE) && (do_output == BC_TRUE))
         {
             write_output(iter, t);
-            do_output = BFLS;
+            do_output = BC_FALSE;
         }
 
         /* stop if required */

@@ -43,7 +43,7 @@ void calc_gradients(double time)
         for (int j = 0; j < n_tot_variables; ++j)
         {
             double phi_mean = solver_data->phi_total[fc[0] * n_tot_variables + j] + faces->lambda[i] *
-                                                                                  (solver_data->phi_total[fc[1] * n_tot_variables + j] - solver_data->phi_total[fc[0] * n_tot_variables + j]);
+                                                                                        (solver_data->phi_total[fc[1] * n_tot_variables + j] - solver_data->phi_total[fc[0] * n_tot_variables + j]);
 
             solver_data->grad_phi_total_x[fc[0] * n_tot_variables + j] += phi_mean * n[0] * area;
             solver_data->grad_phi_total_y[fc[0] * n_tot_variables + j] += phi_mean * n[1] * area;
@@ -85,8 +85,8 @@ void free_reconstruction()
     reconstruction_function_pointer = NULL;
     update_gradients_function_pointer = NULL;
 
-    DEALLOCATE(send_buffer);
-    DEALLOCATE(receive_buffer);
+    BM_DEALLOCATE(send_buffer);
+    BM_DEALLOCATE(receive_buffer);
 }
 
 /*******************************************************************************
@@ -103,7 +103,7 @@ void init_reconstruction(reconstruction_type_t reconstruction_type)
         reconstruction_function_pointer = reconstruction_linear;
         break;
     default:
-        CHECK_EXPRESSION(0);
+        BM_CHECK_EXPRESSION(0);
         break;
     }
 
@@ -114,8 +114,8 @@ void init_reconstruction(reconstruction_type_t reconstruction_type)
         int n_partition_receives = partition->n_partition_receives;
         int n_tot_variables = solver_variables->n_tot_variables;
 
-        send_buffer = ALLOCATE(sizeof(double) * n_tot_variables * n_partition_sends);
-        receive_buffer = ALLOCATE(sizeof(double) * n_tot_variables * n_partition_receives);
+        send_buffer = BM_ALLOCATE(sizeof(double) * n_tot_variables * n_partition_sends);
+        receive_buffer = BM_ALLOCATE(sizeof(double) * n_tot_variables * n_partition_receives);
     }
 }
 

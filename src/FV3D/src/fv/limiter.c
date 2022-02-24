@@ -16,15 +16,15 @@ string_t limiter_name = NULL;
  ******************************************************************************/
 void limiter_define()
 {
-    REGISTER_INITIALIZE_ROUTINE(limiter_initialize);
-    REGISTER_FINALIZE_ROUTINE(limiter_finalize);
+    BM_REGISTER_INITIALIZE_ROUTINE(limiter_initialize);
+    BM_REGISTER_FINALIZE_ROUTINE(limiter_finalize);
 
     string_t tmp_opt[] = {"Barth-Jespersenn", "None"};
     int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
     string_t tmp = tmp_opt[0];
 
-    SET_PARAMETER("FV/Limiter/limiter", StringParameter, &tmp,
-                  "The limiter method", &tmp_opt, tmp_opt_n);
+    BM_SET_PARAMETER("FV/Limiter/limiter", StringParameter, &tmp,
+                     "The limiter method", &tmp_opt, tmp_opt_n);
 }
 
 /*******************************************************************************
@@ -32,7 +32,7 @@ void limiter_define()
  ******************************************************************************/
 void limiter_finalize()
 {
-    DEALLOCATE(limiter_name);
+    BM_DEALLOCATE(limiter_name);
     free_limiter();
 }
 
@@ -41,7 +41,7 @@ void limiter_finalize()
  ******************************************************************************/
 void limiter_initialize()
 {
-    GET_PARAMETER("FV/Limiter/limiter", StringParameter, &limiter_name);
+    BM_GET_PARAMETER("FV/Limiter/limiter", StringParameter, &limiter_name);
 
     if (is_equal(limiter_name, "Barth-Jespersenn"))
     {

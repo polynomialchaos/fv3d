@@ -23,7 +23,7 @@ void_calc_conv_flux_ft calc_convective_flux_function_pointer = NULL;
 void calc_ns_flux(double time)
 {
 #ifdef DEBUG
-    UNUSED(time);
+    BM_UNUSED(time);
 #endif /* DEBUG */
     Faces_t *faces = solver_mesh->faces;
     Boundaries_t *boundaries = solver_mesh->boundaries;
@@ -217,16 +217,16 @@ void eval_viscous_flux_1d(double *phi, double *grad_phi_x, double *grad_phi_y, d
  ******************************************************************************/
 void flux_define()
 {
-    REGISTER_INITIALIZE_ROUTINE(flux_initialize);
-    REGISTER_FINALIZE_ROUTINE(flux_finalize);
+    BM_REGISTER_INITIALIZE_ROUTINE(flux_initialize);
+    BM_REGISTER_FINALIZE_ROUTINE(flux_finalize);
 
     string_t tmp_opt[] = {"AUSM", "Rusanov"};
     int tmp_opt_n = sizeof(tmp_opt) / sizeof(string_t);
     string_t tmp = tmp_opt[0];
 
-    SET_PARAMETER("Equation/Navier-Stokes/Flux/flux_scheme", StringParameter,
-                  &tmp,
-                  "The Riemann solver", &tmp_opt, tmp_opt_n);
+    BM_SET_PARAMETER("Equation/Navier-Stokes/Flux/flux_scheme", StringParameter,
+                     &tmp,
+                     "The Riemann solver", &tmp_opt, tmp_opt_n);
 }
 
 /*******************************************************************************
@@ -234,7 +234,7 @@ void flux_define()
  ******************************************************************************/
 void flux_finalize()
 {
-    DEALLOCATE(flux_scheme_name);
+    BM_DEALLOCATE(flux_scheme_name);
 
     calc_convective_flux_function_pointer = NULL;
 }
@@ -244,8 +244,8 @@ void flux_finalize()
  ******************************************************************************/
 void flux_initialize()
 {
-    GET_PARAMETER("Equation/Navier-Stokes/Flux/flux_scheme", StringParameter,
-                  &flux_scheme_name);
+    BM_GET_PARAMETER("Equation/Navier-Stokes/Flux/flux_scheme", StringParameter,
+                     &flux_scheme_name);
 
     if (is_equal(flux_scheme_name, "Rusanov"))
     {
@@ -257,7 +257,7 @@ void flux_initialize()
     }
     else
     {
-        CHECK_EXPRESSION(0);
+        BM_CHECK_EXPRESSION(0);
     }
 }
 
@@ -273,7 +273,7 @@ void riemann_rusanonv(double *phi_l, double *phi_r, double *f)
 
     double c_l = sqrt(kappa * phi_l[ip_p] / phi_l[ic_rho]);
     double c_r = sqrt(kappa * phi_r[ip_p] / phi_r[ic_rho]);
-    double eigval = MAX(ABS(phi_l[ip_u]) + c_l, ABS(phi_r[ip_u]) + c_r);
+    double eigval = BM_MAX(BM_ABS(phi_l[ip_u]) + c_l, BM_ABS(phi_r[ip_u]) + c_r);
 
     double f_l[n_sol_variables];
     double f_r[n_sol_variables];
@@ -338,18 +338,18 @@ void riemann_ausm(double *phi_l, double *phi_r, double *f)
     }
 
     /* Positive Part of Flux evaluated in the left cell. */
-    f[0] = MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho];
-    f[1] = MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * phi_l[ip_u] + P_p;
-    f[2] = MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * phi_l[ip_v];
-    f[3] = MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * phi_l[ip_w];
-    f[4] = MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * H_l;
+    f[0] = BM_MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho];
+    f[1] = BM_MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * phi_l[ip_u] + P_p;
+    f[2] = BM_MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * phi_l[ip_v];
+    f[3] = BM_MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * phi_l[ip_w];
+    f[4] = BM_MAX(0.0, M_p + M_m) * c_l * phi_l[ic_rho] * H_l;
 
     /* Negative Part of Flux evaluated in the right cell. */
-    f[0] += MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho];
-    f[1] += MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * phi_r[ip_u] + P_m;
-    f[2] += MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * phi_r[ip_v];
-    f[3] += MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * phi_r[ip_w];
-    f[4] += MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * H_r;
+    f[0] += BM_MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho];
+    f[1] += BM_MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * phi_r[ip_u] + P_m;
+    f[2] += BM_MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * phi_r[ip_v];
+    f[3] += BM_MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * phi_r[ip_w];
+    f[4] += BM_MIN(0.0, M_p + M_m) * c_r * phi_r[ic_rho] * H_r;
 }
 
 /*******************************************************************************

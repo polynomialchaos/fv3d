@@ -49,23 +49,23 @@ int ip_T = -1;
  ******************************************************************************/
 void navier_stokes_define()
 {
-    REGISTER_INITIALIZE_ROUTINE(navier_stokes_initialize);
-    REGISTER_FINALIZE_ROUTINE(navier_stokes_finalize);
+    BM_REGISTER_INITIALIZE_ROUTINE(navier_stokes_initialize);
+    BM_REGISTER_FINALIZE_ROUTINE(navier_stokes_finalize);
 
-    SET_PARAMETER("Equation/Navier-Stokes/cfl_scale", NumberParameter,
-                  &cfl_scale,
-                  "The cfl_loc scale factor (0 ... 1)", NULL, 0);
-    SET_PARAMETER("Equation/Navier-Stokes/dfl_scale", NumberParameter,
-                  &dfl_scale,
-                  "The DFL scale factor (0 ... 1)", NULL, 0);
-    SET_PARAMETER("Equation/Navier-Stokes/mu_mix", NumberParameter, &mu_mix,
-                  "The dynamic viscosity, N s m-2", NULL, 0);
-    SET_PARAMETER("Equation/Navier-Stokes/R_mix", NumberParameter, &R_mix,
-                  "The specific gas constant, J kg-1 K-1", NULL, 0);
-    SET_PARAMETER("Equation/Navier-Stokes/Pr", NumberParameter, &Pr,
-                  "The Prandtl number", NULL, 0);
-    SET_PARAMETER("Equation/Navier-Stokes/kappa", NumberParameter, &kappa,
-                  "The isentropic exponent", NULL, 0);
+    BM_SET_PARAMETER("Equation/Navier-Stokes/cfl_scale", NumberParameter,
+                     &cfl_scale,
+                     "The cfl_loc scale factor (0 ... 1)", NULL, 0);
+    BM_SET_PARAMETER("Equation/Navier-Stokes/dfl_scale", NumberParameter,
+                     &dfl_scale,
+                     "The DFL scale factor (0 ... 1)", NULL, 0);
+    BM_SET_PARAMETER("Equation/Navier-Stokes/mu_mix", NumberParameter, &mu_mix,
+                     "The dynamic viscosity, N s m-2", NULL, 0);
+    BM_SET_PARAMETER("Equation/Navier-Stokes/R_mix", NumberParameter, &R_mix,
+                     "The specific gas constant, J kg-1 K-1", NULL, 0);
+    BM_SET_PARAMETER("Equation/Navier-Stokes/Pr", NumberParameter, &Pr,
+                     "The Prandtl number", NULL, 0);
+    BM_SET_PARAMETER("Equation/Navier-Stokes/kappa", NumberParameter, &kappa,
+                     "The isentropic exponent", NULL, 0);
 
     boundary_define();
     flux_define();
@@ -84,14 +84,14 @@ void navier_stokes_finalize()
  ******************************************************************************/
 void navier_stokes_initialize()
 {
-    GET_PARAMETER("Equation/Navier-Stokes/cfl_scale", NumberParameter,
-                  &cfl_scale);
-    GET_PARAMETER("Equation/Navier-Stokes/dfl_scale", NumberParameter,
-                  &dfl_scale);
-    GET_PARAMETER("Equation/Navier-Stokes/mu_mix", NumberParameter, &mu_mix);
-    GET_PARAMETER("Equation/Navier-Stokes/R_mix", NumberParameter, &R_mix);
-    GET_PARAMETER("Equation/Navier-Stokes/Pr", NumberParameter, &Pr);
-    GET_PARAMETER("Equation/Navier-Stokes/kappa", NumberParameter, &kappa);
+    BM_GET_PARAMETER("Equation/Navier-Stokes/cfl_scale", NumberParameter,
+                     &cfl_scale);
+    BM_GET_PARAMETER("Equation/Navier-Stokes/dfl_scale", NumberParameter,
+                     &dfl_scale);
+    BM_GET_PARAMETER("Equation/Navier-Stokes/mu_mix", NumberParameter, &mu_mix);
+    BM_GET_PARAMETER("Equation/Navier-Stokes/R_mix", NumberParameter, &R_mix);
+    BM_GET_PARAMETER("Equation/Navier-Stokes/Pr", NumberParameter, &Pr);
+    BM_GET_PARAMETER("Equation/Navier-Stokes/kappa", NumberParameter, &kappa);
 
     kappa_m1 = kappa - 1.0;
     kappa_p1 = kappa + 1.0;
@@ -133,8 +133,8 @@ void navier_stokes_initialize()
 void calc_ns_exact_function(int id, double t, double *x, double *phi)
 {
 #ifdef DEBUG
-    UNUSED(t);
-    UNUSED(x);
+    BM_UNUSED(t);
+    BM_UNUSED(x);
 #endif /* DEBUG */
     Regions_t *regions = solver_mesh->regions;
     int n_tot_variables = solver_variables->n_tot_variables;
@@ -145,7 +145,7 @@ void calc_ns_exact_function(int id, double t, double *x, double *phi)
         copy_n(&regions->phi_total[regions->flow_region * n_tot_variables], n_tot_variables, phi);
         break;
     default:
-        CHECK_EXPRESSION(0);
+        BM_CHECK_EXPRESSION(0);
         break;
     }
 }
@@ -158,14 +158,14 @@ void calc_ns_exact_function(int id, double t, double *x, double *phi)
 double calc_ns_timestep(double time)
 {
 #ifdef DEBUG
-    UNUSED(time);
+    BM_UNUSED(time);
 #endif /* DEBUG */
     Cells_t *cells = solver_mesh->cells;
     int n_cells = cells->n_domain_cells;
     int n_tot_variables = solver_variables->n_tot_variables;
 
-    double lambda_conv = BDMX;
-    double lambda_visc = BDMX;
+    double lambda_conv = BC_DMAX;
+    double lambda_visc = BC_DMAX;
 
     for (int i = 0; i < n_cells; ++i)
     {
@@ -174,12 +174,12 @@ double calc_ns_timestep(double time)
         double s_rho = 1.0 / phi_total_i[ic_rho];
         double c = sqrt(kappa * phi_total_i[ip_p] * s_rho);
 
-        double ds1 = (ABS(phi_total_i[ip_u]) + c) * dx[0] +
-                     (ABS(phi_total_i[ip_v]) + c) * dx[1] + (ABS(phi_total_i[ip_w]) + c) * dx[2];
-        lambda_conv = MIN(lambda_conv, cells->volume[i] / ds1);
+        double ds1 = (BM_ABS(phi_total_i[ip_u]) + c) * dx[0] +
+                     (BM_ABS(phi_total_i[ip_v]) + c) * dx[1] + (BM_ABS(phi_total_i[ip_w]) + c) * dx[2];
+        lambda_conv = BM_MIN(lambda_conv, cells->volume[i] / ds1);
 
         double ds2 = dot_n(dx, dx, DIM);
-        lambda_visc = MIN(lambda_visc, s_rho * ds2 / cells->volume[i]);
+        lambda_visc = BM_MIN(lambda_visc, s_rho * ds2 / cells->volume[i]);
     }
 
     lambda_conv *= cfl_scale;
@@ -187,7 +187,7 @@ double calc_ns_timestep(double time)
 
     set_viscous_dt(lambda_visc < lambda_conv);
 
-    return MIN(lambda_conv, lambda_visc);
+    return BM_MIN(lambda_conv, lambda_visc);
 }
 
 /*******************************************************************************

@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  * @file implicit.c
  * @author Florian Eigentler
@@ -21,7 +20,7 @@ int n_iter_inner = 0;
 int n_iter_lsoe = 0;
 double **phi_old = NULL;
 
-bool_t is_bicgstab = BTRU;
+bool_t is_bicgstab = BC_TRUE;
 int n_work_size = 0;
 double dt_loc = 0.0;
 double tpdt_loc = 0.0;
@@ -124,16 +123,16 @@ void calc_jacobian_numerical(int n_var, int n_cells)
 void free_implicit()
 {
     for (int i = 0; i < n_bdf_stages; ++i)
-        DEALLOCATE(phi_old[i]);
-    DEALLOCATE(phi_old);
+        BM_DEALLOCATE(phi_old[i]);
+    BM_DEALLOCATE(phi_old);
 
-    DEALLOCATE(work);
+    BM_DEALLOCATE(work);
 
-    DEALLOCATE(Y_n);
-    DEALLOCATE(f_Y_n);
-    DEALLOCATE(dY_n);
-    DEALLOCATE(dY_dt_n);
-    DEALLOCATE(jac);
+    BM_DEALLOCATE(Y_n);
+    BM_DEALLOCATE(f_Y_n);
+    BM_DEALLOCATE(dY_n);
+    BM_DEALLOCATE(dY_dt_n);
+    BM_DEALLOCATE(jac);
 }
 
 /*******************************************************************************
@@ -177,36 +176,36 @@ void init_implicit(implicit_scheme_t implicit_scheme,
         bdf_b = bdf_b_bdf2;
         break;
     default:
-        CHECK_EXPRESSION(0);
+        BM_CHECK_EXPRESSION(0);
         break;
     }
 
     switch (implicit_solver)
     {
     case BiCGStab:
-        is_bicgstab = BTRU;
+        is_bicgstab = BC_TRUE;
         n_work_size = get_bicgstab_n_m_work_size(n_sol_variables, n_domain_cells);
-        work = ALLOCATE(sizeof(double) * n_work_size);
+        work = BM_ALLOCATE(sizeof(double) * n_work_size);
         break;
     case GMRes:
-        is_bicgstab = BFLS;
+        is_bicgstab = BC_FALSE;
         n_work_size = get_gmres_n_m_work_size(n_sol_variables, n_domain_cells, solver_max_krylov_dims);
-        work = ALLOCATE(sizeof(double) * n_work_size);
+        work = BM_ALLOCATE(sizeof(double) * n_work_size);
         break;
     default:
-        CHECK_EXPRESSION(0);
+        BM_CHECK_EXPRESSION(0);
         break;
     }
 
-    phi_old = ALLOCATE(sizeof(double *) * n_bdf_stages);
+    phi_old = BM_ALLOCATE(sizeof(double *) * n_bdf_stages);
     for (int i = 0; i < n_bdf_stages; ++i)
-        phi_old[i] = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
+        phi_old[i] = BM_ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
 
-    Y_n = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
-    f_Y_n = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
-    dY_n = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
-    dY_dt_n = ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
-    jac = ALLOCATE(sizeof(double) * n_sol_variables * n_sol_variables * n_domain_cells);
+    Y_n = BM_ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
+    f_Y_n = BM_ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
+    dY_n = BM_ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
+    dY_dt_n = BM_ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
+    jac = BM_ALLOCATE(sizeof(double) * n_sol_variables * n_sol_variables * n_domain_cells);
 }
 
 /*******************************************************************************
@@ -318,16 +317,16 @@ void timestep_newton(int iter, double t, double dt)
 
         int is_error_less = (err_f_Y_old < err_f_Y_0);
         int is_error_less_g;
-        MPI_ALL_REDUCE(MPIInt, MPILogAnd, &is_error_less, &is_error_less_g);
+        BM_MPI_ALL_REDUCE(MPIInt, MPILogAnd, &is_error_less, &is_error_less_g);
 
         if (is_error_less_g == 1)
             break;
-        if (solver_is_transient == BFLS)
+        if (solver_is_transient == BC_FALSE)
             break;
     }
 
     if (n_iter_inner >= solver_max_iter_inner)
-        CHECK_EXPRESSION(0);
+        BM_CHECK_EXPRESSION(0);
 }
 
 /*******************************************************************************
