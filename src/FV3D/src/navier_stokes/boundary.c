@@ -60,11 +60,13 @@ void boundary_initialize()
 
     regions->type = BM_ALLOCATE(sizeof(int) * n_regions);
     regions->function_id = BM_ALLOCATE(sizeof(int) * n_regions);
-    regions->phi_total = BM_ALLOCATE(sizeof(double) * n_tot_variables * n_regions);
+    regions->phi_total =
+        BM_ALLOCATE(sizeof(double) * n_tot_variables * n_regions);
 
     for (int i = 0; i < n_regions; ++i)
     {
-        string_t path = allocate_strcat("Equation/Navier-Stokes/Boundary/", regions->name[i]);
+        string_t path = allocate_strcat(
+            "Equation/Navier-Stokes/Boundary/", regions->name[i]);
         BM_CHECK_EXPRESSION(BM_PARAMETER_EXISTS(path) == BC_TRUE);
 
         string_t type = allocate_strcat(path, "/type");
@@ -75,13 +77,15 @@ void boundary_initialize()
         {
             BM_CHECK_EXPRESSION(regions->flow_region == i);
             regions->type[i] = BoundaryFlow;
-            parse_primitive_state(path, &regions->phi_total[i * n_tot_variables]);
+            parse_primitive_state(
+                path, &regions->phi_total[i * n_tot_variables]);
             prim_to_con(&regions->phi_total[i * n_tot_variables]);
         }
         else if (is_equal(tmp, boundary_type_strings[BoundaryInflow]))
         {
             regions->type[i] = BoundaryInflow;
-            parse_primitive_state(path, &regions->phi_total[i * n_tot_variables]);
+            parse_primitive_state(
+                path, &regions->phi_total[i * n_tot_variables]);
             prim_to_con(&regions->phi_total[i * n_tot_variables]);
         }
         else if (is_equal(tmp, boundary_type_strings[BoundaryOutflow]))
@@ -111,7 +115,8 @@ void boundary_initialize()
         else if (is_equal(tmp, boundary_type_strings[BoundaryState]))
         {
             regions->type[i] = BoundaryState;
-            parse_primitive_state(path, &regions->phi_total[i * n_tot_variables]);
+            parse_primitive_state(
+                path, &regions->phi_total[i * n_tot_variables]);
             prim_to_con(&regions->phi_total[i * n_tot_variables]);
         }
         else if (is_equal(tmp, boundary_type_strings[BoundaryFunction]))
@@ -203,32 +208,42 @@ void update_boundaries(double t)
         double *t1 = &faces->t1[bf * DIM];
         double *t2 = &faces->t2[bf * DIM];
 
-        double *phi_total_i = &solver_data->phi_total[(n_local_cells + i) * n_tot_variables];
-        copy_n(&solver_data->phi_total[bc * n_tot_variables], n_tot_variables, phi_total_i);
+        double *phi_total_i =
+            &solver_data->phi_total[(n_local_cells + i) * n_tot_variables];
+        copy_n(&solver_data->phi_total[bc * n_tot_variables],
+               n_tot_variables, phi_total_i);
 
         switch (regions->type[id])
         {
         case BoundaryInflow:
         case BoundaryState:
-            copy_n(&regions->phi_total[id * n_tot_variables], n_tot_variables, phi_total_i);
+            copy_n(&regions->phi_total[id * n_tot_variables],
+                   n_tot_variables, phi_total_i);
             break;
         case BoundaryOutflow:
             break;
         case BoundaryAdiabaticWall:
             /* rotate into local coordinate system */
-            phi_total_i[ip_u] = dot_n(&solver_data->phi_total[bc * n_tot_variables + ip_u], n, DIM);
-            phi_total_i[ip_v] = dot_n(&solver_data->phi_total[bc * n_tot_variables + ip_u], t1, DIM);
-            phi_total_i[ip_w] = dot_n(&solver_data->phi_total[bc * n_tot_variables + ip_u], t2, DIM);
+            phi_total_i[ip_u] = dot_n(
+                &solver_data->phi_total[bc * n_tot_variables + ip_u], n, DIM);
+            phi_total_i[ip_v] = dot_n(
+                &solver_data->phi_total[bc * n_tot_variables + ip_u], t1, DIM);
+            phi_total_i[ip_w] = dot_n(
+                &solver_data->phi_total[bc * n_tot_variables + ip_u], t2, DIM);
 
             /* apply boundary specific behaviour */
             phi_total_i[ip_p] = calc_riemann_p(phi_total_i);
             set_value_n(0.0, DIM, &phi_total_i[ip_u]);
-            phi_total_i[ic_rho] = calc_ig_rho(phi_total_i[ip_p], phi_total_i[ip_T], R_mix);
+            phi_total_i[ic_rho] =
+                calc_ig_rho(phi_total_i[ip_p], phi_total_i[ip_T], R_mix);
 
             /* rotate back to global coordinate system */
-            tmp_u = phi_total_i[ip_u] * n[0] + phi_total_i[ip_v] * t1[0] + phi_total_i[ip_w] * t2[0];
-            tmp_v = phi_total_i[ip_u] * n[1] + phi_total_i[ip_v] * t1[1] + phi_total_i[ip_w] * t2[1];
-            tmp_w = phi_total_i[ip_u] * n[2] + phi_total_i[ip_v] * t1[2] + phi_total_i[ip_w] * t2[2];
+            tmp_u = phi_total_i[ip_u] * n[0] +
+                    phi_total_i[ip_v] * t1[0] + phi_total_i[ip_w] * t2[0];
+            tmp_v = phi_total_i[ip_u] * n[1] +
+                    phi_total_i[ip_v] * t1[1] + phi_total_i[ip_w] * t2[1];
+            tmp_w = phi_total_i[ip_u] * n[2] +
+                    phi_total_i[ip_v] * t1[2] + phi_total_i[ip_w] * t2[2];
 
             phi_total_i[ip_u] = tmp_u;
             phi_total_i[ip_v] = tmp_v;
@@ -236,20 +251,27 @@ void update_boundaries(double t)
             break;
         case BoundaryIsothermalWall:
             /* rotate into local coordinate system */
-            phi_total_i[ip_u] = dot_n(&solver_data->phi_total[bc * n_tot_variables + ip_u], n, DIM);
-            phi_total_i[ip_v] = dot_n(&solver_data->phi_total[bc * n_tot_variables + ip_u], t1, DIM);
-            phi_total_i[ip_w] = dot_n(&solver_data->phi_total[bc * n_tot_variables + ip_u], t2, DIM);
+            phi_total_i[ip_u] = dot_n(
+                &solver_data->phi_total[bc * n_tot_variables + ip_u], n, DIM);
+            phi_total_i[ip_v] = dot_n(
+                &solver_data->phi_total[bc * n_tot_variables + ip_u], t1, DIM);
+            phi_total_i[ip_w] = dot_n(
+                &solver_data->phi_total[bc * n_tot_variables + ip_u], t2, DIM);
 
             /* apply boundary specific behaviour */
             phi_total_i[ip_p] = calc_riemann_p(phi_total_i);
             set_value_n(0.0, DIM, &phi_total_i[ip_u]);
             phi_total_i[ip_T] = regions->phi_total[id * n_tot_variables + ip_T];
-            phi_total_i[ic_rho] = calc_ig_rho(phi_total_i[ip_p], phi_total_i[ip_T], R_mix);
+            phi_total_i[ic_rho] =
+                calc_ig_rho(phi_total_i[ip_p], phi_total_i[ip_T], R_mix);
 
             /* rotate back to global coordinate system */
-            tmp_u = phi_total_i[ip_u] * n[0] + phi_total_i[ip_v] * t1[0] + phi_total_i[ip_w] * t2[0];
-            tmp_v = phi_total_i[ip_u] * n[1] + phi_total_i[ip_v] * t1[1] + phi_total_i[ip_w] * t2[1];
-            tmp_w = phi_total_i[ip_u] * n[2] + phi_total_i[ip_v] * t1[2] + phi_total_i[ip_w] * t2[2];
+            tmp_u = phi_total_i[ip_u] * n[0] +
+                    phi_total_i[ip_v] * t1[0] + phi_total_i[ip_w] * t2[0];
+            tmp_v = phi_total_i[ip_u] * n[1] +
+                    phi_total_i[ip_v] * t1[1] + phi_total_i[ip_w] * t2[1];
+            tmp_w = phi_total_i[ip_u] * n[2] +
+                    phi_total_i[ip_v] * t1[2] + phi_total_i[ip_w] * t2[2];
 
             phi_total_i[ip_u] = tmp_u;
             phi_total_i[ip_v] = tmp_v;
@@ -258,26 +280,34 @@ void update_boundaries(double t)
         case BoundarySlipWall:
         case BoundarySymmetry:
             /* rotate into local coordinate system */
-            phi_total_i[ip_u] = dot_n(&solver_data->phi_total[bc * n_tot_variables + ip_u], n, DIM);
-            phi_total_i[ip_v] = dot_n(&solver_data->phi_total[bc * n_tot_variables + ip_u], t1, DIM);
-            phi_total_i[ip_w] = dot_n(&solver_data->phi_total[bc * n_tot_variables + ip_u], t2, DIM);
+            phi_total_i[ip_u] = dot_n(
+                &solver_data->phi_total[bc * n_tot_variables + ip_u], n, DIM);
+            phi_total_i[ip_v] = dot_n(
+                &solver_data->phi_total[bc * n_tot_variables + ip_u], t1, DIM);
+            phi_total_i[ip_w] = dot_n(
+                &solver_data->phi_total[bc * n_tot_variables + ip_u], t2, DIM);
 
             /* apply boundary specific behaviour */
             phi_total_i[ip_p] = calc_riemann_p(phi_total_i);
             phi_total_i[ip_u] = 0.0;
-            phi_total_i[ip_T] = calc_ig_T(phi_total_i[ip_p], phi_total_i[ic_rho], R_mix);
+            phi_total_i[ip_T] =
+                calc_ig_T(phi_total_i[ip_p], phi_total_i[ic_rho], R_mix);
 
             /* rotate back to global coordinate system */
-            tmp_u = phi_total_i[ip_u] * n[0] + phi_total_i[ip_v] * t1[0] + phi_total_i[ip_w] * t2[0];
-            tmp_v = phi_total_i[ip_u] * n[1] + phi_total_i[ip_v] * t1[1] + phi_total_i[ip_w] * t2[1];
-            tmp_w = phi_total_i[ip_u] * n[2] + phi_total_i[ip_v] * t1[2] + phi_total_i[ip_w] * t2[2];
+            tmp_u = phi_total_i[ip_u] * n[0] +
+                    phi_total_i[ip_v] * t1[0] + phi_total_i[ip_w] * t2[0];
+            tmp_v = phi_total_i[ip_u] * n[1] +
+                    phi_total_i[ip_v] * t1[1] + phi_total_i[ip_w] * t2[1];
+            tmp_w = phi_total_i[ip_u] * n[2] +
+                    phi_total_i[ip_v] * t1[2] + phi_total_i[ip_w] * t2[2];
 
             phi_total_i[ip_u] = tmp_u;
             phi_total_i[ip_v] = tmp_v;
             phi_total_i[ip_w] = tmp_w;
             break;
         case BoundaryFunction:
-            calc_ns_exact_function(regions->function_id[id], t, &faces->x[bf * DIM], phi_total_i);
+            calc_ns_exact_function(
+                regions->function_id[id], t, &faces->x[bf * DIM], phi_total_i);
             con_to_prim(phi_total_i);
             break;
         default:
@@ -318,13 +348,22 @@ void update_gradients_boundaries(double time)
         double *t1 = &faces->t1[bf * DIM];
         double *t2 = &faces->t2[bf * DIM];
 
-        double *grad_phi_total_x_i = &solver_data->grad_phi_total_x[(n_local_cells + i) * n_tot_variables];
-        double *grad_phi_total_y_i = &solver_data->grad_phi_total_y[(n_local_cells + i) * n_tot_variables];
-        double *grad_phi_total_z_i = &solver_data->grad_phi_total_z[(n_local_cells + i) * n_tot_variables];
+        double *grad_phi_total_x_i =
+            &solver_data->grad_phi_total_x
+                 [(n_local_cells + i) * n_tot_variables];
+        double *grad_phi_total_y_i =
+            &solver_data->grad_phi_total_y
+                 [(n_local_cells + i) * n_tot_variables];
+        double *grad_phi_total_z_i =
+            &solver_data->grad_phi_total_z
+                 [(n_local_cells + i) * n_tot_variables];
 
-        copy_n(&solver_data->grad_phi_total_x[bc * n_tot_variables], n_tot_variables, grad_phi_total_x_i);
-        copy_n(&solver_data->grad_phi_total_y[bc * n_tot_variables], n_tot_variables, grad_phi_total_y_i);
-        copy_n(&solver_data->grad_phi_total_z[bc * n_tot_variables], n_tot_variables, grad_phi_total_z_i);
+        copy_n(&solver_data->grad_phi_total_x[bc * n_tot_variables],
+               n_tot_variables, grad_phi_total_x_i);
+        copy_n(&solver_data->grad_phi_total_y[bc * n_tot_variables],
+               n_tot_variables, grad_phi_total_y_i);
+        copy_n(&solver_data->grad_phi_total_z[bc * n_tot_variables],
+               n_tot_variables, grad_phi_total_z_i);
 
         switch (regions->type[id])
         {
@@ -340,9 +379,15 @@ void update_gradients_boundaries(double time)
             /* rotate neighbour cell gradient into local coordinates */
             for (int j = 0; j < n_tot_variables; ++j)
             {
-                tmp_x[j] = grad_phi_total_x_i[j] * n[0] + grad_phi_total_y_i[j] * n[1] + grad_phi_total_z_i[j] * n[2];
-                tmp_y[j] = grad_phi_total_x_i[j] * t1[0] + grad_phi_total_y_i[j] * t1[1] + grad_phi_total_z_i[j] * t1[2];
-                tmp_z[j] = grad_phi_total_x_i[j] * t2[0] + grad_phi_total_y_i[j] * t2[1] + grad_phi_total_z_i[j] * t2[2];
+                tmp_x[j] = grad_phi_total_x_i[j] * n[0] +
+                           grad_phi_total_y_i[j] * n[1] +
+                           grad_phi_total_z_i[j] * n[2];
+                tmp_y[j] = grad_phi_total_x_i[j] * t1[0] +
+                           grad_phi_total_y_i[j] * t1[1] +
+                           grad_phi_total_z_i[j] * t1[2];
+                tmp_z[j] = grad_phi_total_x_i[j] * t2[0] +
+                           grad_phi_total_y_i[j] * t2[1] +
+                           grad_phi_total_z_i[j] * t2[2];
             }
 
             /* apply boundary specific behaviour */
@@ -351,9 +396,12 @@ void update_gradients_boundaries(double time)
             /* rotate neighbour cell gradient back from local coordinates */
             for (int j = 0; j < n_tot_variables; ++j)
             {
-                grad_phi_total_x_i[j] = tmp_x[j] * n[0] + tmp_y[j] * t1[0] + tmp_z[j] * t2[0];
-                grad_phi_total_y_i[j] = tmp_x[j] * n[1] + tmp_y[j] * t1[1] + tmp_z[j] * t2[1];
-                grad_phi_total_z_i[j] = tmp_x[j] * n[2] + tmp_y[j] * t1[2] + tmp_z[j] * t2[2];
+                grad_phi_total_x_i[j] =
+                    tmp_x[j] * n[0] + tmp_y[j] * t1[0] + tmp_z[j] * t2[0];
+                grad_phi_total_y_i[j] =
+                    tmp_x[j] * n[1] + tmp_y[j] * t1[1] + tmp_z[j] * t2[1];
+                grad_phi_total_z_i[j] =
+                    tmp_x[j] * n[2] + tmp_y[j] * t1[2] + tmp_z[j] * t2[2];
             }
             break;
         default:

@@ -250,7 +250,8 @@ Partition_t *allocate_partition(Mesh_t *mesh,
         BM_ALLOCATE(sizeof(int) * n_partition_boundaries);
     partition->partition_faces = BM_ALLOCATE(sizeof(int) * n_partition_faces);
     partition->partition_sends = BM_ALLOCATE(sizeof(int) * n_partition_sends);
-    partition->partition_sends_pid = BM_ALLOCATE(sizeof(int) * n_partition_sends);
+    partition->partition_sends_pid =
+        BM_ALLOCATE(sizeof(int) * n_partition_sends);
     partition->partition_receives =
         BM_ALLOCATE(sizeof(int) * n_partition_receives);
     partition->partition_receives_pid =
@@ -259,7 +260,8 @@ Partition_t *allocate_partition(Mesh_t *mesh,
     partition->n_partition_sends_to = BM_ALLOCATE(sizeof(int) * n_partitions);
     partition->partition_sends_to =
         BM_ALLOCATE(sizeof(int) * n_partition_sends * n_partitions);
-    partition->n_partition_receives_from = BM_ALLOCATE(sizeof(int) * n_partitions);
+    partition->n_partition_receives_from =
+        BM_ALLOCATE(sizeof(int) * n_partitions);
     partition->partition_receives_from =
         BM_ALLOCATE(sizeof(int) * n_partition_receives * n_partitions);
 

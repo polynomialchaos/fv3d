@@ -63,13 +63,21 @@ double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
 
         if (fc[0] == i_cell)
         {
-            phi_min = BM_MIN(phi_min, solver_data->phi_total[fc[1] * n_tot_variables + i_var]);
-            phi_max = BM_MAX(phi_max, solver_data->phi_total[fc[1] * n_tot_variables + i_var]);
+            phi_min = BM_MIN(
+                phi_min,
+                solver_data->phi_total[fc[1] * n_tot_variables + i_var]);
+            phi_max = BM_MAX(
+                phi_max,
+                solver_data->phi_total[fc[1] * n_tot_variables + i_var]);
         }
         else
         {
-            phi_min = BM_MIN(phi_min, solver_data->phi_total[fc[0] * n_tot_variables + i_var]);
-            phi_max = BM_MAX(phi_max, solver_data->phi_total[fc[0] * n_tot_variables + i_var]);
+            phi_min = BM_MIN(
+                phi_min,
+                solver_data->phi_total[fc[0] * n_tot_variables + i_var]);
+            phi_max = BM_MAX(
+                phi_max,
+                solver_data->phi_total[fc[0] * n_tot_variables + i_var]);
         }
     }
 
@@ -80,11 +88,15 @@ double limiter_barth_jespersenn(int i_cell, int i_var, double slope)
         double y = 1.0;
         if (slope > 0)
         {
-            y = (phi_max - solver_data->phi_total[i_cell * n_tot_variables + i_var]) / slope;
+            y = (phi_max -
+                 solver_data->phi_total[i_cell * n_tot_variables + i_var]) /
+                slope;
         }
         else if (slope < 0)
         {
-            y = (phi_min - solver_data->phi_total[i_cell * n_tot_variables + i_var]) / slope;
+            y = (phi_min -
+                 solver_data->phi_total[i_cell * n_tot_variables + i_var]) /
+                slope;
         }
 
         tmp = BM_MIN(tmp, y);

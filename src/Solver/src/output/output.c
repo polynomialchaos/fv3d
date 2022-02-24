@@ -38,7 +38,8 @@ void create_file_header(cstring_t file_name)
             strcpy(tmp[i], solver_variables->tot_variables[i]->name);
 
         hsize_t dims[2] = {solver_variables->n_tot_variables, max_len + 1};
-        BM_SET_HDF5_DATASET_N(file_id, "tot_variables", HDF5String, tmp, dims[0]);
+        BM_SET_HDF5_DATASET_N(file_id, "tot_variables",
+                              HDF5String, tmp, dims[0]);
 
         deallocate_hdf5_string_buffer(tmp);
         BM_DEALLOCATE(tmp);
@@ -56,7 +57,8 @@ void create_file_header(cstring_t file_name)
             strcpy(tmp[i], solver_variables->sol_variables[i].name);
 
         hsize_t dims[2] = {solver_variables->n_sol_variables, max_len + 1};
-        BM_SET_HDF5_DATASET_N(file_id, "sol_variables", HDF5String, tmp, dims[0]);
+        BM_SET_HDF5_DATASET_N(file_id, "sol_variables",
+                              HDF5String, tmp, dims[0]);
 
         deallocate_hdf5_string_buffer(tmp);
         BM_DEALLOCATE(tmp);
@@ -112,16 +114,20 @@ void write_output(int iter, double t)
             hsize_t dims[2] = {n_global_cells, n_sol_variables};
             hsize_t offset[2] = {0, 0};
             hsize_t count[2] = {n_domain_cells, n_sol_variables};
-            BM_SET_HDF5_DATASET_SELECT_N_M(file_id, "phi_total", HDF5Double, solver_data->phi_total,
-                                           count, dims, offset[0], cells->stride, n_domain_cells);
+            BM_SET_HDF5_DATASET_SELECT_N_M(file_id, "phi_total",
+                                           HDF5Double, solver_data->phi_total,
+                                           count, dims, offset[0],
+                                           cells->stride, n_domain_cells);
         }
 
         {
             hsize_t dims[2] = {n_global_cells, n_sol_variables};
             hsize_t offset[2] = {0, 0};
             hsize_t count[2] = {n_domain_cells, n_sol_variables};
-            BM_SET_HDF5_DATASET_SELECT_N_M(file_id, "phi_dt", HDF5Double, solver_data->phi_dt,
-                                           count, dims, offset[0], cells->stride, n_domain_cells);
+            BM_SET_HDF5_DATASET_SELECT_N_M(file_id, "phi_dt",
+                                           HDF5Double, solver_data->phi_dt,
+                                           count, dims, offset[0],
+                                           cells->stride, n_domain_cells);
         }
 
         if (n_bdf_stages > 0)
@@ -137,8 +143,10 @@ void write_output(int iter, double t)
                 hsize_t dims[2] = {n_global_cells, n_sol_variables};
                 hsize_t offset[2] = {0, 0};
                 hsize_t count[2] = {n_domain_cells, n_sol_variables};
-                BM_SET_HDF5_DATASET_SELECT_N_M(file_id, tmp, HDF5Double, phi_old[i_stage],
-                                               count, dims, offset[0], cells->stride, n_domain_cells);
+                BM_SET_HDF5_DATASET_SELECT_N_M(file_id, tmp,
+                                               HDF5Double, phi_old[i_stage],
+                                               count, dims, offset[0],
+                                               cells->stride, n_domain_cells);
 
                 BM_DEALLOCATE(tmp);
             }
@@ -148,12 +156,14 @@ void write_output(int iter, double t)
     {
         {
             hsize_t dims[2] = {n_domain_cells, n_tot_variables};
-            BM_SET_HDF5_DATASET_N_M(file_id, "phi_total", HDF5Double, solver_data->phi_total, dims);
+            BM_SET_HDF5_DATASET_N_M(file_id, "phi_total",
+                                    HDF5Double, solver_data->phi_total, dims);
         }
 
         {
             hsize_t dims[2] = {n_domain_cells, n_sol_variables};
-            BM_SET_HDF5_DATASET_N_M(file_id, "phi_dt", HDF5Double, solver_data->phi_dt, dims);
+            BM_SET_HDF5_DATASET_N_M(file_id, "phi_dt",
+                                    HDF5Double, solver_data->phi_dt, dims);
         }
 
         if (n_bdf_stages > 0)
@@ -168,7 +178,8 @@ void write_output(int iter, double t)
 
                 hsize_t dims[2] = {n_domain_cells, n_sol_variables};
 
-                BM_SET_HDF5_DATASET_N_M(file_id, tmp, HDF5Double, phi_old[i_stage], dims);
+                BM_SET_HDF5_DATASET_N_M(file_id, tmp,
+                                        HDF5Double, phi_old[i_stage], dims);
 
                 BM_DEALLOCATE(tmp);
             }

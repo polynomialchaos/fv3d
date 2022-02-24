@@ -93,7 +93,8 @@ void print_partition(Partition_t *partition)
     BM_PRINT("PARTITION\n");
     BM_PRINT("n_partitions           = %d\n", partition->n_partitions);
     BM_PRINT("n_partition_cells      = %d\n", partition->n_partition_cells);
-    BM_PRINT("n_partition_boundaries = %d\n", partition->n_partition_boundaries);
+    BM_PRINT("n_partition_boundaries = %d\n",
+             partition->n_partition_boundaries);
     BM_PRINT("n_partition_faces      = %d\n", partition->n_partition_faces);
     BM_PRINT("n_partition_sends      = %d\n", partition->n_partition_sends);
     BM_PRINT("n_partition_receives   = %d\n", partition->n_partition_receives);

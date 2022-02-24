@@ -74,7 +74,8 @@ void calc_jacobian_numerical(int n_var, int n_cells)
         for (int i = 0; i < n_cells; ++i)
         {
             for (int j = 0; j < n_var; ++j)
-                solver_data->phi_total[i * n_tot_variables + j] = Y_n[i * n_var + j];
+                solver_data->phi_total[i * n_tot_variables + j] =
+                    Y_n[i * n_var + j];
 
             solver_data->phi_total[i * n_tot_variables + i_var] += 0.5 * eps_fd;
         }
@@ -95,7 +96,8 @@ void calc_jacobian_numerical(int n_var, int n_cells)
         for (int i = 0; i < n_cells; ++i)
         {
             for (int j = 0; j < n_var; ++j)
-                solver_data->phi_total[i * n_tot_variables + j] = Y_n[i * n_var + j];
+                solver_data->phi_total[i * n_tot_variables + j] =
+                    Y_n[i * n_var + j];
 
             solver_data->phi_total[i * n_tot_variables + i_var] -= 0.5 * eps_fd;
         }
@@ -184,12 +186,15 @@ void init_implicit(implicit_scheme_t implicit_scheme,
     {
     case BiCGStab:
         is_bicgstab = BC_TRUE;
-        n_work_size = get_bicgstab_n_m_work_size(n_sol_variables, n_domain_cells);
+        n_work_size =
+            get_bicgstab_n_m_work_size(n_sol_variables, n_domain_cells);
         work = BM_ALLOCATE(sizeof(double) * n_work_size);
         break;
     case GMRes:
         is_bicgstab = BC_FALSE;
-        n_work_size = get_gmres_n_m_work_size(n_sol_variables, n_domain_cells, solver_max_krylov_dims);
+        n_work_size = get_gmres_n_m_work_size(n_sol_variables,
+                                              n_domain_cells,
+                                              solver_max_krylov_dims);
         work = BM_ALLOCATE(sizeof(double) * n_work_size);
         break;
     default:
@@ -199,13 +204,15 @@ void init_implicit(implicit_scheme_t implicit_scheme,
 
     phi_old = BM_ALLOCATE(sizeof(double *) * n_bdf_stages);
     for (int i = 0; i < n_bdf_stages; ++i)
-        phi_old[i] = BM_ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
+        phi_old[i] =
+            BM_ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
 
     Y_n = BM_ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
     f_Y_n = BM_ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
     dY_n = BM_ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
     dY_dt_n = BM_ALLOCATE(sizeof(double) * n_sol_variables * n_domain_cells);
-    jac = BM_ALLOCATE(sizeof(double) * n_sol_variables * n_sol_variables * n_domain_cells);
+    jac = BM_ALLOCATE(
+        sizeof(double) * n_sol_variables * n_sol_variables * n_domain_cells);
 }
 
 /*******************************************************************************
@@ -236,7 +243,8 @@ void timestep_newton(int iter, double t, double dt)
 
     for (int i = 0; i < n_domain_cells; ++i)
         for (int j = 0; j < n_sol_variables; ++j)
-            phi_old[0][i * n_sol_variables + j] = solver_data->phi_total[i * n_tot_variables + j];
+            phi_old[0][i * n_sol_variables + j] =
+                solver_data->phi_total[i * n_tot_variables + j];
 
     /* fill inital values for newton iteration */
     copy_n(phi_old[0], n_sol_variables * n_domain_cells, Y_n);
@@ -247,7 +255,9 @@ void timestep_newton(int iter, double t, double dt)
         for (int j = 0; j < n_sol_variables; ++j)
         {
             int idx = i * n_sol_variables + j;
-            f_Y_n[idx] = -(Y_n[idx] - phi_old[0][idx]) / dt_loc + bdf_b_loc * dY_dt_n[idx];
+            f_Y_n[idx] =
+                -(Y_n[idx] - phi_old[0][idx]) / dt_loc +
+                bdf_b_loc * dY_dt_n[idx];
         }
 
     for (int i_stage = 0; i_stage < n_bdf_stages_loc; ++i_stage)
@@ -255,30 +265,38 @@ void timestep_newton(int iter, double t, double dt)
             for (int j = 0; j < n_sol_variables; ++j)
             {
                 int idx = i * n_sol_variables + j;
-                f_Y_n[idx] -= bdf_a_loc[i_stage] / dt_loc * phi_old[i_stage][idx];
+                f_Y_n[idx] -=
+                    bdf_a_loc[i_stage] / dt_loc * phi_old[i_stage][idx];
             }
 
     const double err_f_Y_0 = len_n(f_Y_n, n_sol_variables * n_domain_cells);
     double err_f_Y_old = err_f_Y_0;
 
-    for (n_iter_inner = 1; n_iter_inner <= solver_max_iter_inner; ++n_iter_inner)
+    for (n_iter_inner = 1; n_iter_inner <= solver_max_iter_inner;
+         ++n_iter_inner)
     {
         calc_jacobian_numerical(n_sol_variables, n_domain_cells);
 
         if (err_f_Y_old >= err_f_Y_0)
         {
-            /* Jac * dY = fY_n => dY ... Jacobian is determined via finite difference. fY_n = phi - dt * RHS */
+            /* Jac * dY = fY_n => dY
+             * Jacobian is determined via finite difference.
+             * fY_n = phi - dt * RHS */
             n_iter_lsoe = solver_max_iter_lsoe;
             double residual_lsoe = solver_tolerance_lsoe * err_f_Y_old;
             if (is_bicgstab)
             {
                 solve_bicgstab_n_m(n_sol_variables, n_domain_cells, f_Y_n, dY_n,
-                                   work, matrix_vector_numerical, &n_iter_lsoe, &residual_lsoe);
+                                   work, matrix_vector_numerical,
+                                   &n_iter_lsoe, &residual_lsoe);
             }
             else
             {
                 solve_gmres_n_m(n_sol_variables, n_domain_cells, f_Y_n, dY_n,
-                                work, matrix_vector_numerical, &n_iter_lsoe, &residual_lsoe, solver_max_krylov_dims, solver_max_krylov_restarts);
+                                work, matrix_vector_numerical,
+                                &n_iter_lsoe, &residual_lsoe,
+                                solver_max_krylov_dims,
+                                solver_max_krylov_restarts);
             }
 
             /* Y^(n+1) = Y^(n) + (Y^(n+1)-Y^(n)) */
@@ -291,13 +309,16 @@ void timestep_newton(int iter, double t, double dt)
                 }
 
             finite_volume_time_derivative(tpdt_loc);
-            copy_n(solver_data->phi_dt, n_sol_variables * n_domain_cells, dY_dt_n);
+            copy_n(
+                solver_data->phi_dt, n_sol_variables * n_domain_cells, dY_dt_n);
 
             for (int i = 0; i < n_domain_cells; ++i)
                 for (int j = 0; j < n_sol_variables; ++j)
                 {
                     int idx = i * n_sol_variables + j;
-                    f_Y_n[idx] = -(Y_n[idx] - phi_old[0][idx]) / dt_loc + bdf_b_loc * dY_dt_n[idx];
+                    f_Y_n[idx] =
+                        -(Y_n[idx] - phi_old[0][idx]) / dt_loc +
+                        bdf_b_loc * dY_dt_n[idx];
                 }
 
             for (int i_stage = 0; i_stage < n_bdf_stages_loc; ++i_stage)
@@ -305,7 +326,8 @@ void timestep_newton(int iter, double t, double dt)
                     for (int j = 0; j < n_sol_variables; ++j)
                     {
                         int idx = i * n_sol_variables + j;
-                        f_Y_n[idx] -= bdf_a_loc[i_stage] / dt_loc * phi_old[i_stage][idx];
+                        f_Y_n[idx] -=
+                            bdf_a_loc[i_stage] / dt_loc * phi_old[i_stage][idx];
                     }
 
             err_f_Y_old = len_n(f_Y_n, n_sol_variables * n_domain_cells);

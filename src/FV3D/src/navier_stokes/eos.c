@@ -57,15 +57,20 @@ double calc_riemann_p(double *phi)
     if (phi[ip_u] <= 0.0)
     {
         double c = sqrt(kappa * phi[ip_p] / phi[ic_rho]);
-        return phi[ip_p] * pow(
-                               BM_MAX(1e-4, 1. + 0.5 * kappa_m1 * phi[ip_u] / c),
-                               2 * kappa * s_kappa_m1);
+        return phi[ip_p] *
+               pow(BM_MAX(
+                       1e-4, 1. + 0.5 * kappa_m1 * phi[ip_u] / c),
+                   2 * kappa * s_kappa_m1);
     }
     else
     {
         double ar = 2 * s_kappa_p1 / phi[ip_u];
         double br = kappa_m1 * s_kappa_p1 * phi[ip_p];
-        return phi[ip_p] + phi[ip_u] / ar * 0.5 * (phi[ip_u] + sqrt(phi[ip_u] * phi[ip_u] + 4. * ar * (phi[ip_p] + br)));
+        return phi[ip_p] +
+               phi[ip_u] / ar * 0.5 *
+                   (phi[ip_u] + sqrt(
+                                    phi[ip_u] * phi[ip_u] +
+                                    4. * ar * (phi[ip_p] + br)));
     }
 }
 
@@ -79,9 +84,11 @@ void con_to_prim(double *phi)
     phi[ip_v] = phi[ic_rho_v] / phi[ic_rho]; /* v */
     phi[ip_w] = phi[ic_rho_w] / phi[ic_rho]; /* w */
     phi[ip_p] = kappa_m1 * (phi[ic_rho_e] -
-                            0.5 * dot_n(&phi[ic_rho_u], &phi[ip_u], DIM)); /* p */
-    phi[ip_p] = BM_MAX(1.00E-10, phi[ip_p]);                               /* pressure must not be negative */
-    phi[ip_T] = calc_ig_T(phi[ip_p], phi[ic_rho], R_mix);                  /* T */
+                            0.5 * dot_n(
+                                      &phi[ic_rho_u], &phi[ip_u], DIM)); /* p */
+    phi[ip_p] = BM_MAX(1.00E-10, phi[ip_p]);
+    /* pressure must not be negative */
+    phi[ip_T] = calc_ig_T(phi[ip_p], phi[ic_rho], R_mix); /* T */
 }
 
 /*******************************************************************************

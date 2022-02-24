@@ -142,7 +142,8 @@ void calc_ns_exact_function(int id, double t, double *x, double *phi)
     switch (id)
     {
     case BoundaryFlow:
-        copy_n(&regions->phi_total[regions->flow_region * n_tot_variables], n_tot_variables, phi);
+        copy_n(&regions->phi_total[regions->flow_region * n_tot_variables],
+               n_tot_variables, phi);
         break;
     default:
         BM_CHECK_EXPRESSION(0);
@@ -175,7 +176,8 @@ double calc_ns_timestep(double time)
         double c = sqrt(kappa * phi_total_i[ip_p] * s_rho);
 
         double ds1 = (BM_ABS(phi_total_i[ip_u]) + c) * dx[0] +
-                     (BM_ABS(phi_total_i[ip_v]) + c) * dx[1] + (BM_ABS(phi_total_i[ip_w]) + c) * dx[2];
+                     (BM_ABS(phi_total_i[ip_v]) + c) * dx[1] +
+                     (BM_ABS(phi_total_i[ip_w]) + c) * dx[2];
         lambda_conv = BM_MIN(lambda_conv, cells->volume[i] / ds1);
 
         double ds2 = dot_n(dx, dx, DIM);

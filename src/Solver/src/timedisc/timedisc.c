@@ -90,11 +90,14 @@ void print_residual(int iter, double t, double dt, bool_t do_output)
 
     if (solver_is_explicit)
     {
-        BM_PRINT("%09d %12.5e %12.5e %c %c:", iter, t, dt, viscous_str, output_str);
+        BM_PRINT("%09d %12.5e %12.5e %c %c:",
+                 iter, t, dt, viscous_str, output_str);
     }
     else
     {
-        BM_PRINT("%09d %12.5e %12.5e %c %c %6d %6d:", iter, t, dt, viscous_str, output_str, n_iter_inner, n_iter_lsoe);
+        BM_PRINT("%09d %12.5e %12.5e %c %c %6d %6d:",
+                 iter, t, dt, viscous_str, output_str,
+                 n_iter_inner, n_iter_lsoe);
     }
 
     for (int i = 0; i < solver_variables->n_sol_variables; ++i)
@@ -110,11 +113,13 @@ void print_residual_header()
 {
     if (solver_is_explicit)
     {
-        BM_PRINT("%9s %12s %12s %1s %1s:", "iter", "time", "dt", "V", "O");
+        BM_PRINT("%9s %12s %12s %1s %1s:",
+                 "iter", "time", "dt", "V", "O");
     }
     else
     {
-        BM_PRINT("%9s %12s %12s %1s %1s %6s %6s:", "iter", "time", "dt", "V", "O", "inner", "lsoe");
+        BM_PRINT("%9s %12s %12s %1s %1s %6s %6s:",
+                 "iter", "time", "dt", "V", "O", "inner", "lsoe");
     }
 
     for (int i = 0; i < solver_variables->n_sol_variables; ++i)
@@ -179,7 +184,9 @@ void timedisc()
         iter = iter + 1;
 
         /* steady-state simulation */
-        if ((solver_is_transient == BC_FALSE) && (max_n(solver_residual, solver_variables->n_sol_variables) < solver_abort_residual))
+        if ((solver_is_transient == BC_FALSE) &&
+            (max_n(solver_residual, solver_variables->n_sol_variables) <
+             solver_abort_residual))
         {
             solver_t_end = t;
             do_output = BC_TRUE;

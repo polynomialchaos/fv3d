@@ -37,8 +37,10 @@ data_t *allocate_data()
     data_t *tmp = BM_ALLOCATE(sizeof(data_t));
 
     tmp->flux = BM_ALLOCATE(sizeof(double) * n_sol_variables * n_faces);
-    tmp->phi_total_left = BM_ALLOCATE(sizeof(double) * n_tot_variables * n_faces);
-    tmp->phi_total_right = BM_ALLOCATE(sizeof(double) * n_tot_variables * n_faces);
+    tmp->phi_total_left =
+        BM_ALLOCATE(sizeof(double) * n_tot_variables * n_faces);
+    tmp->phi_total_right =
+        BM_ALLOCATE(sizeof(double) * n_tot_variables * n_faces);
 
     tmp->grad_phi_total_x =
         BM_ALLOCATE(sizeof(double) * n_tot_variables * n_elements);
@@ -91,7 +93,9 @@ void finite_volume_time_derivative(double time)
     calc_flux_function_pointer(time);
 
     /* the temporal derivative */
-    set_value_n(0.0, n_sol_variables * (n_local_cells + n_boundaries), solver_data->phi_dt);
+    set_value_n(0.0,
+                n_sol_variables * (n_local_cells + n_boundaries),
+                solver_data->phi_dt);
 
     for (int i = 0; i < n_faces; ++i)
     {
@@ -100,8 +104,10 @@ void finite_volume_time_derivative(double time)
 
         for (int j = 0; j < n_sol_variables; ++j)
         {
-            solver_data->phi_dt[fc[0] * n_sol_variables + j] += solver_data->flux[i * n_sol_variables + j] * area;
-            solver_data->phi_dt[fc[1] * n_sol_variables + j] -= solver_data->flux[i * n_sol_variables + j] * area;
+            solver_data->phi_dt[fc[0] * n_sol_variables + j] +=
+                solver_data->flux[i * n_sol_variables + j] * area;
+            solver_data->phi_dt[fc[1] * n_sol_variables + j] -=
+                solver_data->flux[i * n_sol_variables + j] * area;
         }
     }
 
@@ -111,7 +117,8 @@ void finite_volume_time_derivative(double time)
 
         for (int j = 0; j < n_sol_variables; ++j)
         {
-            solver_data->phi_dt[i * n_sol_variables + j] = -solver_data->phi_dt[i * n_sol_variables + j] / volume;
+            solver_data->phi_dt[i * n_sol_variables + j] =
+                -solver_data->phi_dt[i * n_sol_variables + j] / volume;
         }
     }
 }
@@ -186,7 +193,9 @@ void set_solution()
     int n_tot_variables = solver_variables->n_tot_variables;
 
     for (int i = 0; i < n_domain_cells; ++i)
-        calc_exact_function_pointer(0, 0.0, &cells->x[i * DIM], &solver_data->phi_total[i * n_tot_variables]);
+        calc_exact_function_pointer(
+            0, 0.0, &cells->x[i * DIM],
+            &solver_data->phi_total[i * n_tot_variables]);
 
     update_function_pointer(0.0);
 }

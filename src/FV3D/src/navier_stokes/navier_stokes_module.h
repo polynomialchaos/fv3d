@@ -157,7 +157,9 @@ void eval_euler_flux_1d(double *phi, double *f);
 /*******************************************************************************
  * @brief Calculate the Euler 1D viscous flux
  ******************************************************************************/
-void eval_viscous_flux_1d(double *phi, double *grad_phi_x, double *grad_phi_y, double *grad_phi_z,
+void eval_viscous_flux_1d(double *phi,
+                          double *grad_phi_x, double *grad_phi_y,
+                          double *grad_phi_z,
                           double *f, double *g, double *h);
 
 /*******************************************************************************
@@ -254,7 +256,12 @@ void ns_update_gradients(double time);
  * @param g
  * @param h
  ******************************************************************************/
-void viscous_flux(double *phi_l, double *grad_phi_x_l, double *grad_phi_y_l, double *grad_phi_z_l,
-                  double *phi_r, double *grad_phi_x_r, double *grad_phi_y_r, double *grad_phi_z_r, double *f, double *g, double *h);
+void viscous_flux(double *phi_l,
+                  double *grad_phi_x_l, double *grad_phi_y_l,
+                  double *grad_phi_z_l,
+                  double *phi_r,
+                  double *grad_phi_x_r, double *grad_phi_y_r,
+                  double *grad_phi_z_r,
+                  double *f, double *g, double *h);
 
 #endif /* NAVIER_STOKES_MODULE_H */

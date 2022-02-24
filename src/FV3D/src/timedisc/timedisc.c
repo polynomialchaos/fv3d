@@ -33,8 +33,10 @@ void timedisc_define()
     BM_SET_PARAMETER("TimeDisc/max_iter", DigitParameter, &max_iter,
                      "The maximum number of iterations", NULL, 0);
     BM_SET_PARAMETER("TimeDisc/transient", LogicalParameter, &is_transient,
-                     "The flag wheter to be transient or steady-state", NULL, 0);
-    BM_SET_PARAMETER("TimeDisc/abort_residual", NumberParameter, &abort_residual,
+                     "The flag wheter to be transient or steady-state",
+                     NULL, 0);
+    BM_SET_PARAMETER("TimeDisc/abort_residual", NumberParameter,
+                     &abort_residual,
                      "The abort residual", NULL, 0);
     BM_SET_PARAMETER("TimeDisc/t_start", NumberParameter, &t_start,
                      "The start time", NULL, 0);
@@ -62,7 +64,8 @@ void timedisc_initialize()
     BM_GET_PARAMETER("TimeDisc/timestep", StringParameter, &timestep_name);
     BM_GET_PARAMETER("TimeDisc/max_iter", DigitParameter, &max_iter);
     BM_GET_PARAMETER("TimeDisc/transient", LogicalParameter, &is_transient);
-    BM_GET_PARAMETER("TimeDisc/abort_residual", NumberParameter, &abort_residual);
+    BM_GET_PARAMETER("TimeDisc/abort_residual", NumberParameter,
+                     &abort_residual);
     BM_GET_PARAMETER("TimeDisc/t_start", NumberParameter, &t_start);
     BM_GET_PARAMETER("TimeDisc/t_end", NumberParameter, &t_end);
 
